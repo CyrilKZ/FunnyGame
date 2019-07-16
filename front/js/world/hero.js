@@ -6,14 +6,15 @@ const HERO_RADIUS = 6
 const HERO_BASELINE = -220
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
+const JUMPING_SPEED = 8
 const GRAVITY = 0.5
 const NO_MOVE = 0
-const MOVE_UP = 1
-const MOVE_LEFT = 2
-const MOVE_RIGHT = 3
+const MOVE_UP = 3
+const MOVE_LEFT = 1
+const MOVE_RIGHT = 2
 const TOTALFRAME_X = ROW_WIDTH / MOVING_SPEED
-const TOTALFRAME_Z = 2 * MOVING_SPEED / GRAVITY
-const TOUCHBAR = 100
+const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
+
 
 let databus = new DataBus()
 
@@ -30,8 +31,9 @@ export default class Hero extends Sprite{
     this.y = HERO_BASELINE
     this.z = 0
     this.movingframe = 0
-    this.model.position.set(this.x + ROW_WIDTH / 2 + HERO_RADIUS, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
-    this.model.visible = true
+    this.model.position.set(this.x + ROW_WIDTH / 2, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
+    this.model.castShadow = true
+    this.model.visible = true  
     this.visible = true
     this.moving = false
     this.direction = NO_MOVE
@@ -41,19 +43,7 @@ export default class Hero extends Sprite{
 
   move(direction){
     if(this.moving === true){
-      if(this.direction === MOVE_LEFT && direction === MOVE_RIGHT){
-        this.speedX = MOVING_SPEED
-        this.direction = MOVE_RIGHT
-        this.movingframe = TOTALFRAME_X - this.movingframe
-      }
-      else if(this.direction === MOVE_RIGHT && direction === MOVE_LEFT){
-        this.speedX = -MOVING_SPEED
-        this.direction = MOVE_LEFT
-        this.movingframe = TOTALFRAME_X- this.movingframe
-      }
-      else{
-        return
-      }
+      return
     }
     switch(direction){
       case MOVE_LEFT:
@@ -75,7 +65,10 @@ export default class Hero extends Sprite{
       case MOVE_UP:
         this.moving = true
         this.direction = MOVE_UP
-        this.speedZ = MOVING_SPEED
+        this.speedZ = JUMPING_SPEED
+        break
+      default:
+        break
     }
   }
 
@@ -108,7 +101,7 @@ export default class Hero extends Sprite{
             this.row += 1
           }
           this.x = (this.row - 2) * ROW_WIDTH
-          this.model.position.x = this.row + ROW_WIDTH/2 + HERO_RADIUS
+          this.model.position.x = this.x + ROW_WIDTH/2
           this.moving = false
           this.direction = NO_MOVE
           this.speedX = 0
@@ -121,16 +114,16 @@ export default class Hero extends Sprite{
       }
     }
   }
-  checkIsTouchValid(y){
-    return y > 200
-  }
-  initEvent(){
-    canvas.addEventListener('touchstart', ((e)=>{
-      e.preventDefault()
-      let y = e.touches[0].clientY
-      if(this.checkIsTouchValid(y)){
-        this.move(MOVE_UP)
-      }
-    }).bind(this))
-  }
+  // checkIsTouchValid(y){
+  //   return y > 200
+  // }
+  // initEvent(){
+  //   canvas.addEventListener('touchstart', ((e)=>{
+  //     e.preventDefault()
+  //     let y = e.touches[0].clientY
+  //     if(this.checkIsTouchValid(y)){
+  //       this.move(MOVE_UP)
+  //     }
+  //   }).bind(this))
+  // }
 }

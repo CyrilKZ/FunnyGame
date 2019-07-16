@@ -14,6 +14,8 @@ export default class DataBus {
   reset(){
     this.frame   = 0
     this.score   = 0
+    this.step    = 0
+    this.speed   = 1
     this.blocks  = [[],[],[],[]]
   }
 
