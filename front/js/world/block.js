@@ -49,7 +49,7 @@ export default class Block extends Sprite{
     this.y -= this.speed
     this.model.position.y -= this.speed
     //console.log(this.model.position.y)
-    if( this.y < -250){
+    if( this.y < -500){
       databus.removeBlocks(this)
     }
   }

@@ -3,7 +3,7 @@ import DataBus from '../databus'
 import * as THREE from '../libs/three.min'
 
 const HERO_RADIUS = 6
-const HERO_BASELINE = -220
+const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
 const JUMPING_SPEED = 8

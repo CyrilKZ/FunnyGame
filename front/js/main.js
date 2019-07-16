@@ -8,9 +8,9 @@ import * as THREE from './libs/three.min'
 const PLANE_WIDTH = 440
 const PLANE_LENGTH = 1000
 const BASELINE_POS = -250
-const CAMERA_Z = 250
-const CAMERA_Y = -300
-const CAMERA_ROT_X = Math.PI / 6
+const CAMERA_Z = 250 * Math.sqrt(3)
+const CAMERA_Y = -750
+const CAMERA_ROT_X = Math.PI / 4
 const LEFT = 1
 const RIGHT = 2
 const TOUCHBAR = 300
@@ -19,7 +19,7 @@ const SCREEN_HEIGHT = 1080
 
 let gameCtx = canvas.getContext('webgl')
 let gameScene = new THREE.Scene()
-let gameCamera = new THREE.PerspectiveCamera(45, 16 / 9,1, 1000)
+let gameCamera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
 let gameRenderer = new THREE.WebGLRenderer(gameCtx)
 let databus = new DataBus()
 let touchevents = new TouchEvent()
