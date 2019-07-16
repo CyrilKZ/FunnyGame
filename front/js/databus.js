@@ -14,11 +14,11 @@ export default class DataBus {
   reset(){
     this.frame   = 0
     this.score   = 0
-    this.blocks  = []
+    this.blocks  = [[],[],[],[]]
   }
 
   removeBlocks(block){
-    let temp = this.blocks.shift()
+    let temp = this.blocks[block.row].shift()
     temp.setInvisible()
     this.pool.recover('block',block)
   }
