@@ -10,7 +10,7 @@ export default class TouchEvents {
   }
   addEvent(e){
     let x = e.clientX
-    console.log(x)
+    //console.log(x)
     let y = e.clientY
     let type = RIGHT
     if(x < SCREEN_WIDTH / 2){

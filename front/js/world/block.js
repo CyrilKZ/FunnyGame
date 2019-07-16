@@ -28,7 +28,7 @@ export default class Block extends Sprite{
     this.z = 0
     this.speed = speed
     this.row = row
-    this.model.castShadow = true
+    //this.model.castShadow = true
     this.model.receiveShadow = true
     this.model.position.set(this.x + BLOCK_X / 2, this.y + BLOCK_Y / 2, this.z + BLOCK_Z / 2)
     this.model.visible = true

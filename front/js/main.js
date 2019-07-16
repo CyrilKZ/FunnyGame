@@ -8,7 +8,7 @@ import * as THREE from './libs/three.min'
 const PLANE_WIDTH = 440
 const PLANE_LENGTH = 1000
 const BASELINE_POS = -250
-const CAMERA_Z = 250 * Math.sqrt(3)
+const CAMERA_Z = Math.round(250 * Math.sqrt(3))
 const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
 const LEFT = 1
@@ -57,7 +57,7 @@ export default class Game {
     gameRenderer.shadowMapEnabled = true
     light.castShadow = true
     this.ground.receiveShadow = true
-    this.ground.castShadow = true
+    //this.ground.castShadow = true
     //this.ground.castShadow = true
     light.position.set(0, 0, 100)
     light.shadow.camera.near = 0.5
@@ -66,7 +66,7 @@ export default class Game {
     light.shadow.camera.bottom = -500
     light.shadow.camera.right = 220
     light.shadow.camera.top = 500
-    //light.target.position.set(0, 0, 0).normalize()
+    light.target.position.set(0, 0, 0).normalize()
     gameCamera.position.z = CAMERA_Z
     gameCamera.position.y = CAMERA_Y
     gameCamera.rotateX(CAMERA_ROT_X)
