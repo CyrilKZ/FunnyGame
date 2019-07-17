@@ -2,135 +2,252 @@ import Sprite from '../base/sprite'
 import DataBus from '../databus'
 import * as THREE from '../libs/three.min'
 
-const HERO_RADIUS = 6
-const HERO_BASELINE = -220
+const HERO_RADIUS = 8
+const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
+const JUMPING_SPEED = 8
 const GRAVITY = 0.5
 const NO_MOVE = 0
-const MOVE_UP = 1
-const MOVE_LEFT = 2
-const MOVE_RIGHT = 3
+const MOVE_UP = 3
+const MOVE_LEFT = 1
+const MOVE_RIGHT = 2
 const TOTALFRAME_X = ROW_WIDTH / MOVING_SPEED
-const TOTALFRAME_Z = 2 * MOVING_SPEED / GRAVITY
-const TOUCHBAR = 100
+const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
+
 
 let databus = new DataBus()
 
-export default class Hero extends Sprite{
-  constructor(){
-    super(2* HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
+export default class Hero extends Sprite {
+  constructor() {
+    super(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
   }
-  initSelf(row){
+  initSelf(row) {
     let geometry = new THREE.IcosahedronGeometry(HERO_RADIUS, 2)
-    let metarial = new THREE.MeshLambertMaterial({color: 0xeeddcc})
+    let metarial = new THREE.MeshLambertMaterial({ color: 0xeeddcc })
     this.model = new THREE.Mesh(geometry, metarial)
     this.row = row
-    this.x = (row- 2) * ROW_WIDTH
+    this.x = (row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - HERO_RADIUS
     this.y = HERO_BASELINE
     this.z = 0
     this.movingframe = 0
-    this.model.position.set(this.x + ROW_WIDTH / 2 + HERO_RADIUS, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
+    this.model.position.set(this.x + HERO_RADIUS, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
+    this.model.castShadow = true
     this.model.visible = true
     this.visible = true
     this.moving = false
     this.direction = NO_MOVE
     this.speedX = 0
     this.speedZ = 0
+    this.canJumpSave = true
+    this.canMoveSave = true
+    this.isJumpSafe = true
+    this.isMoveSafe = true
+    this.blockAhead = null
+    this.blockAround = null
   }
 
-  move(direction){
-    if(this.moving === true){
-      if(this.direction === MOVE_LEFT && direction === MOVE_RIGHT){
-        this.speedX = MOVING_SPEED
-        this.direction = MOVE_RIGHT
-        this.movingframe = TOTALFRAME_X - this.movingframe
-      }
-      else if(this.direction === MOVE_RIGHT && direction === MOVE_LEFT){
-        this.speedX = -MOVING_SPEED
-        this.direction = MOVE_LEFT
-        this.movingframe = TOTALFRAME_X- this.movingframe
-      }
-      else{
-        return
-      }
+  move(direction) {
+    //console.log(direction)
+    if (this.moving === true) {
+      return
     }
-    switch(direction){
+    switch (direction) {
       case MOVE_LEFT:
-        if(this.row === 0 || this.row === 2){
+        if (this.row === 0 || this.row === 2) {
           return
         }
         this.moving = true
         this.direction = MOVE_LEFT
         this.speedX = -MOVING_SPEED
+       // midX = -MOVING_SPEED * TOTALFRAME_X + this.x
+        this.checkMoveSafe()
         break
       case MOVE_RIGHT:
-        if(this.row === 1 || this.row === 3){
+        if (this.row === 1 || this.row === 3) {
           return
         }
         this.moving = true
         this.direction = MOVE_RIGHT
         this.speedX = MOVING_SPEED
+        //midX = MOVING_SPEED * TOTALFRAME_X + this.x
+        this.checkMoveSafe()
         break
       case MOVE_UP:
         this.moving = true
         this.direction = MOVE_UP
-        this.speedZ = MOVING_SPEED
+        this.speedZ = JUMPING_SPEED
+        this.checkJumpSafe()
+        break
+      default:
+        return
     }
   }
 
-  update(){
-    //console.log(this.moving)
-    if(this.moving){
-      if(this.direction === MOVE_UP){
-        if(this.movingframe === TOTALFRAME_Z){
+  updateSaveInfo(){
+    for (let i = 0; i < databus.blocks[this.row].length; ++i) {
+      if (databus.blocks[this.row][i].y > this.y) {
+        this.blockAhead = databus.blocks[this.row][i]
+        break
+      }
+    }
+    if(this.blockAhead === null){
+      return
+    }
+    let block = this.blockAhead
+    let t = Math.sqrt(2 * block.lengthZ / GRAVITY)
+    let a = databus.accel
+    let v = databus.speed
+    let minDistance = v * t + a * t * t/2
+    let distance = block.y - block.lengthY - this.y
+    if(minDistance > distance){
+      this.canJumpSave = false
+    }    
+    t = TOTALFRAME_X / 2
+    minDistance = v * t + a * t* t/2
+    if(minDistance > distance){
+      this.canMoveSave = false
+    }
+  }
+
+  checkJumpSafe(){
+    if(this.canJumpSave === false){
+      this.isJumpSafe = false
+      return
+    }
+    let block = null
+    for (let i = 0; i < databus.blocks[this.row].length; ++i) {
+      if (databus.blocks[this.row][i].y > this.y) {
+        block = databus.blocks[this.row][i]
+        break
+      }
+    }
+    if(block === null){
+      this.isJumpSafe = true
+      return
+    }
+    let vx = databus.speed
+    let a = databus.accel
+    let t = Math.sqrt(2 * (JUMPING_SPEED * JUMPING_SPEED) / (GRAVITY * GRAVITY) - 2 * block.lengthZ / GRAVITY)
+    let minUnsafeDistance = vx * t + a * t * t / 2
+    t = TOTALFRAME_Z
+    let maxUnsafeDistance = vx * t + a * t * t / 2 + block.lengthY
+    if(minUnsafeDistance < block.y && block.y < maxUnsafeDistance){
+      this.isJumpSafe = false
+      return
+    }
+    this.isJumpSafe = true
+    return
+  }
+
+  checkMoveSafe(){
+    this.blockAround = null
+    //console.log(this.row)
+    if(this.direction === MOVE_LEFT){
+      for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
+        if (databus.blocks[this.row-1][i].y > this.y) {
+          this.blockAround = databus.blocks[this.row-1][i]
+          //console.log(this.blockAround)
+          break
+        }
+      }
+    }
+    else{
+      for (let i = 0; i < databus.blocks[this.row+1].length; ++i) {
+        if (databus.blocks[this.row+1][i].y > this.y) {
+          this.blockAround = databus.blocks[this.row+1][i]
+          //console.log(this.blockAround)
+          break
+        }
+      }
+    }
+    if(this.blockAround === null){
+      this.isMoveSafe = false
+      return
+    }
+    let block = this.blockAround
+    let a = databus.accel
+    let v = databus.speed
+    let t1 = TOTALFRAME_X
+    let s1 = v * t1 + a * t1* t1/2
+    let t2 = TOTALFRAME_X/2
+    let s2 = v * t2 + a * t2* t2/2
+    let distance1 = block.y - block.lengthY - this.y      // move in
+    let distance2 = block.y - this.y                      // move out
+    if(s1 > distance1 && s2 < distance2){
+      this.isMoveSafe = false
+      return
+    }
+    this.isMoveSafe = true
+    return
+  }
+
+  update() {
+    //console.log('update')
+    if (this.moving) {
+      if (this.direction === MOVE_UP) {
+        if (this.movingframe === TOTALFRAME_Z) {
           this.movingframe = 0
           this.moving = false
           this.direction = NO_MOVE
           this.z = 0
           this.speedZ = 0
-          this.model.position.z = 0
+          this.model.position.z = this.z + HERO_RADIUS
         }
-        else{
+        else {
           this.movingframe += 1
           this.z += this.speedZ
           this.speedZ -= GRAVITY
           this.model.position.z = this.z + HERO_RADIUS
         }
-      }
-      else{
-        if(this.movingframe === TOTALFRAME_X){
-          this.movingframe = 0
-          if(this.direction === MOVE_LEFT){
-            this.row -= 1            
+        if(!(this.canJumpSave && this.isJumpSafe)){
+          if(this.is3DCollideWith(this.blockAhead)){
+            databus.heroHit = true
+            //console.log('hit when jumping')
           }
-          else{
+        }
+      }
+      else {
+        if (this.movingframe === TOTALFRAME_X) {
+          this.movingframe = 0
+          if (this.direction === MOVE_LEFT) {
+            this.row -= 1
+          }
+          else {
             this.row += 1
           }
-          this.x = (this.row - 2) * ROW_WIDTH
-          this.model.position.x = this.row + ROW_WIDTH/2 + HERO_RADIUS
+          this.x = (this.row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - HERO_RADIUS
+          this.model.position.x = this.x + HERO_RADIUS
           this.moving = false
           this.direction = NO_MOVE
           this.speedX = 0
         }
-        else{
+        else {
           this.movingframe += 1
           this.x += this.speedX
           this.model.position.x += this.speedX
+          if(!(this.canMoveSave && this.isMoveSafe)){
+            
+            if(this.is2DCollideWith(this.blockAround)){
+              databus.heroHit = true
+              //console.log('hit when moving')
+            }            
+          }
         }
       }
     }
-  }
-  checkIsTouchValid(y){
-    return y > 200
-  }
-  initEvent(){
-    canvas.addEventListener('touchstart', ((e)=>{
-      e.preventDefault()
-      let y = e.touches[0].clientY
-      if(this.checkIsTouchValid(y)){
-        this.move(MOVE_UP)
+    else{
+      if(this.is2DCollideWith(this.blockAhead)){
+        databus.heroHit = true
+        //console.log('direct hit')
       }
-    }).bind(this))
+      
+    }
+    this.updateSaveInfo()
+    if((!this.isJumpSafe) || (!this.isMoveSafe) || ((!this.canJumpSave)&&(!this.canMoveSave))){
+      databus.heroWillHit = true
+      //console.log('will hit')
+    }
+    
   }
 }

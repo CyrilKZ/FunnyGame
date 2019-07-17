@@ -1,6 +1,7 @@
 import Pool from './base/pool'
 let instance
-
+const LEFT = 1
+const RIGHT = 2
 export default class DataBus {
   constructor() {
     if(instance){
@@ -14,7 +15,18 @@ export default class DataBus {
   reset(){
     this.frame   = 0
     this.score   = 0
+    this.step    = 0
+    this.speed   = 1
+    this.accel   = 1 / 10000
     this.blocks  = [[],[],[],[]]
+    this.gameOver    = false
+    this.heroWillHit = false
+    this.heroSide    = 0
+    this.heroHit     = false
+  }
+  setHeroSide(row){
+    this.heroSide = row < 2 ? LEFT:RIGHT
+    //console.log(this.heroSide)
   }
 
   removeBlocks(block){

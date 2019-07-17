@@ -8,8 +8,8 @@
 		"newFeature": true
 	},
 	"compileType": "game",
-	"libVersion": "1.9.94",
-	"appid": "wx2046aa8c9c129059",
+	"libVersion": "2.6.6",
+	"appid": "wxe19dbe01bf7a3e44",
 	"projectname": "FunnyGame",
 	"simulatorType": "wechat",
 	"simulatorPluginLibVersion": {},
