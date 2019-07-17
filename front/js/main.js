@@ -33,17 +33,38 @@ export default class Game {
     this.aniID = 0
     this.initTouchEvents()
     canvas.appendChild(gameRenderer.domElement)
-    this.heroSide = LEFT
     
-    this.hero = new Hero()
-    this.hero.initSelf(2)
-    this.setHeroPos(RIGHT)
+    this.models = []
+    this.hero = null
+    
+    //this.setHeroPos(RIGHT)
     this.setUpScene()
     this.restart()
+    
+    
   }
-  setHeroPos(side){
-    this.heroSide = side
+
+  addModel(model){
+    this.models.push(model)
+    gameScene.add(model)
   }
+  clearModels(){
+    this.models.forEach((item)=>{
+      gameScene.remove(item)
+      item.geometry.dispose()
+      item.material.dispose()
+    })
+    this.models = []
+    if(this.hero === null || this.hero === undefined){
+      return
+    }
+    gameScene.remove(this.hero.model)
+    this.hero.model.geometry.dispose()
+    this.hero.model.material.dispose()
+    delete(this.hero)
+    this.hero = null
+  }
+
   setUpScene(){
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
     let material = new THREE.MeshLambertMaterial({ color: 0xeeffee })
@@ -57,8 +78,6 @@ export default class Game {
     gameRenderer.shadowMapEnabled = true
     light.castShadow = true
     this.ground.receiveShadow = true
-    //this.ground.castShadow = true
-    //this.ground.castShadow = true
     light.position.set(0, 0, 100)
     light.shadow.camera.near = 0.5
     light.shadow.camera.far = 500
@@ -73,12 +92,17 @@ export default class Game {
     gameScene.add(this.ground)
     gameScene.add(this.baseline)
     gameScene.add(light)
-    gameScene.add(aLight)
-    gameScene.add(this.hero.model)
+    gameScene.add(aLight)    
   }
 
-  restart(){
+
+  restart(){  
     databus.reset()
+    this.clearModels()
+    this.hero = new Hero()
+    this.hero.initSelf(2)
+    databus.setHeroSide(2)
+    gameScene.add(this.hero.model)
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
     this.aniID = window.requestAnimationFrame(
@@ -86,21 +110,31 @@ export default class Game {
       canvas
     )
   }
+
+  
+
   loop() {
+    if(databus.heroHit === true){
+      return
+    }
+    //console.log(databus.frame)
     databus.frame++
     if(databus.frame % 40 === 0){
       let block = databus.pool.getItemByClass('block', Block)
       block.init(Math.round(Math.random() * 3), 1)
       databus.blocks[block.row].push(block)
-      gameScene.add(block.model)
+      this.addModel(block.model)
     }
     databus.blocks.forEach((row)=>{
       row.forEach((item)=>{
-        item.update()
+        //console.log(databus.speed)
+        item.update(databus.speed)
       })
     })
+    databus.speed += databus.accel
     this.hero.update()
     this.render()
+    
   }
   render() {
     this.aniID = window.requestAnimationFrame(
@@ -129,8 +163,13 @@ export default class Game {
       e.changedTouches.forEach((item)=>{
         let res = touchevents.removeEvent(item)
         //console.log(res.type)
-        if(res.type === this.heroSide){         
+        //console.log(databus.heroSide)
+        if(res.type === databus.heroSide){ 
+          console.log(res.swipe)        
           this.hero.move(res.swipe)
+        }
+        if(databus.heroHit === true){
+          this.restart()
         }
       })
     }))

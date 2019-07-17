@@ -24,6 +24,9 @@ export default class Sprite {
    * @param{Sprite} sp: Sptite的实例
    */
   is2DCollideWith(sp) {
+    if(sp === null)
+      return false
+
     if ( !this.visible || !sp.visible )
       return false
 
@@ -43,9 +46,13 @@ export default class Sprite {
     if(spXLeft < xRight && spXRight > xLeft){
       xCollide = true
     }
-    if(spYBack < yFront && spYFront > yBack){
+    if(spYBack > yFront && spYFront < yBack){
       yCollide = true
     }
+    //console.log(sp.y - sp.lengthY)
+    //console.log(this.y)
+    //console.log(this)
+    //console.log(yCollide)
     return (xCollide && yCollide)
   }
   /**
@@ -53,10 +60,32 @@ export default class Sprite {
    * @param{Sprite} sp: Sptite的实例
    */
   is3DCollideWith(sp) {
+    if(sp === null)
+      return false
     let spZBottom = sp.z
     let spZTop = spZBottom + sp.lengthZ
     let zBottom = this.z
     let zTop = zBottom + this.lengthZ
-    return (this.is2DCollideWith(sp) && spZBottom > zTop && zBottom > spZTop)
+    return (this.is2DCollideWith(sp) && spZBottom < zTop && zBottom < spZTop)
   }
+  isCollideWithRect(rectX, rectY, rectLX, rectLY){
+    if ( !this.visible || !sp.visible )
+      return false
+    let xLeft = this.x
+    let xRight = xLeft + this.lengthX
+    let yBack = this.y
+    let yFront = yBack - this.lengthY
+    let xCollide = false
+    let yCollide = false
+
+    if(rectX < xRight && rectX + rectLX > xLeft){
+      xCollide = true
+    }
+    if(rectY < yFront && rectY - rectLY > yBack){
+      yCollide = true
+    }
+
+    return (xCollide && yCollide)
+  }
+
 }

@@ -38,6 +38,7 @@ export default class TouchEvents {
   }
   removeEvent(e){
     let info = this.touchMap.get(e.identifier)
+    //console.log(info)
     if(info === undefined){
       return null
     }
