@@ -3,9 +3,9 @@ import DataBus from '../databus'
 import * as THREE from '../libs/three.min'
 
 const BLOCK_X = 110
-const BLOCK_Y = 8
+const BLOCK_Y = 5
 const BLOCK_Z = 12
-const OFFSET = 10
+const OFFSET = 3
 
 let databus = new DataBus()
 
@@ -24,7 +24,7 @@ export default class Block extends Sprite{
     this.z = 0
     this.row = row
     this.model.receiveShadow = true
-    this.model.position.set(this.x + BLOCK_X / 2, this.y + BLOCK_Y / 2, this.z + BLOCK_Z / 2)
+    this.model.position.set(this.x + BLOCK_X / 2, this.y - BLOCK_Y / 2, this.z + BLOCK_Z / 2)
     this.model.visible = true
     this.visible = true
   }
