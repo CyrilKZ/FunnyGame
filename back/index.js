@@ -1,6 +1,7 @@
 var fs = require('fs');
+var Server = require('./server');
 
-var keypath = __dirname + '/private.pem';
+var keypath = __dirname + '/server.pem';
 var certpath = __dirname + '/server.crt';
 
 var options = {
@@ -8,9 +9,4 @@ var options = {
     cert: fs.readFileSync(certpath)
 };
 
-var Server = require('./server');
-var Scene = require('./scene');
-
 var sever = new Server(options, 10443);
-
-
