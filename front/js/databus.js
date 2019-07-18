@@ -23,6 +23,9 @@ export default class DataBus {
     this.heroWillHit = false
     this.heroSide    = 0
     this.heroHit     = false
+    this.enemyHit    = false
+    this.eneyWillHit = false
+    this.eneySide    = 0
   }
   setHeroSide(row){
     this.heroSide = row < 2 ? LEFT:RIGHT
