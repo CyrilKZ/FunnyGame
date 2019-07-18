@@ -53,7 +53,7 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key] } } newObj.default = obj; return newObj } }
 
 	var global = GameGlobal
-
+	
 	function inject() {
 	  _window.addEventListener = _window.canvas.addEventListener = function (type, listener) {
 	    _window.document.addEventListener(type, listener)
@@ -699,7 +699,10 @@
 	    }
 
 	    return new _HTMLElement2.default(tagName)
-	  },
+		},
+		createElementNS: function createElementNS(nameSpace, tagName) {
+			return this.createElement(tagName)
+		},
 	  getElementById: function getElementById(id) {
 	    if (id === window.canvas.id) {
 	      return window.canvas

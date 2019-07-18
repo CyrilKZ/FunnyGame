@@ -1,9 +1,9 @@
-import DataBus from './databus'
-import Block from './world/block'
-import Hero from './world/hero'
+import DataBus from '../databus'
+import Block from '../world/block'
+import Hero from '../world/hero'
 //import TouchEvent from './runtime/touch'
 
-import * as THREE from './libs/three.min'
+import * as THREE from '../libs/three.min'
 
 const PLANE_WIDTH = 440
 const PLANE_LENGTH = 1000
@@ -11,6 +11,7 @@ const BASELINE_POS = -250
 const CAMERA_Z = Math.round(250 * Math.sqrt(3))
 const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
+const ANIMATION_FRAME = 100
 const LEFT = 1
 const RIGHT = 2
 const TOUCHBAR = 300
@@ -29,7 +30,7 @@ export default class GameStage {
 
     this.models = []
     this.hero = null
-    
+    this.animationOn = false
     this.setUpScene()
     
     
@@ -54,6 +55,7 @@ export default class GameStage {
     this.hero.model.material.dispose()
     delete(this.hero)
     this.hero = null
+    this.light.intensity = 0.5
   }
 
   setUpScene(){
@@ -87,6 +89,7 @@ export default class GameStage {
 
 
   restart(){  
+    this.animationOn = false
     databus.reset()
     this.clearModels()
     this.hero = new Hero()
@@ -98,9 +101,21 @@ export default class GameStage {
   
 
   loop() {
-    if(databus.heroHit === true){
+    if(this.animationOn === true){
+      if(databus.frame === ANIMATION_FRAME){
+        this.animationOn = false
+        databus.endFlag = true
+      }
+      databus.frame += 1
+      this.light.intensity -= 0.5 / ANIMATION_FRAME
       return
     }
+
+    if(databus.heroHit === true){
+      databus.frame = 0
+      this.animationOn = true
+      return
+    }    
     databus.frame++
     if(databus.frame % 40 === 0){
       let block = databus.pool.getItemByClass('block', Block)
@@ -122,12 +137,12 @@ export default class GameStage {
   }
 
   handleTouchEvents(res){
+    if(this.animationOn || databus.heroHit){
+      return
+    }
     if(res.type === databus.heroSide){      
       this.hero.move(res.swipe)
       //this.hero.model.material.color = 0xffeeff
-    }
-    if(databus.heroHit === true){
-      this.restart()
     }
   }
 }
