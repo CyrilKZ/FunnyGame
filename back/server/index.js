@@ -35,9 +35,10 @@ app.get('/logout', function (req, res) {
 });
 
 app.post('/team/create', function (req, res) {
-    team.teamHandler.create(req.body.openid);
+    let teamid = team.teamHandler.create(req.body.openid);
     res.json({
-        'result' : 0
+        'result': 0,
+        'teamid': teamid
     });
 });
 
@@ -49,8 +50,7 @@ app.post('/team/join', function (req, res) {
 });
 
 app.post('/team/exit', function (req, res) {
-    let team = 
-    team.teamHandler.join(req.body.openid, req.body.teamid);
+    team.teamHandler.exit(req.body.openid, req.body.teamid);
     res.json({
         'result' : 0
     });

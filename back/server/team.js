@@ -35,6 +35,10 @@ userHandler.login = function (openid) {
 }
 
 userHandler.logout = function (openid) {
+    let user = this.users[openid];
+    if(user.team){
+        user.team.delUser(user);
+    }
     delete this.users[openid];
 }
 
@@ -43,7 +47,7 @@ class User {
     constructor(openid) {
         this.id = openid;
         this.team = undefined;
-        this.role = -1;
+        this.companion = undefined;
     }
 }
 
@@ -56,12 +60,18 @@ teamHandler.create = function (openid) {
     let newteam = new Team(user, teamid);
     this.teams[teamid] = newteam;
     user.team = newteam;
+    return teamid;
 }
 
 teamHandler.join = function (openid, teamid){
     let team = this.teams[teamid];
     let user = userHandler.users[openid];
-    team.addUser(user);
+    if(team.addUser(user)){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 teamHandler.exit = function (openid, teamid){
@@ -78,14 +88,15 @@ teamHandler.destroy = function (team) {
 class Team {
     constructor(user, id) {
         this.id = id;
-        this.users = [];
-        this.users[0] = user;
-        user.role = 0;
+        this.users = [ user ];
+        user.team = this;
     }
 
     addUser(user) {
         if (this.users.length === 1) {
-            user.role = 1;
+            user.team = this;
+            this.users[0].companion = user;
+            user.companion = this.users[0];
             this.users[1] = user;
             return true;
         }
@@ -95,12 +106,15 @@ class Team {
     }
 
     delUser(user) {
-        this.users.splice(user.role, user.role);
+        let index = this.users.indexOf(user);
+        user.team = undefined;
+        user.companion = undefined;
+        this.users.splice(index, 1);
         if (this.users.length === 0) {
             teamHandler.destroy(this);
         }
-        else {
-            this.users[0].role = 0;
+        else{
+            this.users[0].companion = undefined;
         }
     }
 }
