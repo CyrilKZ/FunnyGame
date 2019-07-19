@@ -40,7 +40,16 @@ export default class Game {
     console.log(this.endStage)
     this.currentStage = store.welcome
     this.restart()
-
+    wx.showShareMenu({
+      withShareTicket: true
+    })
+    wx.onShareAppMessage(() => {
+      console.log('????')
+      console.log(store.roomID)
+      return {
+        query: store.roomID
+      }
+    })
   }
 
   restart(){  

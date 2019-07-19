@@ -1,5 +1,6 @@
 import DataBus from '../databus'
 import GameStore from '../gamestore'
+import Network from '../network'
 import Block from '../world/block'
 import Hero from '../world/hero'
 import Enemy from '../world/enemy'
@@ -22,6 +23,7 @@ const SCREEN_HEIGHT = 1080
 
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class GameStage {
   constructor() {
@@ -30,14 +32,24 @@ export default class GameStage {
     this.light = new THREE.DirectionalLight(0xffffff, 0.5)
     this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
 
-    this.absDistance = 0
     this.models = []
     this.hero = null
     this.enemy = null
     this.animationOn = false
     this.setUpScene()
     
-    
+    let self = this
+    network.onBrick = (res)=>{
+      if(store.host){
+        self.addBlockToSelf(res.row + 2, res.dis)
+      }
+      else{
+        self.addBlockToSelf(res.row, res.dis)
+      }      
+    }
+    network.onWin = (res)=>{
+      self.enemyHit = true
+    }
   }
 
   addModel(model){
@@ -102,14 +114,28 @@ export default class GameStage {
     databus.reset()
     this.clearModels()
     this.hero = new Hero()
-    this.hero.initSelf(2)
-    databus.setHeroSide(2)
-    this.scene.add(this.hero.model)
+    if(store.host){
+      this.hero.initSelf(2)
+      databus.setHeroSide(2)
+      this.scene.add(this.hero.model)
+      this.enemy = new Enemy()
+      this.enemy.initEnemy(1)
+      databus.setEnemySide(1)
+      this.scene.add(this.enemy.model)
+    }
+    else{
+      this.hero.initSelf(1)
+      databus.setHeroSide(1)
+      this.scene.add(this.hero.model)
+      this.enemy = new Enemy()
+      this.enemy.initEnemy(2)
+      databus.setEnemySide(2)
+      this.scene.add(this.enemy.model)
+    }
+    
+    
 
-    this.enemy = new Enemy()
-    this.enemy.initEnemy(1)
-    databus.setEnemySide(1)
-    this.scene.add(this.enemy.model)
+    
   }
 
   
@@ -136,7 +162,7 @@ export default class GameStage {
      
       
     }
-    this.absDistance += databus.speed
+    databus.absDistance += databus.speed
     databus.blocks.forEach((row)=>{
       row.forEach((item)=>{
         item.update(databus.speed)
@@ -154,6 +180,13 @@ export default class GameStage {
 
   generateRandomBlock(){
     
+  }
+
+  addBlockToSelf(row, absdis){
+    let block = databus.pool.getItemByClass('block', Block)
+    block.init(row, absdis - databus.absDistance)
+    databus.blocks[block.row].push(block)
+    this.addModel(block.model)
   }
 
   addBlockToEnemy(x){
@@ -185,6 +218,21 @@ export default class GameStage {
     block.init(row)
     databus.blocks[block.row].push(block)
     this.addModel(block.model)
+    if(store.host){
+      network.sendBrick({
+        "self": true,
+        "row": block.row,
+        "dis": this.absDistance
+      })
+    }
+    else{
+      network.sendBrick({
+        "self": true,
+        "row": block.row - 2,
+        "dis": this.absDistance
+      })
+    }
+    
   }
 
   handleTouchEvents(res){

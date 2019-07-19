@@ -1,5 +1,7 @@
 import Sprite from '../base/sprite'
 import DataBus from '../databus'
+import GameStore from '../gamestore'
+import Network from '../network'
 import * as THREE from '../libs/three.min'
 
 const HERO_RADIUS = 7
@@ -17,6 +19,8 @@ const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
 
 
 let databus = new DataBus()
+let store = new GameStore()
+let network = new Network()
 
 export default class Enemy extends Sprite {
   constructor() {
@@ -45,12 +49,34 @@ export default class Enemy extends Sprite {
     this.isMoveSafe = true
     this.blockAhead = null
     this.blockAround = null
+    this.moves = []
+
+    let self = this
+    network.onAction((res)=>{
+      self.addToMove(res.dir, res.safe)
+    })
   }
 
-  move(direction, safe) {
+  addToMove(direction, safe){
+    this.moves.push({
+      direction: direction,
+      safe: safe
+    })
+  }
+
+  move() {
     if (this.moving === true) {
       return
     }
+    let nextMove = null
+    if(this.moves.length > 0){
+      nextMove = this.moves.shift()
+    }
+    if(nextMove === null){
+      return
+    }
+    let direction = nextMove.direction
+    let safe = nextMove.safe
     switch (direction) {
       case MOVE_LEFT:
         if (this.row === 0 || this.row === 2) {
@@ -122,6 +148,7 @@ export default class Enemy extends Sprite {
   }
 
   update() {
+    this.move()
     if (this.moving) {
       if (this.direction === MOVE_UP) {
         if (this.movingframe === TOTALFRAME_Z) {
@@ -133,7 +160,7 @@ export default class Enemy extends Sprite {
           this.model.position.z = this.z + HERO_RADIUS
           if(!(this.canJumpSave && this.isJumpSafe)){
             if(this.is3DCollideWith(this.blockAhead)){
-              databus.enemyHit = true
+              //databus.enemyHit = true
             }
           }
         }
@@ -145,7 +172,7 @@ export default class Enemy extends Sprite {
         }
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
-            databus.enemyHit = true
+            //databus.enemyHit = true
           }
         }
       }
@@ -166,7 +193,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //databus.enemyHit = true
             }            
           }
         }
@@ -177,7 +204,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //databus.enemyHit = true
             }            
           }
         }
@@ -185,7 +212,7 @@ export default class Enemy extends Sprite {
     }
     else{
       if(this.is2DCollideWith(this.blockAhead)){
-        databus.enemyHit = true
+        //databus.enemyHit = true
       }
       
     }

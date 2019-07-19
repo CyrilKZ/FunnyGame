@@ -29,6 +29,7 @@ export default class DataBus {
 
     this.gameFlag    = false
     this.endFlag     = false
+    this.absDistance = 0
   }
   setHeroSide(row){
     this.heroSide = row < 2 ? LEFT:RIGHT

@@ -26,11 +26,13 @@ export default class WelcomeStage {
     this.enemyReady = false
     this.startAnimation = false
 
-    network.onStart = (data)=>{
-      console.log(data)
-    }
+    
 
     this.setUpScene()
+    network.onStart = (data)=>{
+      console.log(data)
+      this.handleTouchEvents()
+    }
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
@@ -69,25 +71,36 @@ export default class WelcomeStage {
       store.setSelfInfo(JSON.parse(res.rawData))
       store.openID = Math.round(Math.random()*10000)
       if(shareData === undefined){
+        store.host = true
         network.login(store.openID, ()=>{
           network.createTeam(store.openID, (res)=>{
-            store.teamID = res.teamID
+            console.log(res)
+            store.roomID = res.teamid
+            console.log(store.roomID)
             network.initSocket(()=>{
               network.sendOpenid(store.openID, ()=>{
-                network.sendReady(true, ()=>{
-
-                })
+                self.startAnimation = true
               }, self.fail)
             }, self.fail)
           }, self.fail)
         }, self.fail)
       }
       else{
-        console.log('old')
+        store.host = false
+        store.teamID = shareData
+        network.login(store.openID, ()=>{
+          network.joinTeam(store.openID, store.teamID ,(res)=>{
+            store.teamID = res.teamID
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                self.startAnimation = true
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
       }
       
       button.hide()
-      self.handleTouchEvents()
       
     })
   }

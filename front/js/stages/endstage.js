@@ -1,5 +1,6 @@
 import DataBus from '../databus'
 import GameStore from '../gamestore'
+import Network from '../network'
 import * as THREE from '../libs/three.min'
 
 const PLANE_WIDTH = 1920
@@ -8,6 +9,7 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class EndStage {
   constructor(){
@@ -22,7 +24,14 @@ export default class EndStage {
     this.enemyReady = false
     this.startAnimation = false
 
+
     this.setUpScene()
+
+    let self = this
+
+    network.onStart = (()=>{
+      self.startAnimation = true
+    })
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
@@ -46,7 +55,8 @@ export default class EndStage {
   handleTouchEvents(res){
     // if in range
     console.log(res)
-    this.startAnimation = true
+    network.sendReady(true)
+    //this.startAnimation = true
   }
   setEnemyStatus(status){
     this.enemyReady = status

@@ -13,6 +13,8 @@ export default class GameStore {
     this.gameFlag = false
     this.endFlag = false
 
+    this.host = false
+
     this.selfInfo = {
       nickName: '',
       picUrl:''

@@ -1,5 +1,8 @@
 import Sprite from '../base/sprite'
 import DataBus from '../databus'
+import GameStore from '../gamestore'
+import Network from '../network'
+
 import * as THREE from '../libs/three.min'
 
 const HERO_RADIUS = 7
@@ -18,6 +21,8 @@ const ENERGY_LIMIT = 100
 const ENERGY_REWARD = 50
 
 let databus = new DataBus()
+let store = new GameStore()
+let network = new Network()
 
 export default class Hero extends Sprite {
   constructor() {
@@ -69,6 +74,7 @@ export default class Hero extends Sprite {
     else{
       return
     }
+    let safe = true
     this.scanBlockAhead()
     switch (direction) {
       case MOVE_LEFT:
@@ -78,8 +84,10 @@ export default class Hero extends Sprite {
         this.moving = true
         this.direction = MOVE_LEFT
         this.speedX = -MOVING_SPEED
-       // midX = -MOVING_SPEED * TOTALFRAME_X + this.x
         this.checkMoveSafe()
+        if(!this.isMoveSafe){
+          safe = false
+        }
         break
       case MOVE_RIGHT:
         if (this.row === 1 || this.row === 3) {
@@ -88,18 +96,32 @@ export default class Hero extends Sprite {
         this.moving = true
         this.direction = MOVE_RIGHT
         this.speedX = MOVING_SPEED
-        //midX = MOVING_SPEED * TOTALFRAME_X + this.x
         this.checkMoveSafe()
+        if(!this.isMoveSafe){
+          safe = false
+        }
         break
       case MOVE_UP:
         this.moving = true
         this.direction = MOVE_UP
         this.speedZ = JUMPING_SPEED
         this.checkJumpSafe()
+        if(!this.isJumpSafe){
+          safe = false
+        }
         break
       default:
         return
     }
+    network.sendAction({
+      "pos": databus.absDistance,
+      "dir": direction,
+      "safe": safe
+    }, ()=>{
+      console.log(safe)
+    }, ()=>{
+      console.log('fail')
+    })
   }
 
   scanBlockAhead(){
@@ -223,7 +245,13 @@ export default class Hero extends Sprite {
         }
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
+
             databus.heroHit = true
+            network.sendFail(()=>{
+              console.log('fail')
+            }, ()=>{
+              console.log('didnt send')
+            })
           }
         }
       }
@@ -250,6 +278,11 @@ export default class Hero extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
+              network.sendFail(()=>{
+                console.log('fail')
+              }, ()=>{
+                console.log('didnt send')
+              })
               databus.heroHit = true
             }            
           }
@@ -258,6 +291,11 @@ export default class Hero extends Sprite {
     }
     else{
       if(this.is2DCollideWith(this.blockAhead)){
+        network.sendFail(()=>{
+          console.log('fail')
+        }, ()=>{
+          console.log('didnt send')
+        })
         databus.heroHit = true
       }
     }
