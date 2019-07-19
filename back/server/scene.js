@@ -15,10 +15,14 @@ function ready(user, data){
     user.setReady(data.state);
     if(user.team.checkReady()){
         user.socket.send('{"msg":"start"}', (err) => {
-            console.log(`[ERROR]: ${err}`);
+            if(err){
+                console.log(`[ERROR]: ${err}`);
+            }
         });
         user.companion.socket.send('{"msg":"start"}', (err) => {
-            console.log(`[ERROR]: ${err}`);
+            if(err){
+                console.log(`[ERROR]: ${err}`);
+            }
         });
     }
 }
@@ -27,7 +31,9 @@ function forwardData(user, data){
     let companion = user.companion;
     if(companion){
         companion.socket.send(JSON.stringify(data), (err) => {
-            console.log(`[ERROR]: ${err}`);
+            if(err){
+                console.log(`[ERROR]: ${err}`);
+            }
         });
     }
 }
@@ -36,7 +42,9 @@ function fail(user, data){
     let companion = user.companion;
     if(companion){
         companion.socket.send('{"msg":"win"}', (err) => {
-            console.log(`[ERROR]: ${err}`);
+            if(err){
+                console.log(`[ERROR]: ${err}`);
+            }
         });
     }
 }
