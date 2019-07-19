@@ -41,7 +41,7 @@ POST https://game.lbjthu.tech:10443/team/create
 ```json
 {
     'result': 0 //0为成功,非0为失败,
-    'team_id': 'asdfghhjkl'
+    'teamid': 'asdfghhjkl'
 }
 ```
 
