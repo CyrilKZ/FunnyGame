@@ -7,6 +7,7 @@ import GameStage from './stages/gamestage'
 import StartStage from './stages/startstage'
 import EndStage from './stages/endstage'
 import WelcomeStage from './stages/welcome'
+import netDemo from './net-demo'
 
 import * as THREE from './libs/three.min'
 
@@ -29,7 +30,8 @@ export default class Game {
     canvas.appendChild(renderer.domElement)
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
-    
+
+    this.netDemo = new netDemo()
     this.welcomeStage = new WelcomeStage()
     this.gameStage = new GameStage()
     this.startStage = new StartStage()

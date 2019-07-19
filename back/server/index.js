@@ -3,6 +3,7 @@ var ws = require('ws');
 var express = require('express');
 var bodyParser = require('body-parser');
 var team = require('./team');
+var scene = require('./scene');
 
 var app = express();
 app.use(bodyParser.json());  //body-parser 解析json格式数据
@@ -11,16 +12,7 @@ class Server {
     constructor(options, port) {
         this.httpsServer = https.createServer(options, app).listen(port);
         this.wssServer = new ws.Server({ server: this.httpsServer });
-        this.wssServer.on('connection', this.wssHandler);
-    }
-
-    wssHandler(wssSocket) {
-        wssSocket.on('message', function (msg) {
-            console.log(`[SERVER] Received: ${message}`);
-            ws.send(`ECHO: ${message}`, (err) => {
-
-            });
-        });
+        this.wssServer.on('connection', wssHandler);
     }
 }
 
@@ -45,15 +37,40 @@ app.post('/team/create', function (req, res) {
 app.post('/team/join', function (req, res) {
     team.teamHandler.join(req.body.openid, req.body.teamid);
     res.json({
-        'result' : 0
+        'result': 0
     });
 });
 
 app.post('/team/exit', function (req, res) {
     team.teamHandler.exit(req.body.openid, req.body.teamid);
     res.json({
-        'result' : 0
+        'result': 0
     });
 });
+
+function wssHandler(wssSocket) {
+    let user = undefined;
+    wssSocket.on('message', function (msg) {
+        let data = JSON.parse(msg);
+        if(user){
+            scene[data.msg](user, data);
+        }
+        else{
+            if(data.msg === 'open'){
+                user = scene.open(data.openid, wssSocket);
+            }
+            else{
+                console.log(`[SERVER] Received: ${msg}`);
+                wssSocket.send(`Unauthorized:${data.msg}`);
+            }
+        }
+    });
+}
+
+
+team.userHandler.login('1');
+team.userHandler.login('2');
+teamid = team.teamHandler.create('1');
+team.teamHandler.join('2', teamid);
 
 module.exports = Server;
