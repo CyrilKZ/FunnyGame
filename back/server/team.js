@@ -48,6 +48,20 @@ class User {
         this.id = openid;
         this.team = undefined;
         this.companion = undefined;
+        this.socket = undefined;
+        this.ready = false;
+    }
+
+    setSocket(wssSocket){
+        this.socket = wssSocket;
+    }
+
+    setReady(bool){
+        this.ready = bool;
+    }
+
+    reset(){
+        this.ready = false;
     }
 }
 
@@ -92,6 +106,12 @@ class Team {
         user.team = this;
     }
 
+    restart(){
+        for(let user of this.users){
+            user.reset();
+        }
+    }
+
     addUser(user) {
         if (this.users.length === 1) {
             user.team = this;
@@ -116,6 +136,19 @@ class Team {
         else{
             this.users[0].companion = undefined;
         }
+    }
+
+    checkReady(){
+        if(this.users.length !== 2){
+            return false;
+        }
+
+        for(let user of this.users){
+            if(user.ready === false){
+                return false;
+            }
+        }
+        return true;
     }
 }
 
