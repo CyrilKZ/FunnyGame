@@ -2,7 +2,7 @@ import DataBus from '../databus'
 import GameStore from '../gamestore'
 import Block from '../world/block'
 import Hero from '../world/hero'
-
+import Enemy from '../world/enemy'
 
 import * as THREE from '../libs/three.min'
 
@@ -33,6 +33,7 @@ export default class GameStage {
     this.absDistance = 0
     this.models = []
     this.hero = null
+    this.enemy = null
     this.animationOn = false
     this.setUpScene()
     
@@ -58,6 +59,11 @@ export default class GameStage {
     this.hero.model.material.dispose()
     delete(this.hero)
     this.hero = null
+
+    this.scene.remove(this.enemy.model)
+    this.enemy.model.geometry.dispose()
+    this.enemy.model.material.dispose()
+    delete(this.enemy)
     this.light.intensity = 0.5
   }
 
@@ -99,6 +105,11 @@ export default class GameStage {
     this.hero.initSelf(2)
     databus.setHeroSide(2)
     this.scene.add(this.hero.model)
+
+    this.enemy = new Enemy()
+    this.enemy.initEnemy(1)
+    databus.setEnemySide(1)
+    this.scene.add(this.enemy.model)
   }
 
   
@@ -114,7 +125,7 @@ export default class GameStage {
       return
     }
 
-    if(databus.heroHit === true){
+    if(databus.heroHit === true || databus.enemyHit === true){
       databus.frame = 0
       this.animationOn = true
       return

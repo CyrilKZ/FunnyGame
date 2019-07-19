@@ -61,8 +61,10 @@ export default class WelcomeStage {
       store.setSelfInfo(JSON.parse(res.rawData))
       button.hide()
       self.handleTouchEvents()
+      
     })
   }
+  
   
 
   handleTouchEvents(res){

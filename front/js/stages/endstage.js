@@ -1,4 +1,5 @@
 import DataBus from '../databus'
+import GameStore from '../gamestore'
 import * as THREE from '../libs/three.min'
 
 const PLANE_WIDTH = 1920
@@ -6,6 +7,7 @@ const PLANE_LENGTH = 1080
 const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
+let store = new GameStore()
 
 export default class EndStage {
   constructor(){

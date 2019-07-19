@@ -160,12 +160,10 @@ export default class Hero extends Sprite {
 
   checkMoveSafe(){
     this.blockAround = null    
-    //console.log(this.row)
     if(this.direction === MOVE_LEFT){
       for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
         if (databus.blocks[this.row-1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row-1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -174,7 +172,6 @@ export default class Hero extends Sprite {
       for (let i = 0; i < databus.blocks[this.row+1].length; ++i) {
         if (databus.blocks[this.row+1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row+1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -262,13 +259,11 @@ export default class Hero extends Sprite {
     else{
       if(this.is2DCollideWith(this.blockAhead)){
         databus.heroHit = true
-        //console.log('direct hit')
       }
     }
     this.updateSaveInfo()
     if((!this.isJumpSafe) || (!this.isMoveSafe) || ((!this.canJumpSave)&&(!this.canMoveSave))){
       databus.heroWillHit = true
-      //console.log('will hit')
     }
     this.energy += 1
     if(this.energy > ENERGY_LIMIT){

@@ -2,7 +2,7 @@ import Sprite from '../base/sprite'
 import DataBus from '../databus'
 import * as THREE from '../libs/three.min'
 
-const HERO_RADIUS = 8
+const HERO_RADIUS = 7
 const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
@@ -23,7 +23,7 @@ export default class Enemy extends Sprite {
     super(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
   }
   initEnemy(row) {
-    let geometry = new THREE.IcosahedronGeometry(HERO_RADIUS, 2)
+    let geometry = new THREE.BoxGeometry(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
     let metarial = new THREE.MeshLambertMaterial({ color: 0xee22ff })
     this.model = new THREE.Mesh(geometry, metarial)
     this.row = row
@@ -31,7 +31,7 @@ export default class Enemy extends Sprite {
     this.y = HERO_BASELINE
     this.z = 0
     this.movingframe = 0
-    this.model.position.set(this.x + HERO_RADIUS, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
+    this.model.position.set(this.x + HERO_RADIUS, this.y - HERO_RADIUS, this.z + HERO_RADIUS)
     this.model.castShadow = true
     this.model.visible = true
     this.visible = true
@@ -85,7 +85,7 @@ export default class Enemy extends Sprite {
 
   findBlockAhead(){
     for (let i = 0; i < databus.blocks[this.row].length; ++i) {
-      if (databus.blocks[this.row][i].y > this.y) {
+      if (databus.blocks[this.row][i].y > this.y  - this.lengthY + 1) {
         this.blockAhead = databus.blocks[this.row][i]
         break
       }
@@ -98,12 +98,10 @@ export default class Enemy extends Sprite {
 
   findBlockAround(){
     this.blockAround = null
-    //console.log(this.row)
     if(this.direction === MOVE_LEFT){
       for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
         if (databus.blocks[this.row-1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row-1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -112,7 +110,6 @@ export default class Enemy extends Sprite {
       for (let i = 0; i < databus.blocks[this.row+1].length; ++i) {
         if (databus.blocks[this.row+1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row+1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -125,7 +122,6 @@ export default class Enemy extends Sprite {
   }
 
   update() {
-    //console.log('update')
     if (this.moving) {
       if (this.direction === MOVE_UP) {
         if (this.movingframe === TOTALFRAME_Z) {
@@ -138,7 +134,6 @@ export default class Enemy extends Sprite {
           if(!(this.canJumpSave && this.isJumpSafe)){
             if(this.is3DCollideWith(this.blockAhead)){
               databus.enemyHit = true
-              //console.log('hit when jumping')
             }
           }
         }
@@ -151,7 +146,6 @@ export default class Enemy extends Sprite {
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
             databus.enemyHit = true
-            //console.log('hit when jumping')
           }
         }
       }
@@ -173,7 +167,6 @@ export default class Enemy extends Sprite {
             
             if(this.is2DCollideWith(this.blockAround)){
               databus.enemyHit = true
-              //console.log('hit when moving')
             }            
           }
         }
@@ -185,7 +178,6 @@ export default class Enemy extends Sprite {
             
             if(this.is2DCollideWith(this.blockAround)){
               databus.enemyHit = true
-              //console.log('hit when moving')
             }            
           }
         }
@@ -194,7 +186,6 @@ export default class Enemy extends Sprite {
     else{
       if(this.is2DCollideWith(this.blockAhead)){
         databus.enemyHit = true
-        //console.log('direct hit')
       }
       
     }

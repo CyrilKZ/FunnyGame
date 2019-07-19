@@ -24,8 +24,8 @@ export default class DataBus {
     this.heroSide    = 0
     this.heroHit     = false
     this.enemyHit    = false
-    this.eneyWillHit = false
-    this.eneySide    = 0
+    this.enemyWillHit = false
+    this.enemySide    = 0
 
     this.gameFlag    = false
     this.endFlag     = false
@@ -33,6 +33,9 @@ export default class DataBus {
   setHeroSide(row){
     this.heroSide = row < 2 ? LEFT:RIGHT
     //console.log(this.heroSide)
+  }
+  setEnemySide(row){
+    this.enemySide = row < 2 ? LEFT:RIGHT
   }
 
   removeBlocks(block){
