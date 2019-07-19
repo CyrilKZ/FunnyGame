@@ -19,8 +19,8 @@ export default class TouchEvents {
     let info = {
       initX: x,
       initY: y,
-      endX: -1,
-      endY: -1,
+      endX:  x,
+      endY:  y,
       type: type
     }
     this.touchMap.set(e.identifier, info)  
@@ -49,23 +49,30 @@ export default class TouchEvents {
       dX: info.endX - info.initX,
       dY: info.endY - info.initY,
       swipe: 0,
-      type: info.type
+      type: info.type,
+      endType: 0
     }
     if(Math.abs(res.dX) > Math.abs(res.dY)){
       if(res.dX > 0){
         res.swipe = RIGHT
       }
-      else{
+      else if (res.dX < 0){
         res.swipe = LEFT
       }
     }
-    else{
+    else {
       if(res.dY < 0){
         res.swipe = TOP
       }
       else{
         res.swipe = 0
       }
+    }
+    if(res.endX < innerWidth / 2){
+      res.endType = LEFT
+    }
+    else{
+      res.endType = RIGHT
     }
     return res
   }

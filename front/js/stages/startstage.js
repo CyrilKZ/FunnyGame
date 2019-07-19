@@ -28,9 +28,6 @@ export default class StartStage {
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
     let texture = new THREE.TextureLoader().load( './resources/startbg.png' )
-    //texture.wrapS = THREE.RepeatWrapping
-    //texture.wrapT = THREE.RepeatWrapping
-    //texture.repeat.set( 1, 1 )
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
@@ -46,8 +43,7 @@ export default class StartStage {
   }
 
   handleTouchEvents(res){
-    // if in range
-    console.log(res)
+
     this.startAnimation = true
   }
   setEnemyStatus(status){

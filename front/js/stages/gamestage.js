@@ -12,6 +12,7 @@ const CAMERA_Z = Math.round(250 * Math.sqrt(3))
 const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
 const ANIMATION_FRAME = 100
+const BLOCK_MIN_DISTANCE = 56
 const LEFT = 1
 const RIGHT = 2
 const TOUCHBAR = 300
@@ -28,6 +29,7 @@ export default class GameStage {
     this.light = new THREE.DirectionalLight(0xffffff, 0.5)
     this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
 
+    this.absDistance = 0
     this.models = []
     this.hero = null
     this.animationOn = false
@@ -118,17 +120,19 @@ export default class GameStage {
     }    
     databus.frame++
     if(databus.frame % 40 === 0){
-      let block = databus.pool.getItemByClass('block', Block)
-      block.init(Math.round(Math.random() * 3), 1)
-      databus.blocks[block.row].push(block)
-      this.addModel(block.model)
+      
+     
+      
     }
+    this.absDistance += databus.speed
     databus.blocks.forEach((row)=>{
       row.forEach((item)=>{
         item.update(databus.speed)
       })
     })
-    databus.speed += databus.accel
+    if(databus.speed < 3){
+      databus.speed += databus.accel
+    }    
     this.hero.update()
     
   }
@@ -136,13 +140,48 @@ export default class GameStage {
     renderer.render(this.scene, this.camera)
   }
 
+  addBlockToEnemy(x){
+    if(this.hero.blockPonits < 1){
+      return
+    }
+    console.log(x)
+    let row
+    if(x < window.innerWidth / 4){
+      row = 0
+    }
+    else if(x < window.innerWidth / 2){
+      row = 1
+    }
+    else if(x < window.innerWidth *3 / 4){
+      row = 2
+    }
+    else{
+      row = 3
+    }
+    if(
+        databus.blocks[row].length > 0 && 
+        databus.blocks[row][databus.blocks[row].length - 1].y > -BLOCK_MIN_DISTANCE
+      ){
+      return
+    }
+    this.hero.blockPonits -= 1
+    let block = databus.pool.getItemByClass('block', Block)
+    block.init(row)
+    databus.blocks[block.row].push(block)
+    this.addModel(block.model)
+  }
+
   handleTouchEvents(res){
     if(this.animationOn || databus.heroHit){
       return
     }
     if(res.type === databus.heroSide){      
-      this.hero.move(res.swipe)
-      //this.hero.model.material.color = 0xffeeff
+      this.hero.addMove(res.swipe)
+    }
+    else if(res.endY > window.innerHeight / 4 * 3 && res.endType !== databus.heroSide){
+      {
+        this.addBlockToEnemy(res.endX)
+      }
     }
   }
 }

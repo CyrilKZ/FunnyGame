@@ -18,8 +18,8 @@ export default class Block extends Sprite{
     let metarial = new THREE.MeshLambertMaterial({ color: 0xccddee })
     this.model = new THREE.Mesh(geometry, metarial)  
   }
-  init(row){    
-    this.y = 40
+  init(row ,y = 0){    
+    this.y = y
     this.x = (row - 2) * BLOCK_X
     this.z = 0
     this.row = row
