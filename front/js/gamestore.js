@@ -35,6 +35,9 @@ export default class GameStore {
     this.start = 1
     this.game = 2
     this.end = 3
+
+    this.roomID = ''
+    this.openID = ''
   }
   setSelfInfo(info){
     this.selfInfo.nickName = info.nickName

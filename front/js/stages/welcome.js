@@ -12,6 +12,7 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class WelcomeStage {
   constructor(){
@@ -24,6 +25,10 @@ export default class WelcomeStage {
     this.selfReady = false
     this.enemyReady = false
     this.startAnimation = false
+
+    network.onStart = (data)=>{
+      console.log(data)
+    }
 
     this.setUpScene()
   }
@@ -55,10 +60,32 @@ export default class WelcomeStage {
       }
     })
     let button = this.doWeHaveToUseThis
+    this.fail = function(err){
+      console.log(err)
+    }
     let self = this
     this.doWeHaveToUseThis.onTap((res) => {
-      //console.log(JSON.parse(res.rawData))
+      let shareData = wx.getLaunchOptionsSync().query.teamID
       store.setSelfInfo(JSON.parse(res.rawData))
+      store.openID = Math.round(Math.random()*10000)
+      if(shareData === undefined){
+        network.login(store.openID, ()=>{
+          network.createTeam(store.openID, (res)=>{
+            store.teamID = res.teamID
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                network.sendReady(true, ()=>{
+
+                })
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }
+      else{
+        console.log('old')
+      }
+      
       button.hide()
       self.handleTouchEvents()
       
@@ -67,8 +94,7 @@ export default class WelcomeStage {
   
   
 
-  handleTouchEvents(res){
-
+  handleTouchEvents(res = null){
     this.startAnimation = true
   }
   setEnemyStatus(status){

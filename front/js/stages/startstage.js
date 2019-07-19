@@ -14,6 +14,7 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class StartStage {
   constructor(){

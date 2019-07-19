@@ -152,6 +152,10 @@ export default class GameStage {
     renderer.render(this.scene, this.camera)
   }
 
+  generateRandomBlock(){
+    
+  }
+
   addBlockToEnemy(x){
     if(this.hero.blockPonits < 1){
       return

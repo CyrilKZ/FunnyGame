@@ -31,7 +31,7 @@ export default class Game {
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
 
-    this.netDemo = new netDemo()
+    //this.netDemo = new netDemo()
     this.welcomeStage = new WelcomeStage()
     this.gameStage = new GameStage()
     this.startStage = new StartStage()

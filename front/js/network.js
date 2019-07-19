@@ -1,5 +1,12 @@
+let instance
+
 export default class Network {
   constructor() {
+    if(instance){
+      return instance
+    }
+    instance = this
+    
     this.url = 'https://game.lbjthu.tech:10443/'
     this.wssUrl = 'wss://game.lbjthu.tech:10443/'
     this.socket = undefined
