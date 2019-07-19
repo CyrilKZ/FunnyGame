@@ -67,10 +67,4 @@ function wssHandler(wssSocket) {
     });
 }
 
-
-team.userHandler.login('1');
-team.userHandler.login('2');
-teamid = team.teamHandler.create('1');
-team.teamHandler.join('2', teamid);
-
 module.exports = Server;
