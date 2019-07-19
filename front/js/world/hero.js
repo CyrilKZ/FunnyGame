@@ -14,7 +14,8 @@ const MOVE_LEFT = 1
 const MOVE_RIGHT = 2
 const TOTALFRAME_X = ROW_WIDTH / MOVING_SPEED
 const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
-
+const ENERGY_LIMIT = 100
+const ENERGY_REWARD = 50
 
 let databus = new DataBus()
 
@@ -45,11 +46,27 @@ export default class Hero extends Sprite {
     this.isMoveSafe = true
     this.blockAhead = null
     this.blockAround = null
+    this.moves = []
+    this.blockPonits = 10
+    this.energy = 0
   }
 
-  move(direction) {
-    //console.log(direction)
+  addMove(direction){
+    if(this.moves.length < 2){
+      this.moves.push(direction)
+    }
+  }
+
+  updateMove() {
     if (this.moving === true) {
+      return
+    }
+    
+    let direction
+    if(this.moves.length > 0){
+      direction = this.moves.shift()
+    }
+    else{
       return
     }
     this.scanBlockAhead()
@@ -86,6 +103,7 @@ export default class Hero extends Sprite {
   }
 
   scanBlockAhead(){
+    this.blockAhead = null
     for (let i = 0; i < databus.blocks[this.row].length; ++i) {
       if (databus.blocks[this.row][i].y > this.y - this.lengthY + 1) {
         this.blockAhead = databus.blocks[this.row][i]
@@ -124,7 +142,7 @@ export default class Hero extends Sprite {
     if(this.blockAhead === null){
       this.isJumpSafe = true
       return
-    }
+    }    
     let block = this.blockAhead
     let vx = databus.speed
     let a = databus.accel
@@ -141,7 +159,7 @@ export default class Hero extends Sprite {
   }
 
   checkMoveSafe(){
-    this.blockAround = null
+    this.blockAround = null    
     //console.log(this.row)
     if(this.direction === MOVE_LEFT){
       for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
@@ -183,7 +201,7 @@ export default class Hero extends Sprite {
   }
 
   update() {
-    //console.log('update')
+    this.updateMove()
     if (this.moving) {
       if (this.direction === MOVE_UP) {
         if (this.movingframe === TOTALFRAME_Z) {
@@ -193,6 +211,11 @@ export default class Hero extends Sprite {
           this.z = 0
           this.speedZ = 0
           this.model.position.z = this.z + HERO_RADIUS
+          if(this.blockAhead !==null && this.y - this.lengthY >= this.blockAhead.y){
+            console.log(this.blockAhead.y)
+            console.log('jump dodge')
+            this.energy += ENERGY_REWARD
+          }
           this.scanBlockAhead()
         }
         else {
@@ -204,7 +227,6 @@ export default class Hero extends Sprite {
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
             databus.heroHit = true
-            //console.log('hit when jumping')
           }
         }
       }
@@ -232,7 +254,6 @@ export default class Hero extends Sprite {
             
             if(this.is2DCollideWith(this.blockAround)){
               databus.heroHit = true
-              //console.log('hit when moving')
             }            
           }
         }
@@ -249,6 +270,10 @@ export default class Hero extends Sprite {
       databus.heroWillHit = true
       //console.log('will hit')
     }
-    
+    this.energy += 1
+    if(this.energy > ENERGY_LIMIT){
+      this.energy -= ENERGY_REWARD
+      this.blockPonits += 1
+    }
   }
 }
