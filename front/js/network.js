@@ -1,15 +1,24 @@
 export default class Network {
   constructor() {
     this.url = 'https://game.lbjthu.tech:10443/'
+    this.wssUrl = 'wss://game.lbjthu.tech:10443/'
+    this.socket = undefined
+
+    // data格式见https://github.com/CyrilKZ/FunnyGame/blob/lbj-back/back/wss.md#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B9%BF%E6%92%AD%E6%95%B0%E6%8D%AE
+    this.onStart = function (data) { console.log(`onStart: ${data}`)}
+    this.onWin = function (data) { console.log(`onWin: ${data}`) }
+    this.onBrick = function (data) { console.log(`onBrick: ${data}`) }
+    this.onAction = function (data) { console.log(`onAction: ${data}`) }
   }
+
   login(openid, sucess, fail) {
     let options = {
       'url': this.url + 'login',
-      'data':{
-        'openid' : openid
+      'data': {
+        'openid': openid
       },
       'method': 'GET',
-      'success' : function(res){
+      'success': function (res) {
         sucess(res.data)  // 正常data为'Welcome'
       },
       'fail': fail
@@ -77,5 +86,88 @@ export default class Network {
       'fail': fail
     }
     wx.request(options)
+  }
+
+  initSocket(success, fail) {
+    this.socket = wx.connectSocket({
+      'url': this.wssUrl,
+      'fail': fail
+    })
+    this.socket.onOpen(success)
+    let self = this
+    this.socket.onMessage((res) => {
+      self.onMessage(res.data)
+    })
+  }
+
+  onMessage(msg) {
+    let data = JSON.parse(msg)
+    let fun = {
+      'start': this.onStart,
+      'brick': this.onBrick,
+      'win': this.onWin,
+      'action': this.onAction,
+    }
+    fun[data.msg](data)
+  }
+
+  sendOpenid(openid, success, fail){
+    this.socket.send({
+      'data':JSON.stringify({
+        'msg': 'open',
+        'openid': openid
+      }),
+      'success':success,
+      'fail': fail
+    })
+  }
+
+  sendReady(state, success, fail){
+    this.socket.send({
+      'data': JSON.stringify({
+        'msg': 'ready',
+        'state': state
+      }),
+      'success': success,
+      'fail': fail
+    })
+  }
+
+  sendBrick(data, success, fail){
+    data['msg'] = 'brick'
+    this.socket.send({
+      'data': JSON.stringify(data),
+      'success': success,
+      'fail': fail
+    })
+  }
+
+  sendAction(data, success, fail) {
+    data['msg'] = 'action'
+    this.socket.send({
+      'data': JSON.stringify(data),
+      'success': success,
+      'fail': fail
+    })
+  }
+
+  sendFail(success, fail) {
+    this.socket.send({
+      'data': JSON.stringify({
+        'msg':'fail',
+      }),
+      'success': success,
+      'fail': fail
+    })
+  }
+
+  sendRestart(success, fail) {
+    this.socket.send({
+      'data': JSON.stringify({
+        'msg': 'restart',
+      }),
+      'success': success,
+      'fail': fail
+    })
   }
 }
