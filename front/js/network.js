@@ -72,7 +72,7 @@ export default class Network {
     wx.request(options)
   }
 
-  joinTeam(openid, sucess, fail) {
+  joinTeam(openid, teamid, sucess, fail) {
     let options = {
       'url': this.url + 'team/join',
       'data': {
