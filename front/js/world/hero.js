@@ -2,7 +2,7 @@ import Sprite from '../base/sprite'
 import DataBus from '../databus'
 import * as THREE from '../libs/three.min'
 
-const HERO_RADIUS = 6
+const HERO_RADIUS = 7
 const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10

@@ -1,7 +1,8 @@
 import DataBus from '../databus'
+import GameStore from '../gamestore'
 import Block from '../world/block'
 import Hero from '../world/hero'
-//import TouchEvent from './runtime/touch'
+
 
 import * as THREE from '../libs/three.min'
 
@@ -20,7 +21,7 @@ const SCREEN_WIDTH = 1920
 const SCREEN_HEIGHT = 1080
 
 let databus = new DataBus()
-
+let store = new GameStore()
 
 export default class GameStage {
   constructor() {
@@ -106,7 +107,7 @@ export default class GameStage {
     if(this.animationOn === true){
       if(databus.frame === ANIMATION_FRAME){
         this.animationOn = false
-        databus.endFlag = true
+        store.endFlag = true
       }
       databus.frame += 1
       this.light.intensity -= 0.5 / ANIMATION_FRAME
