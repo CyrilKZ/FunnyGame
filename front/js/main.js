@@ -1,20 +1,21 @@
 import DataBus from './databus'
+import GameStore from './gamestore'
 import Block from './world/block'
 import Hero from './world/hero'
 import TouchEvent from './runtime/touch'
 import GameStage from './stages/gamestage'
 import StartStage from './stages/startstage'
 import EndStage from './stages/endstage'
+import WelcomeStage from './stages/welcome'
 
 import * as THREE from './libs/three.min'
 
 let databus = new DataBus()
+let store = new GameStore()
 
 const SCREEN_WIDTH = 1920
 const SCREEN_HEIGHT = 1080
-const GAME = 2
-const START = 1
-const END = 3
+
 let ctx = canvas.getContext('webgl')
 let renderer = new THREE.WebGLRenderer(ctx)
 let touchevents = new TouchEvent()
@@ -23,36 +24,37 @@ let touchevents = new TouchEvent()
 
 export default class Game {
   constructor() {
-    //console.log(d2Ctx)
     this.aniID = 0
     this.initTouchEvents()
     canvas.appendChild(renderer.domElement)
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
     
+    this.welcomeStage = new WelcomeStage()
     this.gameStage = new GameStage()
     this.startStage = new StartStage()
+    
     this.endStage = new EndStage()
     console.log(this.endStage)
-    this.currentStage = START
+    this.currentStage = store.welcome
     this.restart()
 
   }
 
   restart(){  
-    switch (this.currentStage) {
-      case START:
-        this.startStage.restart()
-        break
-      case GAME:
-        this.gameStage.restart()
-        break
-      case END:
-        this.endStage.restart()
-        break
-      default:
-        break
-    }
+    // switch (this.currentStage) {
+    //   case store.start:
+    //     this.startStage.restart()
+    //     break
+    //   case store.game:
+    //     this.gameStage.restart()
+    //     break
+    //   case store.end:
+    //     this.endStage.restart()
+    //     break
+    //   default:
+    //     break
+    // }
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
     this.aniID = window.requestAnimationFrame(
@@ -64,28 +66,37 @@ export default class Game {
   
 
   loop() {
-    if(databus.gameFlag){
+    if(store.startFlag){
       console.log('switch')
-      this.currentStage = GAME
-      databus.gameFlag = false
+      this.currentStage = store.start
+      store.startFlag = false
+      this.startStage.restart()
+    }
+    else if(store.gameFlag){
+      console.log('switch')
+      this.currentStage = store.game
+      store.gameFlag = false
       this.gameStage.restart()
       //renderer.clear()
     }
     else if(databus.endFlag){
       console.log('switch')
-      this.currentStage = END
-      databus.endFlag = false
+      this.currentStage = store.end
+      store.endFlag = false
       this.endStage.restart()
       //renderer.clear()
     }
     switch (this.currentStage) {
-      case START:
+      case store.welcome:
+        this.welcomeStage.loop()
+        break
+      case store.start:
         this.startStage.loop()
         break
-      case GAME:
+      case store.game:
         this.gameStage.loop()
         break
-      case END:
+      case store.end:
         this.endStage.loop()
       default:
         break
@@ -99,13 +110,16 @@ export default class Game {
       canvas
       )
       switch (this.currentStage) {
-        case START:
+        case store.welcome:
+          this.welcomeStage.render(renderer)
+          break
+        case store.start:
           this.startStage.render(renderer)
           break
-        case GAME:
+        case store.game:
           this.gameStage.render(renderer)
           break
-        case END:
+        case store.end:
           this.endStage.render(renderer)
         default:
           break
@@ -113,13 +127,13 @@ export default class Game {
   }
   handleTouchEvents(res){
     switch (this.currentStage) {
-      case START:
+      case store.start:
         this.startStage.handleTouchEvents(res)
         break
-      case GAME:
+      case store.game:
         this.gameStage.handleTouchEvents(res)
         break
-      case END:
+      case store.end:
         this.endStage.handleTouchEvents(res)
         break
       default:
