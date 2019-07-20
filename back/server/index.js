@@ -16,6 +16,12 @@ class Server {
     }
 }
 
+app.get('/reset', function (req, res) {
+    team.userHandler.users = {};
+    team.teamHandler.teams = [];
+    res.status(200).send('Finished');
+});
+
 app.get('/login', function (req, res) {
     team.userHandler.login(req.query.openid);
     res.status(200).send('Welcome');
@@ -35,10 +41,16 @@ app.post('/team/create', function (req, res) {
 });
 
 app.post('/team/join', function (req, res) {
-    team.teamHandler.join(req.body.openid, req.body.teamid);
-    res.json({
-        'result': 0
-    });
+    if (team.teamHandler.join(req.body.openid, req.body.teamid, req.body.userinfo)) {
+        res.json({
+            'result': 0
+        });
+    }
+    else{
+        res.json({
+            'result': 1
+        });
+    }
 });
 
 app.post('/team/exit', function (req, res) {
@@ -52,14 +64,15 @@ function wssHandler(wssSocket) {
     let user = undefined;
     wssSocket.on('message', function (msg) {
         let data = JSON.parse(msg);
-        if(user){
+        if (user) {
+            console.log(`${user.id}: ${msg}`);
             scene[data.msg](user, data);
         }
-        else{
-            if(data.msg === 'open'){
+        else {
+            if (data.msg === 'open') {
                 user = scene.open(data.openid, wssSocket);
             }
-            else{
+            else {
                 console.log(`[SERVER] Received: ${msg}`);
                 wssSocket.send(`Unauthorized:${data.msg}`);
             }

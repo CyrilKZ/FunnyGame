@@ -1,55 +1,65 @@
 var team = require('./team');
 
-function open(openid, wssSocket){
+function open(openid, wssSocket) {
     let user = team.userHandler.users[openid];
-    if(user){
+    if (user) {
         user.setSocket(wssSocket);
         return user;
     }
-    else{
+    else {
         return false;
     }
 }
 
-function ready(user, data){
+function ready(user, data) {
     user.setReady(data.state);
-    if(user.team.checkReady()){
+    let companion = user.companion;
+    companion.socket.send(JSON.stringify(data), (err) => {
+        if (err) {
+            console.log(`[ERROR]: ${err}`);
+        }
+    });
+    if (user.team.checkReady()) {
         user.socket.send('{"msg":"start"}', (err) => {
-            if(err){
+            console.log({ "msg": "start" });
+            if (err) {
                 console.log(`[ERROR]: ${err}`);
             }
         });
         user.companion.socket.send('{"msg":"start"}', (err) => {
-            if(err){
+            if (err) {
                 console.log(`[ERROR]: ${err}`);
             }
         });
     }
 }
 
-function forwardData(user, data){
+function forwardData(user, data) {
     let companion = user.companion;
-    if(companion){
-        companion.socket.send(JSON.stringify(data), (err) => {
-            if(err){
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
-    }
+    // if(companion){
+    companion.socket.send(JSON.stringify(data), (err) => {
+        if (err) {
+            console.log(`[ERROR]: ${err}`);
+        }
+        else{
+            console.log('Forwarded');
+        }
+    });
+    // }
 }
 
-function fail(user, data){
+function fail(user, data) {
     let companion = user.companion;
-    if(companion){
-        companion.socket.send('{"msg":"win"}', (err) => {
-            if(err){
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
-    }
+    // if(companion){
+    companion.socket.send('{"msg":"win"}', (err) => {
+        if (err) {
+            console.log(`[ERROR]: ${err}`);
+        }
+    });
+    // }
 }
 
-function restart(user, data){
+function restart(user, data) {
     user.team.restart();
 }
 

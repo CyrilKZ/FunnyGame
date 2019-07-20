@@ -33,15 +33,15 @@ POST https://game.lbjthu.tech:10443/team/create
 
 ```json
 {
-    'openid': ''
+    "openid": ""
 }
 ```
 
 返回
 ```json
 {
-    'result': 0 //0为成功,非0为失败,
-    'teamid': 'asdfghhjkl'
+    "result": 0, //0为成功,非0为失败,
+    "teamid": "asdfghhjkl"
 }
 ```
 
@@ -54,15 +54,18 @@ POST https://game.lbjthu.tech:10443/team/join
 
 ```json
 {
-    'openid': 'asdfghjkl',
-    'teamid': 'asdfghjkl'
+    "openid": "asdfghjkl",
+    "teamid": "asdfghjkl",
+    "userinfo":{
+        // 任何你发的用户信息，会在稍后通过WebSocket发给房间的另一个用户
+    }
 }
 ```
 
 成功返回
 ```
 {
-    'result': 0 //0为成功,非0为失败
+    "result": 0 //0为成功,非0为失败
 }
 ```
 
@@ -75,14 +78,14 @@ POST https://game.lbjthu.tech:10443/team/exit
 
 ```json
 {
-    'openid': 'asdfghjkl',
-    'teamid': 'asdfghjkl'
+    "openid": "asdfghjkl",
+    "teamid': "asdfghjkl"
 }
 ```
 
 返回
 ```json
 {
-    'result': 0 //0为成功,非0为失败
+    "result": 0 //0为成功,非0为失败
 }
 ```
