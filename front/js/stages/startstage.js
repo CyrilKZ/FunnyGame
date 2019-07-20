@@ -14,6 +14,7 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class StartStage {
   constructor(){
@@ -42,6 +43,11 @@ export default class StartStage {
     this.scene.add(this.backgound)
     this.scene.add(this.light)
     this.scene.add(this.aLight)
+
+    let self = this
+    network.onStart = (()=>{
+      self.startAnimation = true
+    })
     
   }
   restart(){
@@ -65,8 +71,10 @@ export default class StartStage {
   
 
   handleTouchEvents(res){
+    network.sendReady(true, ()=>{
+      this.selfReady = true
+    })
 
-    this.startAnimation = true
   }
   setEnemyStatus(status){
     this.enemyReady = status
