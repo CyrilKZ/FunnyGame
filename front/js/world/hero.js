@@ -10,7 +10,7 @@ const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
 const JUMPING_SPEED = 9
-const GRAVITY = 0.5
+const GRAVITY = 0.4
 const NO_MOVE = 0
 const MOVE_UP = 3
 const MOVE_LEFT = 1
@@ -118,7 +118,7 @@ export default class Hero extends Sprite {
       "dir": direction,
       "safe": safe
     }, ()=>{
-      console.log(safe)
+      //console.log(safe)
     }, ()=>{
       console.log('fail')
     })

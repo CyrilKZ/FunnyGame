@@ -14,7 +14,7 @@ const CAMERA_Z = Math.round(250 * Math.sqrt(3))
 const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
 const ANIMATION_FRAME = 100
-const BLOCK_MIN_DISTANCE = 56
+const BLOCK_MIN_DISTANCE = 64
 const LEFT = 1
 const RIGHT = 2
 const TOUCHBAR = 300
@@ -39,17 +39,21 @@ export default class GameStage {
     this.setUpScene()
     
     let self = this
-    network.onBrick = (res)=>{
+    network.onBrick = ((res)=>{
+      console.log(`brick info: ${res}`)
+      console.log(JSON.stringify(res))
+      console.log(res.row)
+      console.log(res.dis)
       if(store.host){
         self.addBlockToSelf(res.row + 2, res.dis)
       }
       else{
         self.addBlockToSelf(res.row, res.dis)
       }      
-    }
-    network.onWin = (res)=>{
-      self.enemyHit = true
-    }
+    })
+    network.onWin = ((res)=>{
+      databus.enemyHit = true
+    })
   }
 
   addModel(model){
@@ -172,7 +176,7 @@ export default class GameStage {
       databus.speed += databus.accel
     }    
     this.hero.update()
-    
+    this.enemy.update()
   }
   render(renderer) {
     renderer.render(this.scene, this.camera)
@@ -184,7 +188,7 @@ export default class GameStage {
 
   addBlockToSelf(row, absdis){
     let block = databus.pool.getItemByClass('block', Block)
-    block.init(row, absdis - databus.absDistance)
+    block.init(row)
     databus.blocks[block.row].push(block)
     this.addModel(block.model)
   }
@@ -213,30 +217,40 @@ export default class GameStage {
       ){
       return
     }
-    this.hero.blockPonits -= 1
-    let block = databus.pool.getItemByClass('block', Block)
-    block.init(row)
-    databus.blocks[block.row].push(block)
-    this.addModel(block.model)
+    let self = this
+    let block = null
+
     if(store.host){
       network.sendBrick({
-        "self": true,
-        "row": block.row,
-        "dis": this.absDistance
-      })
+        "self": false,
+        "row": row,
+        "dis": databus.absDistance
+      }, (()=>{
+        self.hero.blockPonits -= 1
+        block = databus.pool.getItemByClass('block', Block)
+        block.init(row)
+        databus.blocks[block.row].push(block)
+        self.addModel(block.model)
+      }))
     }
     else{
       network.sendBrick({
-        "self": true,
-        "row": block.row - 2,
-        "dis": this.absDistance
-      })
+        "self": false,
+        "row": row - 2,
+        "dis": databus.absDistance
+      }, (()=>{
+        self.hero.blockPonits -= 1
+        block = databus.pool.getItemByClass('block', Block)
+        block.init(row)
+        databus.blocks[block.row].push(block)
+        self.addModel(block.model)
+      }))
     }
     
   }
 
   handleTouchEvents(res){
-    if(this.animationOn || databus.heroHit){
+    if(this.animationOn || databus.heroHit ||databus.enemyHit){
       return
     }
     if(res.type === databus.heroSide){      

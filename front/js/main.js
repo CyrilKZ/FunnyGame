@@ -44,28 +44,16 @@ export default class Game {
       withShareTicket: true
     })
     wx.onShareAppMessage(() => {
-      console.log('????')
+      console.log('share successful')
       console.log(store.roomID)
       return {
-        query: store.roomID
+        query: 'teamid=' + store.roomID.toString()
       }
     })
   }
 
   restart(){  
-    // switch (this.currentStage) {
-    //   case store.start:
-    //     this.startStage.restart()
-    //     break
-    //   case store.game:
-    //     this.gameStage.restart()
-    //     break
-    //   case store.end:
-    //     this.endStage.restart()
-    //     break
-    //   default:
-    //     break
-    // }
+
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
     this.aniID = window.requestAnimationFrame(
@@ -78,23 +66,23 @@ export default class Game {
 
   loop() {
     if(store.startFlag){
-      console.log('switch')
+      console.log('switch to start')
       this.currentStage = store.start
       store.startFlag = false
       this.startStage.restart()
     }
     else if(store.gameFlag){
-      console.log('switch')
+      console.log('switch to game')
       this.currentStage = store.game
       store.gameFlag = false
       this.gameStage.restart()
       //renderer.clear()
     }
-    else if(databus.endFlag){
-      console.log('switch')
-      this.currentStage = store.end
+    else if(store.endFlag){
+      console.log('switch to start')
+      this.currentStage = store.start
       store.endFlag = false
-      this.endStage.restart()
+      this.startStage.restart()
       //renderer.clear()
     }
     switch (this.currentStage) {

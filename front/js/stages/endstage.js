@@ -29,9 +29,9 @@ export default class EndStage {
 
     let self = this
 
-    network.onStart = (()=>{
-      self.startAnimation = true
-    })
+    // network.onStart = (()=>{
+    //   self.startAnimation = true
+    // })
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z

@@ -8,8 +8,8 @@ const HERO_RADIUS = 7
 const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
-const JUMPING_SPEED = 8
-const GRAVITY = 0.5
+const JUMPING_SPEED = 9
+const GRAVITY = 0.4
 const NO_MOVE = 0
 const MOVE_UP = 3
 const MOVE_LEFT = 1
@@ -52,7 +52,11 @@ export default class Enemy extends Sprite {
     this.moves = []
 
     let self = this
-    network.onAction((res)=>{
+    network.onAction = ((res)=>{
+      console.log(`action received ${res}`)
+      console.log(JSON.stringify(res))
+      console.log(res.dir)
+      console.log(res.safe)
       self.addToMove(res.dir, res.safe)
     })
   }
@@ -62,6 +66,7 @@ export default class Enemy extends Sprite {
       direction: direction,
       safe: safe
     })
+    console.log(this.moves[this.moves.length - 1])
   }
 
   move() {
@@ -72,7 +77,7 @@ export default class Enemy extends Sprite {
     if(this.moves.length > 0){
       nextMove = this.moves.shift()
     }
-    if(nextMove === null){
+    else{
       return
     }
     let direction = nextMove.direction
@@ -110,6 +115,7 @@ export default class Enemy extends Sprite {
   }
 
   findBlockAhead(){
+    this.blockAhead = null
     for (let i = 0; i < databus.blocks[this.row].length; ++i) {
       if (databus.blocks[this.row][i].y > this.y  - this.lengthY + 1) {
         this.blockAhead = databus.blocks[this.row][i]

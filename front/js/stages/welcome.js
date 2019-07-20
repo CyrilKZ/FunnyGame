@@ -67,10 +67,12 @@ export default class WelcomeStage {
     }
     let self = this
     this.doWeHaveToUseThis.onTap((res) => {
-      let shareData = wx.getLaunchOptionsSync().query.teamID
+      let shareData = wx.getLaunchOptionsSync().query.teamid
+      console.log(`query info: ${wx.getLaunchOptionsSync().query.teamid}`)
       store.setSelfInfo(JSON.parse(res.rawData))
       store.openID = Math.round(Math.random()*10000)
       if(shareData === undefined){
+        console.log('host')
         store.host = true
         network.login(store.openID, ()=>{
           network.createTeam(store.openID, (res)=>{
@@ -87,10 +89,10 @@ export default class WelcomeStage {
       }
       else{
         store.host = false
-        store.teamID = shareData
+        store.roomID = shareData
         network.login(store.openID, ()=>{
-          network.joinTeam(store.openID, store.teamID ,(res)=>{
-            store.teamID = res.teamID
+          network.joinTeam(store.openID, store.roomID ,(res)=>{
+            console.log('gest')
             network.initSocket(()=>{
               network.sendOpenid(store.openID, ()=>{
                 self.startAnimation = true
