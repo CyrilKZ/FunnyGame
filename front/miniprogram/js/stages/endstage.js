@@ -22,7 +22,7 @@ export default class EndStage {
 
     this.selfReady = false
     this.enemyReady = false
-    this.startAnimation = false
+    this.animation = false
 
 
     this.setUpScene()
@@ -30,7 +30,7 @@ export default class EndStage {
     let self = this
 
     // network.onStart = (()=>{
-    //   self.startAnimation = true
+    //   self.animation = true
     // })
   }
   setUpScene(){
@@ -47,7 +47,7 @@ export default class EndStage {
   restart(){
     this.selfReady = false
     this.enemyReady = false
-    this.startAnimation = false
+    this.animation = false
     this.light.intensity = 1
     databus.reset()
   }
@@ -56,20 +56,20 @@ export default class EndStage {
     // if in range
     console.log(res)
     network.sendReady(true)
-    //this.startAnimation = true
+    //this.animation = true
   }
   setEnemyStatus(status){
     this.enemyReady = status
   }
   loop(){
-    //console.log(this.startAnimation)
-    if(this.startAnimation === false){
+    //console.log(this.animation)
+    if(this.animation === false){
       return
     }
     databus.frame += 1
     this.light.intensity -= 1 / ANIMATION_FRAME
     if(databus.frame === ANIMATION_FRAME){
-      this.startAnimation = false
+      this.animation = false
       store.gameFlag = true
     }
   }

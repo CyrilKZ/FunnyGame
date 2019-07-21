@@ -7,12 +7,16 @@ import GameStage from './stages/gamestage'
 import StartStage from './stages/startstage'
 import EndStage from './stages/endstage'
 import WelcomeStage from './stages/welcome'
+import Network from './network'
 import netDemo from './net-demo'
 
 import * as THREE from './libs/three.min'
 
+wx.cloud.init()
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
+let db = wx.cloud.database()
 
 const SCREEN_WIDTH = 1920
 const SCREEN_HEIGHT = 1080
@@ -21,29 +25,38 @@ let ctx = canvas.getContext('webgl')
 let renderer = new THREE.WebGLRenderer(ctx)
 let touchevents = new TouchEvent()
 
-wx.cloud.init()
-const db = wx.cloud.database()
+
+
 
 
 export default class Game {
   constructor() {
-    console.log(window.openid)
+    
+
     this.aniID = 0
     this.initTouchEvents()
     canvas.appendChild(renderer.domElement)
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
+    renderer.autoClear = false
+
+    this.stages = []
+    this.stages[store.welcome] = new WelcomeStage()
+    this.stages[store.start] = new StartStage()
+    this.stages[store.game] = new GameStage()
+    this.stages[store.end] = new EndStage()
+    this.currentStage = store.welcome
+
+
+
+
+
+
+
 
     this.login()
 
-    //this.netDemo = new netDemo()
-    this.welcomeStage = new WelcomeStage()
-    this.gameStage = new GameStage()
-    this.startStage = new StartStage()
     
-    this.endStage = new EndStage()
-    console.log(this.endStage)
-    this.currentStage = store.welcome
     this.restart()
     wx.showShareMenu({
       withShareTicket: true
@@ -59,15 +72,7 @@ export default class Game {
 
   login(){
     // 获取 openid
-    wx.cloud.callFunction({
-      name: 'login',
-      success: res => {
-        window.openid = res.result.openid
-      },
-      fail: err => {
-        console.error('get openid failed with error', err)
-      }
-    })
+    
   }
 
   
@@ -105,21 +110,7 @@ export default class Game {
       this.startStage.restart()
       //renderer.clear()
     }
-    switch (this.currentStage) {
-      case store.welcome:
-        this.welcomeStage.loop()
-        break
-      case store.start:
-        this.startStage.loop()
-        break
-      case store.game:
-        this.gameStage.loop()
-        break
-      case store.end:
-        this.endStage.loop()
-      default:
-        break
-    }
+    this.stages[this.currentStage].loop()
     this.render()
     
   }
@@ -128,21 +119,7 @@ export default class Game {
       this.bindLoop,
       canvas
       )
-      switch (this.currentStage) {
-        case store.welcome:
-          this.welcomeStage.render(renderer)
-          break
-        case store.start:
-          this.startStage.render(renderer)
-          break
-        case store.game:
-          this.gameStage.render(renderer)
-          break
-        case store.end:
-          this.endStage.render(renderer)
-        default:
-          break
-      }
+    this.stages[this.currentStage].render(renderer)
   }
   handleTouchEvents(res){
     switch (this.currentStage) {

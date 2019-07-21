@@ -32,7 +32,6 @@ export default class GameStage extends Stage{
       new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000),
       new THREE.DirectionalLight(0xffffff, 0.5),
       new THREE.AmbientLight(0xeeeeee, 0.5),
-      this.setUpScene()
     )
 
     this.models = []
@@ -40,6 +39,9 @@ export default class GameStage extends Stage{
     this.enemy = null
     
     let self = this
+    this.setUpScene
+
+
     network.onBrick = ((res)=>{
       console.log(`brick info: ${res}`)
       console.log(JSON.stringify(res))
@@ -136,11 +138,7 @@ export default class GameStage extends Stage{
       this.enemy.initEnemy(2)
       databus.setEnemySide(2)
       this.scene.add(this.enemy.model)
-    }
-    
-    
-
-    
+    }    
   }
 
   
