@@ -29,16 +29,12 @@ export default class WelcomeStage {
     
 
     this.setUpScene()
-    network.onStart = (data)=>{
-      console.log(data)
-      this.handleTouchEvents()
-    }
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
-    let texture = new THREE.TextureLoader().load( './resources/startbg.png' )
+    let texture = new THREE.TextureLoader().load( 'resources/startbg.png' )
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
@@ -67,6 +63,8 @@ export default class WelcomeStage {
     }
     let self = this
     this.doWeHaveToUseThis.onTap((res) => {
+      console.log(res)
+      console.log(window.openid)
       let shareData = wx.getLaunchOptionsSync().query.teamid
       console.log(`query info: ${wx.getLaunchOptionsSync().query.teamid}`)
       store.setSelfInfo(JSON.parse(res.rawData))

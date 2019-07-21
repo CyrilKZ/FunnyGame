@@ -25,6 +25,7 @@ let touchevents = new TouchEvent()
 
 export default class Game {
   constructor() {
+    console.log(window.openid)
     this.aniID = 0
     this.initTouchEvents()
     canvas.appendChild(renderer.domElement)
