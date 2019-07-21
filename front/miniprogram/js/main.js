@@ -70,6 +70,8 @@ export default class Game {
     })
   }
 
+  
+
   restart(){  
 
     this.bindLoop = this.loop.bind(this)

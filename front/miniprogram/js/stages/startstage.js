@@ -1,5 +1,6 @@
 import DataBus from '../databus'
 import GameStore from '../gamestore'
+import Stage from '../base/stage'
 import * as THREE from '../libs/three.min'
 import Network from '../network'
 
@@ -16,22 +17,19 @@ let databus = new DataBus()
 let store = new GameStore()
 let network = new Network()
 
-export default class StartStage {
+export default class StartStage extends Stage{
   constructor(){
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
-
-
+    super(
+      new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
     this.selfReady = false
     this.enemyReady = false
     this.startAnimation = false
-
     this.selfPic = null
     this.otherPic = null
-
-    this.setUpScene()
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
@@ -41,8 +39,6 @@ export default class StartStage {
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
-    this.scene.add(this.light)
-    this.scene.add(this.aLight)
 
     let self = this
     network.onStart = (()=>{
@@ -89,8 +85,5 @@ export default class StartStage {
       this.startAnimation = false
       store.gameFlag = true
     }
-  }
-  render(renderer){
-    renderer.render(this.scene, this.camera)
   }
 }

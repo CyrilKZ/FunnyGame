@@ -16,17 +16,12 @@ let network = new Network()
 
 export default class WelcomeStage {
   constructor(){
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
-
-
-    this.selfReady = false
-    this.enemyReady = false
-    this.startAnimation = false
-
-    
+    super(
+      new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
 
     this.setUpScene()
   }
@@ -43,7 +38,7 @@ export default class WelcomeStage {
     this.startAnimation = false
     this.doWeHaveToUseThis = wx.createUserInfoButton({
       type: 'text',
-      text: '获取用户信息',
+      text: '开始游戏',
       style: {
         left: 10,
         top: 76,

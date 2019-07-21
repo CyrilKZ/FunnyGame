@@ -1,3 +1,4 @@
+import Stage from '../base/stage'
 import DataBus from '../databus'
 import GameStore from '../gamestore'
 import Network from '../network'
@@ -25,18 +26,18 @@ let databus = new DataBus()
 let store = new GameStore()
 let network = new Network()
 
-export default class GameStage {
+export default class GameStage extends Stage{
   constructor() {
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
+    super(
+      new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
 
     this.models = []
     this.hero = null
     this.enemy = null
-    this.animationOn = false
-    this.setUpScene()
     
     let self = this
     network.onBrick = ((res)=>{
@@ -54,6 +55,33 @@ export default class GameStage {
     network.onWin = ((res)=>{
       databus.enemyHit = true
     })
+  }
+
+  setUpScene(){
+    let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
+    let material = new THREE.MeshLambertMaterial({ color: 0xfefefe })
+    this.ground = new THREE.Mesh(geometry, material)
+    let baselineGeo = new THREE.CubeGeometry(PLANE_WIDTH, 0.1, 0.1)
+    let baselineMat = new THREE.MeshLambertMaterial({ color: 0x000000 })
+    this.baseline = new THREE.Mesh(baselineGeo, baselineMat)
+    this.ground.position.set(0, 0, 0)
+    this.baseline.position.set(0, BASELINE_POS, 0)
+    
+    this.light.castShadow = true
+    this.ground.receiveShadow = true
+    this.light.position.set(0, 0, 100)
+    this.light.shadow.camera.near = 0.5
+    this.light.shadow.camera.far = 500
+    this.light.shadow.camera.left = -220
+    this.light.shadow.camera.bottom = -500
+    this.light.shadow.camera.right = 220
+    this.light.shadow.camera.top = 500
+    this.light.target.position.set(0, 0, 0).normalize()
+    this.camera.position.z = CAMERA_Z
+    this.camera.position.y = CAMERA_Y
+    this.camera.rotateX(CAMERA_ROT_X)
+    this.scene.add(this.ground)
+    this.scene.add(this.baseline)  
   }
 
   addModel(model){
@@ -83,34 +111,7 @@ export default class GameStage {
     this.light.intensity = 0.5
   }
 
-  setUpScene(){
-    let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
-    let material = new THREE.MeshLambertMaterial({ color: 0xfefefe })
-    this.ground = new THREE.Mesh(geometry, material)
-    let baselineGeo = new THREE.CubeGeometry(PLANE_WIDTH, 0.1, 0.1)
-    let baselineMat = new THREE.MeshLambertMaterial({ color: 0x000000 })
-    this.baseline = new THREE.Mesh(baselineGeo, baselineMat)
-    this.ground.position.set(0, 0, 0)
-    this.baseline.position.set(0, BASELINE_POS, 0)
-    
-    this.light.castShadow = true
-    this.ground.receiveShadow = true
-    this.light.position.set(0, 0, 100)
-    this.light.shadow.camera.near = 0.5
-    this.light.shadow.camera.far = 500
-    this.light.shadow.camera.left = -220
-    this.light.shadow.camera.bottom = -500
-    this.light.shadow.camera.right = 220
-    this.light.shadow.camera.top = 500
-    this.light.target.position.set(0, 0, 0).normalize()
-    this.camera.position.z = CAMERA_Z
-    this.camera.position.y = CAMERA_Y
-    this.camera.rotateX(CAMERA_ROT_X)
-    this.scene.add(this.ground)
-    this.scene.add(this.baseline)
-    this.scene.add(this.light)
-    this.scene.add(this.aLight)    
-  }
+
 
 
   restart(){  
@@ -177,9 +178,6 @@ export default class GameStage {
     }    
     this.hero.update()
     this.enemy.update()
-  }
-  render(renderer) {
-    renderer.render(this.scene, this.camera)
   }
 
   generateRandomBlock(){
