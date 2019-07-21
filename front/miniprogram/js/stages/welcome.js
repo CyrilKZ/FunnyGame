@@ -68,7 +68,7 @@ export default class WelcomeStage {
       let shareData = wx.getLaunchOptionsSync().query.teamid
       console.log(`query info: ${wx.getLaunchOptionsSync().query.teamid}`)
       store.setSelfInfo(JSON.parse(res.rawData))
-      store.openID = Math.round(Math.random()*10000)
+      store.openID = window.openid
       if(shareData === undefined){
         console.log('host')
         store.host = true

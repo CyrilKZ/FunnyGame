@@ -11,6 +11,8 @@
 	"libVersion": "2.6.6",
 	"appid": "wxe19dbe01bf7a3e44",
 	"projectname": "FunnyGame",
+	"miniprogramRoot": "miniprogram/",
+	"cloudfunctionRoot": "cloudfunction/",
 	"simulatorType": "wechat",
 	"simulatorPluginLibVersion": {},
 	"condition": {

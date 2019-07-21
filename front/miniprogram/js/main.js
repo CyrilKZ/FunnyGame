@@ -21,6 +21,8 @@ let ctx = canvas.getContext('webgl')
 let renderer = new THREE.WebGLRenderer(ctx)
 let touchevents = new TouchEvent()
 
+wx.cloud.init()
+const db = wx.cloud.database()
 
 
 export default class Game {
@@ -31,6 +33,8 @@ export default class Game {
     canvas.appendChild(renderer.domElement)
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
+
+    this.login()
 
     //this.netDemo = new netDemo()
     this.welcomeStage = new WelcomeStage()
@@ -49,6 +53,19 @@ export default class Game {
       console.log(store.roomID)
       return {
         query: 'teamid=' + store.roomID.toString()
+      }
+    })
+  }
+
+  login(){
+    // 获取 openid
+    wx.cloud.callFunction({
+      name: 'login',
+      success: res => {
+        window.openid = res.result.openid
+      },
+      fail: err => {
+        console.error('get openid failed with error', err)
       }
     })
   }
