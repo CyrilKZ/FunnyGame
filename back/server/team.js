@@ -68,10 +68,6 @@ class User {
         this.ready = bool;
     }
 
-    setInfo(userinfo){
-        this.info = userinfo;
-    }
-
     reset(){
         this.ready = false;
     }
@@ -106,7 +102,10 @@ teamHandler.join = function (openid, teamid, userinfo){
     if(team.addUser(user)){
         let socket = user.companion.socket;
         if(socket){
-            socket.send(JSON.stringify(user.info), (err) => {
+            socket.send(JSON.stringify({
+                'msg':'join',
+                'userinfo': user.info
+            }), (err) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
                 }
