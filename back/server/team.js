@@ -31,6 +31,10 @@ accessToken.get = function () {
 var userHandler = function () { };
 userHandler.users = {};
 userHandler.login = function (openid) {
+    if(this.users[openid]){
+        this.logout(openid);
+    }
+
     this.users[openid] = new User(openid);
 }
 
@@ -77,10 +81,25 @@ teamHandler.create = function (openid) {
     return teamid;
 }
 
-teamHandler.join = function (openid, teamid){
+teamHandler.join = function (openid, teamid, userinfo){
     let team = this.teams[teamid];
     let user = userHandler.users[openid];
+    if(!team){
+        return false;
+    }
+    if(!user){
+        return false;
+    }
+
     if(team.addUser(user)){
+        let socket = user.companion.socket;
+        if(socket){
+            socket.send(JSON.stringify(userinfo), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
         return true;
     }
     else{
