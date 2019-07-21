@@ -1,23 +1,33 @@
+let instance
+
 export default class Network {
   constructor() {
+    if (instance) {
+      return instance
+    }
+    instance = this
+
     this.url = 'https://game.lbjthu.tech:10443/'
     this.wssUrl = 'wss://game.lbjthu.tech:10443/'
     this.socket = undefined
 
     // data格式见https://github.com/CyrilKZ/FunnyGame/blob/lbj-back/back/wss.md#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B9%BF%E6%92%AD%E6%95%B0%E6%8D%AE
-    this.onStart = function (data) { console.log(`onStart: ${data}`)}
+    this.onStart = function (data) { console.log(`onStart: ${data}`) }
     this.onWin = function (data) { console.log(`onWin: ${data}`) }
     this.onBrick = function (data) { console.log(`onBrick: ${data}`) }
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
+    this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
+    this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
   }
 
-  login(openid, sucess, fail) {
+  login(openid, userinfo, sucess, fail) {
     let options = {
       'url': this.url + 'login',
       'data': {
-        'openid': openid
+        'openid': openid,
+        'userinfo': userinfo
       },
-      'method': 'GET',
+      'method': 'POST',
       'success': function (res) {
         sucess(res.data)  // 正常data为'Welcome'
       },
@@ -56,7 +66,7 @@ export default class Network {
     wx.request(options)
   }
 
-  exitTeam(openid, sucess, fail) {
+  exitTeam(openid, teamid, sucess, fail) {
     let options = {
       'url': this.url + 'team/exit',
       'data': {
@@ -72,7 +82,7 @@ export default class Network {
     wx.request(options)
   }
 
-  joinTeam(openid, sucess, fail) {
+  joinTeam(openid, teamid, sucess, fail) {
     let options = {
       'url': this.url + 'team/join',
       'data': {
@@ -107,22 +117,24 @@ export default class Network {
       'brick': this.onBrick,
       'win': this.onWin,
       'action': this.onAction,
+      'transfer': this.onTransfer,
+      'join': this.onJoin
     }
     fun[data.msg](data)
   }
 
-  sendOpenid(openid, success, fail){
+  sendOpenid(openid, success, fail) {
     this.socket.send({
-      'data':JSON.stringify({
+      'data': JSON.stringify({
         'msg': 'open',
         'openid': openid
       }),
-      'success':success,
+      'success': success,
       'fail': fail
     })
   }
 
-  sendReady(state, success, fail){
+  sendReady(state, success, fail) {
     this.socket.send({
       'data': JSON.stringify({
         'msg': 'ready',
@@ -133,7 +145,7 @@ export default class Network {
     })
   }
 
-  sendBrick(data, success, fail){
+  sendBrick(data, success, fail) {
     data['msg'] = 'brick'
     this.socket.send({
       'data': JSON.stringify(data),
@@ -154,7 +166,7 @@ export default class Network {
   sendFail(success, fail) {
     this.socket.send({
       'data': JSON.stringify({
-        'msg':'fail',
+        'msg': 'fail',
       }),
       'success': success,
       'fail': fail
@@ -166,6 +178,15 @@ export default class Network {
       'data': JSON.stringify({
         'msg': 'restart',
       }),
+      'success': success,
+      'fail': fail
+    })
+  }
+
+  sendTransfer(data, success, fail) {
+    data['msg'] = 'transfer'
+    this.socket.send({
+      'data': JSON.stringify(data),
       'success': success,
       'fail': fail
     })

@@ -12,18 +12,16 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class WelcomeStage {
   constructor(){
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
-
-
-    this.selfReady = false
-    this.enemyReady = false
-    this.startAnimation = false
+    super(
+      new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
 
     this.setUpScene()
   }
@@ -31,7 +29,7 @@ export default class WelcomeStage {
     this.camera.position.z = CAMERA_Z
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
-    let texture = new THREE.TextureLoader().load( './resources/startbg.png' )
+    let texture = new THREE.TextureLoader().load( 'resources/startbg.png' )
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
@@ -40,7 +38,7 @@ export default class WelcomeStage {
     this.startAnimation = false
     this.doWeHaveToUseThis = wx.createUserInfoButton({
       type: 'text',
-      text: '获取用户信息',
+      text: '开始游戏',
       style: {
         left: 10,
         top: 76,
@@ -55,18 +53,56 @@ export default class WelcomeStage {
       }
     })
     let button = this.doWeHaveToUseThis
+    this.fail = function(err){
+      console.log(err)
+    }
     let self = this
     this.doWeHaveToUseThis.onTap((res) => {
-      //console.log(JSON.parse(res.rawData))
+      console.log(res)
+      console.log(window.openid)
+      let shareData = wx.getLaunchOptionsSync().query.teamid
+      console.log(`query info: ${wx.getLaunchOptionsSync().query.teamid}`)
       store.setSelfInfo(JSON.parse(res.rawData))
+      store.openID = window.openid
+      if(shareData === undefined){
+        console.log('host')
+        store.host = true
+        network.login(store.openID, ()=>{
+          network.createTeam(store.openID, (res)=>{
+            console.log(res)
+            store.roomID = res.teamid
+            console.log(store.roomID)
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                self.startAnimation = true
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }
+      else{
+        store.host = false
+        store.roomID = shareData
+        network.login(store.openID, ()=>{
+          network.joinTeam(store.openID, store.roomID ,(res)=>{
+            console.log('gest')
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                self.startAnimation = true
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }
+      
       button.hide()
-      self.handleTouchEvents()
+      
     })
   }
   
+  
 
-  handleTouchEvents(res){
-
+  handleTouchEvents(res = null){
     this.startAnimation = true
   }
   setEnemyStatus(status){

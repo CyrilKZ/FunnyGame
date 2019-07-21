@@ -1,26 +1,35 @@
 import DataBus from '../databus'
+import GameStore from '../gamestore'
+import Stage from '../base/stage'
 import * as THREE from '../libs/three.min'
+import Network from '../network'
+
 
 const PLANE_WIDTH = 1920
 const PLANE_LENGTH = 1080
+const AVATAR_SIZE = 240
+const AVATAR_POS_LEFT = 500
+const AVATAR_POS_TOP = 100
+
 const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
+let store = new GameStore()
+let network = new Network()
 
-export default class EndStage {
+export default class StartStage extends Stage{
   constructor(){
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
-
-
-
+    super(
+      new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
     this.selfReady = false
     this.enemyReady = false
     this.startAnimation = false
-
-    this.setUpScene()
+    this.selfPic = null
+    this.otherPic = null
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
@@ -30,8 +39,12 @@ export default class EndStage {
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
-    this.scene.add(this.light)
-    this.scene.add(this.aLight)
+
+    let self = this
+    network.onStart = (()=>{
+      self.startAnimation = true
+    })
+    
   }
   restart(){
     this.selfReady = false
@@ -39,18 +52,30 @@ export default class EndStage {
     this.startAnimation = false
     this.light.intensity = 1
     databus.reset()
+    this.showSelfInfo()
   }
 
+  showSelfInfo(){
+    let geometry = new THREE.PlaneGeometry(AVATAR_SIZE, AVATAR_SIZE, 1, 1)
+    let texture = new THREE.TextureLoader().load(store.selfInfo.picUrl)
+    let material = new THREE.MeshLambertMaterial({ map: texture })
+    this.selfPic = new THREE.Mesh(geometry, material)
+    this.selfPic.position.set(-AVATAR_POS_LEFT, AVATAR_POS_TOP ,1)
+    this.scene.add(this.selfPic)
+  }
+
+  
+
   handleTouchEvents(res){
-    // if in range
-    console.log(res)
-    this.startAnimation = true
+    network.sendReady(true, ()=>{
+      this.selfReady = true
+    })
+
   }
   setEnemyStatus(status){
     this.enemyReady = status
   }
   loop(){
-    //console.log(this.startAnimation)
     if(this.startAnimation === false){
       return
     }
@@ -60,8 +85,5 @@ export default class EndStage {
       this.startAnimation = false
       store.gameFlag = true
     }
-  }
-  render(renderer){
-    renderer.render(this.scene, this.camera)
   }
 }

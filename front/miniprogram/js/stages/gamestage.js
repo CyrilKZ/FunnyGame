@@ -1,8 +1,10 @@
+import Stage from '../base/stage'
 import DataBus from '../databus'
 import GameStore from '../gamestore'
+import Network from '../network'
 import Block from '../world/block'
 import Hero from '../world/hero'
-
+import Enemy from '../world/enemy'
 
 import * as THREE from '../libs/three.min'
 
@@ -13,7 +15,7 @@ const CAMERA_Z = Math.round(250 * Math.sqrt(3))
 const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
 const ANIMATION_FRAME = 100
-const BLOCK_MIN_DISTANCE = 56
+const BLOCK_MIN_DISTANCE = 64
 const LEFT = 1
 const RIGHT = 2
 const TOUCHBAR = 300
@@ -22,43 +24,37 @@ const SCREEN_HEIGHT = 1080
 
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
-export default class GameStage {
+export default class GameStage extends Stage{
   constructor() {
-    this.scene = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
+    super(
+      new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000),
+      new THREE.DirectionalLight(0xffffff, 0.5),
+      new THREE.AmbientLight(0xeeeeee, 0.5),
+      this.setUpScene()
+    )
 
-    this.absDistance = 0
     this.models = []
     this.hero = null
-    this.animationOn = false
-    this.setUpScene()
+    this.enemy = null
     
-    
-  }
-
-  addModel(model){
-    this.models.push(model)
-    this.scene.add(model)
-  }
-  clearModels(){
-    this.models.forEach((item)=>{
-      this.scene.remove(item)
-      item.geometry.dispose()
-      item.material.dispose()
+    let self = this
+    network.onBrick = ((res)=>{
+      console.log(`brick info: ${res}`)
+      console.log(JSON.stringify(res))
+      console.log(res.row)
+      console.log(res.dis)
+      if(store.host){
+        self.addBlockToSelf(res.row + 2, res.dis)
+      }
+      else{
+        self.addBlockToSelf(res.row, res.dis)
+      }      
     })
-    this.models = []
-    if(this.hero === null || this.hero === undefined){
-      return
-    }
-    this.scene.remove(this.hero.model)
-    this.hero.model.geometry.dispose()
-    this.hero.model.material.dispose()
-    delete(this.hero)
-    this.hero = null
-    this.light.intensity = 0.5
+    network.onWin = ((res)=>{
+      databus.enemyHit = true
+    })
   }
 
   setUpScene(){
@@ -85,10 +81,37 @@ export default class GameStage {
     this.camera.position.y = CAMERA_Y
     this.camera.rotateX(CAMERA_ROT_X)
     this.scene.add(this.ground)
-    this.scene.add(this.baseline)
-    this.scene.add(this.light)
-    this.scene.add(this.aLight)    
+    this.scene.add(this.baseline)  
   }
+
+  addModel(model){
+    this.models.push(model)
+    this.scene.add(model)
+  }
+  clearModels(){
+    this.models.forEach((item)=>{
+      this.scene.remove(item)
+      item.geometry.dispose()
+      item.material.dispose()
+    })
+    this.models = []
+    if(this.hero === null || this.hero === undefined){
+      return
+    }
+    this.scene.remove(this.hero.model)
+    this.hero.model.geometry.dispose()
+    this.hero.model.material.dispose()
+    delete(this.hero)
+    this.hero = null
+
+    this.scene.remove(this.enemy.model)
+    this.enemy.model.geometry.dispose()
+    this.enemy.model.material.dispose()
+    delete(this.enemy)
+    this.light.intensity = 0.5
+  }
+
+
 
 
   restart(){  
@@ -96,9 +119,28 @@ export default class GameStage {
     databus.reset()
     this.clearModels()
     this.hero = new Hero()
-    this.hero.initSelf(2)
-    databus.setHeroSide(2)
-    this.scene.add(this.hero.model)
+    if(store.host){
+      this.hero.initSelf(2)
+      databus.setHeroSide(2)
+      this.scene.add(this.hero.model)
+      this.enemy = new Enemy()
+      this.enemy.initEnemy(1)
+      databus.setEnemySide(1)
+      this.scene.add(this.enemy.model)
+    }
+    else{
+      this.hero.initSelf(1)
+      databus.setHeroSide(1)
+      this.scene.add(this.hero.model)
+      this.enemy = new Enemy()
+      this.enemy.initEnemy(2)
+      databus.setEnemySide(2)
+      this.scene.add(this.enemy.model)
+    }
+    
+    
+
+    
   }
 
   
@@ -114,7 +156,7 @@ export default class GameStage {
       return
     }
 
-    if(databus.heroHit === true){
+    if(databus.heroHit === true || databus.enemyHit === true){
       databus.frame = 0
       this.animationOn = true
       return
@@ -125,7 +167,7 @@ export default class GameStage {
      
       
     }
-    this.absDistance += databus.speed
+    databus.absDistance += databus.speed
     databus.blocks.forEach((row)=>{
       row.forEach((item)=>{
         item.update(databus.speed)
@@ -135,10 +177,18 @@ export default class GameStage {
       databus.speed += databus.accel
     }    
     this.hero.update()
+    this.enemy.update()
+  }
+
+  generateRandomBlock(){
     
   }
-  render(renderer) {
-    renderer.render(this.scene, this.camera)
+
+  addBlockToSelf(row, absdis){
+    let block = databus.pool.getItemByClass('block', Block)
+    block.init(row)
+    databus.blocks[block.row].push(block)
+    this.addModel(block.model)
   }
 
   addBlockToEnemy(x){
@@ -165,15 +215,40 @@ export default class GameStage {
       ){
       return
     }
-    this.hero.blockPonits -= 1
-    let block = databus.pool.getItemByClass('block', Block)
-    block.init(row)
-    databus.blocks[block.row].push(block)
-    this.addModel(block.model)
+    let self = this
+    let block = null
+
+    if(store.host){
+      network.sendBrick({
+        "self": false,
+        "row": row,
+        "dis": databus.absDistance
+      }, (()=>{
+        self.hero.blockPonits -= 1
+        block = databus.pool.getItemByClass('block', Block)
+        block.init(row)
+        databus.blocks[block.row].push(block)
+        self.addModel(block.model)
+      }))
+    }
+    else{
+      network.sendBrick({
+        "self": false,
+        "row": row - 2,
+        "dis": databus.absDistance
+      }, (()=>{
+        self.hero.blockPonits -= 1
+        block = databus.pool.getItemByClass('block', Block)
+        block.init(row)
+        databus.blocks[block.row].push(block)
+        self.addModel(block.model)
+      }))
+    }
+    
   }
 
   handleTouchEvents(res){
-    if(this.animationOn || databus.heroHit){
+    if(this.animationOn || databus.heroHit ||databus.enemyHit){
       return
     }
     if(res.type === databus.heroSide){      

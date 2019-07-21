@@ -21,17 +21,22 @@ let ctx = canvas.getContext('webgl')
 let renderer = new THREE.WebGLRenderer(ctx)
 let touchevents = new TouchEvent()
 
+wx.cloud.init()
+const db = wx.cloud.database()
 
 
 export default class Game {
   constructor() {
+    console.log(window.openid)
     this.aniID = 0
     this.initTouchEvents()
     canvas.appendChild(renderer.domElement)
     renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
     renderer.shadowMapEnabled = true
 
-    this.netDemo = new netDemo()
+    this.login()
+
+    //this.netDemo = new netDemo()
     this.welcomeStage = new WelcomeStage()
     this.gameStage = new GameStage()
     this.startStage = new StartStage()
@@ -40,23 +45,35 @@ export default class Game {
     console.log(this.endStage)
     this.currentStage = store.welcome
     this.restart()
-
+    wx.showShareMenu({
+      withShareTicket: true
+    })
+    wx.onShareAppMessage(() => {
+      console.log('share successful')
+      console.log(store.roomID)
+      return {
+        query: 'teamid=' + store.roomID.toString()
+      }
+    })
   }
 
+  login(){
+    // 获取 openid
+    wx.cloud.callFunction({
+      name: 'login',
+      success: res => {
+        window.openid = res.result.openid
+      },
+      fail: err => {
+        console.error('get openid failed with error', err)
+      }
+    })
+  }
+
+  
+
   restart(){  
-    // switch (this.currentStage) {
-    //   case store.start:
-    //     this.startStage.restart()
-    //     break
-    //   case store.game:
-    //     this.gameStage.restart()
-    //     break
-    //   case store.end:
-    //     this.endStage.restart()
-    //     break
-    //   default:
-    //     break
-    // }
+
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
     this.aniID = window.requestAnimationFrame(
@@ -69,23 +86,23 @@ export default class Game {
 
   loop() {
     if(store.startFlag){
-      console.log('switch')
+      console.log('switch to start')
       this.currentStage = store.start
       store.startFlag = false
       this.startStage.restart()
     }
     else if(store.gameFlag){
-      console.log('switch')
+      console.log('switch to game')
       this.currentStage = store.game
       store.gameFlag = false
       this.gameStage.restart()
       //renderer.clear()
     }
-    else if(databus.endFlag){
-      console.log('switch')
-      this.currentStage = store.end
+    else if(store.endFlag){
+      console.log('switch to start')
+      this.currentStage = store.start
       store.endFlag = false
-      this.endStage.restart()
+      this.startStage.restart()
       //renderer.clear()
     }
     switch (this.currentStage) {
