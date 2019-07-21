@@ -22,8 +22,8 @@ app.get('/reset', function (req, res) {
     res.status(200).send('Finished');
 });
 
-app.get('/login', function (req, res) {
-    team.userHandler.login(req.query.openid);
+app.post('/login', function (req, res) {
+    team.userHandler.login(req.body.openid, req.body.userinfo);
     res.status(200).send('Welcome');
 });
 
