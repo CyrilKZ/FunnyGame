@@ -24,7 +24,7 @@ export default class Network {
       'data': {
         'openid': openid
       },
-      'method': 'GET',
+      'method': 'POST',
       'success': function (res) {
         sucess(res.data)  // 正常data为'Welcome'
       },
