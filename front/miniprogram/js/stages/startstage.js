@@ -53,10 +53,10 @@ export default class StartStage extends Stage{
     this.imReady.initButton(200, 600)
     this.imNotReady.initButton(200, 600)
     this.othersReady.initButton(1120, 600)
-    
 
-    this.scene.add(this.imReady)
-    this.scene.add(this.imNotReady)
+
+    this.scene.add(this.imReady.model)
+    this.scene.add(this.imNotReady.model)
 
   }
   restart(){

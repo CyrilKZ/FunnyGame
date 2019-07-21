@@ -3,7 +3,7 @@ import DataBus from '../databus'
 import GameStore from '../gamestore'
 
 let databus = new DataBus()
-let store = new store()
+let store = new GameStore()
 
 let instance
 

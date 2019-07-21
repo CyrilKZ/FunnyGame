@@ -8,10 +8,10 @@ export default class Stage {
     this.scene = new THREE.Scene()
     this.camera = camera
     this.light = light
-    this.alight = alight
+    this.aLight = alight
     this.animation = false
     this.scene.add(this.light)
-    this.scene.add(this.alight)
+    this.scene.add(this.aLight)
     this.showHUD = false
     this.display = false
   }
@@ -28,9 +28,13 @@ export default class Stage {
     this.display = false
   }
   render(renderer){
+    renderer.clear()
     renderer.render(this.scene, this.camera)
     if(this.showHUD){
       renderer.render(hud)
     }
+  }
+  handleTouchEvent(res = null){
+    return
   }
 }

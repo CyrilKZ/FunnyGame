@@ -32,8 +32,6 @@ export default class WelcomeStage extends Stage{
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
-    this.scene.add(this.light)
-    this.scene.add(this.aLight)
     this.doWeHaveToUseThis = wx.createUserInfoButton({
       type: 'text',
       text: '开始游戏',

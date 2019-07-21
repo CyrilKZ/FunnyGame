@@ -12,7 +12,7 @@ import netDemo from './net-demo'
 
 import * as THREE from './libs/three.min'
 
-
+wx.cloud.init()
 let databus = new DataBus()
 let store = new GameStore()
 let network = new Network()
@@ -31,7 +31,7 @@ let touchevents = new TouchEvent()
 
 export default class Game {
   constructor() {
-    wx.cloud.init()
+    
 
     this.aniID = 0
     this.initTouchEvents()
@@ -110,21 +110,7 @@ export default class Game {
       this.startStage.restart()
       //renderer.clear()
     }
-    switch (this.currentStage) {
-      case store.welcome:
-        this.welcomeStage.loop()
-        break
-      case store.start:
-        this.startStage.loop()
-        break
-      case store.game:
-        this.gameStage.loop()
-        break
-      case store.end:
-        this.endStage.loop()
-      default:
-        break
-    }
+    this.stages[this.currentStage].loop()
     this.render()
     
   }
@@ -133,21 +119,7 @@ export default class Game {
       this.bindLoop,
       canvas
       )
-      switch (this.currentStage) {
-        case store.welcome:
-          this.welcomeStage.render(renderer)
-          break
-        case store.start:
-          this.startStage.render(renderer)
-          break
-        case store.game:
-          this.gameStage.render(renderer)
-          break
-        case store.end:
-          this.endStage.render(renderer)
-        default:
-          break
-      }
+    this.stages[this.currentStage].render(renderer)
   }
   handleTouchEvents(res){
     switch (this.currentStage) {
