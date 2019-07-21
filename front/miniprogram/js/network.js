@@ -17,6 +17,7 @@ export default class Network {
     this.onBrick = function (data) { console.log(`onBrick: ${data}`) }
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
+    this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
   }
 
   login(openid, userinfo, sucess, fail) {
@@ -116,7 +117,8 @@ export default class Network {
       'brick': this.onBrick,
       'win': this.onWin,
       'action': this.onAction,
-      'transfer': this.onTransfer
+      'transfer': this.onTransfer,
+      'join': this.onJoin
     }
     fun[data.msg](data)
   }
