@@ -12,6 +12,7 @@ const ANIMATION_FRAME = 40
 const CAMERA_Z = 100
 let databus = new DataBus()
 let store = new GameStore()
+let network = new Network()
 
 export default class WelcomeStage {
   constructor(){
@@ -25,7 +26,13 @@ export default class WelcomeStage {
     this.enemyReady = false
     this.startAnimation = false
 
+    
+
     this.setUpScene()
+    network.onStart = (data)=>{
+      console.log(data)
+      this.handleTouchEvents()
+    }
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
@@ -55,18 +62,54 @@ export default class WelcomeStage {
       }
     })
     let button = this.doWeHaveToUseThis
+    this.fail = function(err){
+      console.log(err)
+    }
     let self = this
     this.doWeHaveToUseThis.onTap((res) => {
-      //console.log(JSON.parse(res.rawData))
+      let shareData = wx.getLaunchOptionsSync().query.teamid
+      console.log(`query info: ${wx.getLaunchOptionsSync().query.teamid}`)
       store.setSelfInfo(JSON.parse(res.rawData))
+      store.openID = Math.round(Math.random()*10000)
+      if(shareData === undefined){
+        console.log('host')
+        store.host = true
+        network.login(store.openID, ()=>{
+          network.createTeam(store.openID, (res)=>{
+            console.log(res)
+            store.roomID = res.teamid
+            console.log(store.roomID)
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                self.startAnimation = true
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }
+      else{
+        store.host = false
+        store.roomID = shareData
+        network.login(store.openID, ()=>{
+          network.joinTeam(store.openID, store.roomID ,(res)=>{
+            console.log('gest')
+            network.initSocket(()=>{
+              network.sendOpenid(store.openID, ()=>{
+                self.startAnimation = true
+              }, self.fail)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }
+      
       button.hide()
-      self.handleTouchEvents()
+      
     })
   }
   
+  
 
-  handleTouchEvents(res){
-
+  handleTouchEvents(res = null){
     this.startAnimation = true
   }
   setEnemyStatus(status){

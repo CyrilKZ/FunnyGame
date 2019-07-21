@@ -1,13 +1,15 @@
 import Sprite from '../base/sprite'
 import DataBus from '../databus'
+import GameStore from '../gamestore'
+import Network from '../network'
 import * as THREE from '../libs/three.min'
 
-const HERO_RADIUS = 8
+const HERO_RADIUS = 7
 const HERO_BASELINE = -450
 const ROW_WIDTH = 110
 const MOVING_SPEED = 10
-const JUMPING_SPEED = 8
-const GRAVITY = 0.5
+const JUMPING_SPEED = 9
+const GRAVITY = 0.4
 const NO_MOVE = 0
 const MOVE_UP = 3
 const MOVE_LEFT = 1
@@ -17,13 +19,15 @@ const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
 
 
 let databus = new DataBus()
+let store = new GameStore()
+let network = new Network()
 
 export default class Enemy extends Sprite {
   constructor() {
     super(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
   }
   initEnemy(row) {
-    let geometry = new THREE.IcosahedronGeometry(HERO_RADIUS, 2)
+    let geometry = new THREE.BoxGeometry(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
     let metarial = new THREE.MeshLambertMaterial({ color: 0xee22ff })
     this.model = new THREE.Mesh(geometry, metarial)
     this.row = row
@@ -31,7 +35,7 @@ export default class Enemy extends Sprite {
     this.y = HERO_BASELINE
     this.z = 0
     this.movingframe = 0
-    this.model.position.set(this.x + HERO_RADIUS, this.y + HERO_RADIUS, this.z + HERO_RADIUS)
+    this.model.position.set(this.x + HERO_RADIUS, this.y - HERO_RADIUS, this.z + HERO_RADIUS)
     this.model.castShadow = true
     this.model.visible = true
     this.visible = true
@@ -45,12 +49,39 @@ export default class Enemy extends Sprite {
     this.isMoveSafe = true
     this.blockAhead = null
     this.blockAround = null
+    this.moves = []
+
+    let self = this
+    network.onAction = ((res)=>{
+      console.log(`action received ${res}`)
+      console.log(JSON.stringify(res))
+      console.log(res.dir)
+      console.log(res.safe)
+      self.addToMove(res.dir, res.safe)
+    })
   }
 
-  move(direction, safe) {
+  addToMove(direction, safe){
+    this.moves.push({
+      direction: direction,
+      safe: safe
+    })
+    console.log(this.moves[this.moves.length - 1])
+  }
+
+  move() {
     if (this.moving === true) {
       return
     }
+    let nextMove = null
+    if(this.moves.length > 0){
+      nextMove = this.moves.shift()
+    }
+    else{
+      return
+    }
+    let direction = nextMove.direction
+    let safe = nextMove.safe
     switch (direction) {
       case MOVE_LEFT:
         if (this.row === 0 || this.row === 2) {
@@ -84,8 +115,9 @@ export default class Enemy extends Sprite {
   }
 
   findBlockAhead(){
+    this.blockAhead = null
     for (let i = 0; i < databus.blocks[this.row].length; ++i) {
-      if (databus.blocks[this.row][i].y > this.y) {
+      if (databus.blocks[this.row][i].y > this.y  - this.lengthY + 1) {
         this.blockAhead = databus.blocks[this.row][i]
         break
       }
@@ -98,12 +130,10 @@ export default class Enemy extends Sprite {
 
   findBlockAround(){
     this.blockAround = null
-    //console.log(this.row)
     if(this.direction === MOVE_LEFT){
       for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
         if (databus.blocks[this.row-1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row-1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -112,7 +142,6 @@ export default class Enemy extends Sprite {
       for (let i = 0; i < databus.blocks[this.row+1].length; ++i) {
         if (databus.blocks[this.row+1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row+1][i]
-          //console.log(this.blockAround)
           break
         }
       }
@@ -125,7 +154,7 @@ export default class Enemy extends Sprite {
   }
 
   update() {
-    //console.log('update')
+    this.move()
     if (this.moving) {
       if (this.direction === MOVE_UP) {
         if (this.movingframe === TOTALFRAME_Z) {
@@ -137,8 +166,7 @@ export default class Enemy extends Sprite {
           this.model.position.z = this.z + HERO_RADIUS
           if(!(this.canJumpSave && this.isJumpSafe)){
             if(this.is3DCollideWith(this.blockAhead)){
-              databus.enemyHit = true
-              //console.log('hit when jumping')
+              //databus.enemyHit = true
             }
           }
         }
@@ -150,8 +178,7 @@ export default class Enemy extends Sprite {
         }
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
-            databus.enemyHit = true
-            //console.log('hit when jumping')
+            //databus.enemyHit = true
           }
         }
       }
@@ -172,8 +199,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
-              //console.log('hit when moving')
+              //databus.enemyHit = true
             }            
           }
         }
@@ -184,8 +210,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
-              //console.log('hit when moving')
+              //databus.enemyHit = true
             }            
           }
         }
@@ -193,8 +218,7 @@ export default class Enemy extends Sprite {
     }
     else{
       if(this.is2DCollideWith(this.blockAhead)){
-        databus.enemyHit = true
-        //console.log('direct hit')
+        //databus.enemyHit = true
       }
       
     }
