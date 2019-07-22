@@ -6,7 +6,10 @@ function open(openid, wssSocket) {
         user.setSocket(wssSocket);
         let companion = user.companion;
         if (companion) {
-            companion.socket.send(JSON.stringify(data), (err) => {
+            companion.socket.send(JSON.stringify({
+                'msg':'join',
+                'userinfo':user.info
+            }), (err) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
                 }
