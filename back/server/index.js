@@ -11,8 +11,19 @@ app.use(bodyParser.json());  //body-parser 解析json格式数据
 class Server {
     constructor(options, port) {
         this.httpsServer = https.createServer(options, app).listen(port);
-        this.wssServer = new ws.Server({ server: this.httpsServer });
-        this.wssServer.on('connection', wssHandler);
+        let wss = new ws.Server({ server: this.httpsServer });
+        wss.on('connection', wssHandler);
+        const interval = setInterval(function ping() {
+            wss.clients.forEach(function each(ws) {
+                if (ws.isAlive === false) {
+                    return ws.terminate();
+                }
+        
+                ws.isAlive = false;
+                ws.ping();
+            });
+        }, 10000);
+        this.wssServer = wss
     }
 }
 
@@ -46,7 +57,7 @@ app.post('/team/join', function (req, res) {
             'result': 0
         });
     }
-    else{
+    else {
         res.json({
             'result': 1
         });
@@ -62,7 +73,15 @@ app.post('/team/exit', function (req, res) {
 
 function wssHandler(wssSocket) {
     let user = undefined;
+
+    console.log('open');
+    wssSocket.isAlive = true;
+
+    wssSocket.on('pong', function () {
+        this.isAlive = true;
+    });
     wssSocket.on('message', function (msg) {
+        heartCheck.reset();
         let data = JSON.parse(msg);
         if (user) {
             console.log(`${user.id}: ${msg}`);
@@ -77,6 +96,9 @@ function wssHandler(wssSocket) {
                 wssSocket.send(`Unauthorized:${data.msg}`);
             }
         }
+    });
+    wssSocket.on('close', function (msg) {
+        console.log('close');
     });
 }
 
