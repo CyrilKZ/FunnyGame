@@ -8,7 +8,7 @@ import * as THREE from '../libs/three.min'
 const HERO_RADIUS = 7
 const HERO_BASELINE = -450
 const ROW_WIDTH = 110
-const MOVING_SPEED = 10
+const MOVING_SPEED = 8
 const JUMPING_SPEED = 9
 const GRAVITY = 0.4
 const NO_MOVE = 0

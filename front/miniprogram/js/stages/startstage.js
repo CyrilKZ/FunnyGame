@@ -83,6 +83,7 @@ export default class StartStage extends Stage{
   }
 
   showEnemyInfo(info){
+    console.log(info)
     store.setEnemyInfo(info)
     let geometry = new THREE.PlaneGeometry(AVATAR_SIZE, AVATAR_SIZE, 1, 1)
     let texture = new THREE.TextureLoader().load(store.enemyInfo.picUrl)
