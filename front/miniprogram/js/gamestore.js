@@ -40,11 +40,15 @@ export default class GameStore {
 
     this.roomID = ''
     this.openID = ''
+    this.socketOn = false
   }
   setSelfInfo(info){
     this.selfInfo.nickName = info.nickName
     this.selfInfo.picUrl = info.avatarUrl
     console.log(this.selfInfo.picUrl)
   }
-
+  setEnemyInfo(info){
+    this.enemyInfo.nickName = info.nickName
+    this.selfInfo.picUrl = info.avatarUrl
+  }
 }

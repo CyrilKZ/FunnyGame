@@ -48,16 +48,15 @@ export default class Game {
     this.currentStage = store.welcome
 
 
-
-
-
-
-
-
-    this.login()
-
-    
     this.restart()
+    let self = this
+    network.onStart = function(){
+      self.stages[store.start].startFading()
+    }
+    network.onJoin = function(data){
+      self.stages[store.start].showEnemyInfo(data)
+    }
+    
     wx.showShareMenu({
       withShareTicket: true
     })
@@ -69,13 +68,6 @@ export default class Game {
       }
     })
   }
-
-  login(){
-    // 获取 openid
-    
-  }
-
-  
 
   restart(){  
 
@@ -94,20 +86,20 @@ export default class Game {
       console.log('switch to start')
       this.currentStage = store.start
       store.startFlag = false
-      this.startStage.restart()
+      this.stages[store.start].restart()
     }
     else if(store.gameFlag){
       console.log('switch to game')
       this.currentStage = store.game
       store.gameFlag = false
-      this.gameStage.restart()
+      this.stages[store.game].restart()
       //renderer.clear()
     }
     else if(store.endFlag){
       console.log('switch to start')
       this.currentStage = store.start
       store.endFlag = false
-      this.startStage.restart()
+      this.stages[store.start].restart()
       //renderer.clear()
     }
     this.stages[this.currentStage].loop()
@@ -122,19 +114,7 @@ export default class Game {
     this.stages[this.currentStage].render(renderer)
   }
   handleTouchEvents(res){
-    switch (this.currentStage) {
-      case store.start:
-        this.startStage.handleTouchEvents(res)
-        break
-      case store.game:
-        this.gameStage.handleTouchEvents(res)
-        break
-      case store.end:
-        this.endStage.handleTouchEvents(res)
-        break
-      default:
-        break
-    }
+    this.stages[this.currentStage].handleTouchEvents(res)
   }
 
   initTouchEvents(){

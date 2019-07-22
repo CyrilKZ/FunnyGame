@@ -49,10 +49,6 @@ export default class Sprite {
     if(spYBack > yFront && spYFront < yBack){
       yCollide = true
     }
-    //console.log(sp.y - sp.lengthY)
-    //console.log(this.y)
-    //console.log(this)
-    //console.log(yCollide)
     return (xCollide && yCollide)
   }
   /**
@@ -66,7 +62,9 @@ export default class Sprite {
     let spZTop = spZBottom + sp.lengthZ
     let zBottom = this.z
     let zTop = zBottom + this.lengthZ
-    return (this.is2DCollideWith(sp) && spZBottom < zTop && zBottom < spZTop)
+    //console.log(`z of sp : ${spZBottom}, ${spZTop}`)
+    //console.log(`z of self: ${zBottom}, ${zTop}`)
+    return (this.is2DCollideWith(sp) && spZBottom <= zTop && zBottom <= spZTop)
   }
   isCollideWithRect(rectX, rectY, rectLX, rectLY){
     if ( !this.visible || !sp.visible )
