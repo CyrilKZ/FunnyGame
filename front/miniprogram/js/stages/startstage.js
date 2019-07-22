@@ -33,11 +33,9 @@ export default class StartStage extends Stage{
     this.imReady = null
     this.imNotReady = null
     this.othersReady = null
-    this.othersNotReady = null
     this.setUpScene()
   }
   setUpScene(){
-    // setting up background and camera
     this.camera.position.z = CAMERA_Z
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
@@ -46,21 +44,25 @@ export default class StartStage extends Stage{
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
 
-    //setting up buttons
     this.imReady = new Button('resources/ready.png', 600, 200)
     this.imNotReady = new Button('resources/notready.png', 600, 200)
     this.othersReady = new Button('resources/ready.png', 600, 200)
-    this.imReady.initButton(200, 600)
-    this.imNotReady.initButton(200, 600)
-    this.othersReady.initButton(1120, 600)
-
+    this.imReady.initButton(200, 300)
+    this.imNotReady.initButton(200, 300)
+    this.othersReady.initButton(1120, 300)
 
     this.scene.add(this.imReady.model)
     this.scene.add(this.imNotReady.model)
+    this.scene.add(this.othersReady.model)
+    this.imReady.hide()
+    this.othersReady.hide()
+    this.imNotReady.show()
 
   }
   restart(){
     this.selfReady = false
+    this.imNotReady.show()
+    this.imReady.hide()
     this.enemyReady = false
     this.animation = false
     this.light.intensity = 1
@@ -80,16 +82,49 @@ export default class StartStage extends Stage{
     this.scene.add(this.selfPic)
   }
 
+  showEnemyInfo(info){
+    store.setEnemyInfo(info)
+    let geometry = new THREE.PlaneGeometry(AVATAR_SIZE, AVATAR_SIZE, 1, 1)
+    let texture = new THREE.TextureLoader().load(store.enemyInfo.picUrl)
+    let material = new THREE.MeshLambertMaterial({ map: texture })
+    this.otherPic = new THREE.Mesh(geometry, material)
+    this.otherPic.position.set(AVATAR_POS_LEFT, AVATAR_POS_TOP ,1)
+    this.scene.add(this.otherPic)
+  }
+
+  removeEnemyInfo(){
+    this.scene.remove(this.otherPic)
+  }
   
 
   handleTouchEvents(res){
-    network.sendReady(true, ()=>{
-      this.selfReady = true
-    })
-
+    if(this.selfReady === true){
+      if(this.imReady.checkHit(res.initX, res.initY) && this.imReady.checkHit(res.endX, res.endY)){
+        network.sendReady(false, ()=>{
+          this.selfReady = false
+          this.imNotReady.show()
+          this.imReady.hide()
+        })
+      }
+    }
+    else{
+      if(this.imNotReady.checkHit(res.initX, res.initY) && this.imNotReady.checkHit(res.endX, res.endY)){
+        network.sendReady(true, ()=>{
+          this.selfReady = true
+          this.imNotReady.hide()
+          this.imReady.show()
+        })
+      }
+    }
   }
   setEnemyStatus(status){
     this.enemyReady = status
+    if(status){
+      this.othersReady.show()
+    }
+    else{
+      this.othersReady.hide()
+    }
   }
   loop(){
     if(this.animation === false){

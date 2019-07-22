@@ -51,12 +51,13 @@ export default class WelcomeStage extends Stage{
     this.fail = function(err){
       console.log(err)
     }
-    this.doWeHaveToUseThis.onTap((res) => {
+    this.doWeHaveToUseThis.onTap((info) => {
       wx.cloud.callFunction({
         name: 'login',
         success: res => {
+          console.log('called cloud function')
           store.openID = res.result.openid
-          this.handleAuthorizeEvent(res)
+          this.handleAuthorizeEvent(info)
         },
         fail: err => {
           console.error('get openid failed with error', err)
@@ -68,12 +69,15 @@ export default class WelcomeStage extends Stage{
   handleAuthorizeEvent(res){
     let shareData = wx.getLaunchOptionsSync().query.teamid
     store.setSelfInfo(JSON.parse(res.rawData))
+    console.log(shareData)
     if(shareData === undefined){
       console.log('host')
       store.host = true
       network.login(store.openID, store.selfInfo, ()=>{
         network.createTeam(store.openID, (res)=>{
+          store.roomID = res.teamid
           network.initSocket(()=>{
+            store.socketOn = true
             network.sendOpenid(store.openID, ()=>{
               this.animation = true
             }, this.fail)
@@ -84,16 +88,19 @@ export default class WelcomeStage extends Stage{
     else{
       store.host = false
       store.roomID = shareData
-      network.login(store.openID, ()=>{
+      network.login(store.openID, store.selfInfo, ()=>{
+        console.log(store.openID)
+        console.log(store.roomID)
         network.joinTeam(store.openID, store.roomID ,(res)=>{
           console.log('gest')
           network.initSocket(()=>{
+            store.socketOn = true
             network.sendOpenid(store.openID, ()=>{
-              self.animation = true
-            }, self.fail)
-          }, self.fail)
-        }, self.fail)
-      }, self.fail)
+              this.animation = true
+            }, this.fail)
+          }, this.fail)
+        }, this.fail)
+      }, this.fail)
     }
     
     this.doWeHaveToUseThis.hide()
@@ -110,8 +117,5 @@ export default class WelcomeStage extends Stage{
       this.animation = false
       store.startFlag = true
     }
-  }
-  render(renderer){
-    renderer.render(this.scene, this.camera)
   }
 }

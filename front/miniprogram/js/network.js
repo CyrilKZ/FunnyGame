@@ -18,6 +18,7 @@ export default class Network {
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
+    this.onClose = function (data) { console.log(`onClose`) }
   }
 
   login(openid, userinfo, sucess, fail) {
@@ -108,19 +109,21 @@ export default class Network {
     this.socket.onMessage((res) => {
       self.onMessage(res.data)
     })
+    this.socket.onClose(this.onClose)
   }
 
   onMessage(msg) {
-    let data = JSON.parse(msg)
-    let fun = {
-      'start': this.onStart,
-      'brick': this.onBrick,
-      'win': this.onWin,
-      'action': this.onAction,
-      'transfer': this.onTransfer,
-      'join': this.onJoin
-    }
-    fun[data.msg](data)
+    console.log(msg)
+    // let data = JSON.parse(msg)
+    // let fun = {
+    //   'start': this.onStart,
+    //   'brick': this.onBrick,
+    //   'win': this.onWin,
+    //   'action': this.onAction,
+    //   'transfer': this.onTransfer,
+    //   'join': this.onJoin
+    // }
+    // fun[data.msg](data)
   }
 
   sendOpenid(openid, success, fail) {
