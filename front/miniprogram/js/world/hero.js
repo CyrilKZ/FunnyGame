@@ -98,6 +98,7 @@ export default class Hero extends Sprite {
         this.speedX = MOVING_SPEED
         this.checkMoveSafe()
         if(!this.isMoveSafe){
+          console.log('move is unsafe')
           safe = false
         }
         break
@@ -107,6 +108,7 @@ export default class Hero extends Sprite {
         this.speedZ = JUMPING_SPEED
         this.checkJumpSafe()
         if(!this.isJumpSafe){
+          console.log('jump is unsafe')
           safe = false
         }
         break
@@ -114,6 +116,7 @@ export default class Hero extends Sprite {
         return
     }
     network.sendAction({
+      "frm": databus.frame,
       "pos": databus.absDistance,
       "dir": direction,
       "safe": safe
@@ -136,23 +139,33 @@ export default class Hero extends Sprite {
   updateSaveInfo(){
     if(!this.moving){
       this.scanBlockAhead()
+    }
+    else{
+      return
     }  
     if(this.blockAhead === null){
       return
     }
     let block = this.blockAhead
-    let t = Math.sqrt(2 * block.lengthZ / GRAVITY)
+    let t = (JUMPING_SPEED - Math.sqrt(JUMPING_SPEED * JUMPING_SPEED - 2 * block.lengthZ * GRAVITY))/GRAVITY// 建议重修物理，wdnmd
     let a = databus.accel
     let v = databus.speed
     let minDistance = v * t + a * t * t/2
-    let distance = block.y - block.lengthY - this.y
+    let distance = block.y - block.lengthY - this.y + 1
     if(minDistance > distance){
+      console.log('jump unsavable')
       this.canJumpSave = false
+    }
+    else{
+      this.canJumpSave = true
     }    
-    t = TOTALFRAME_X / 2
+    t = (107 - (55 - this.lengthX)) / MOVING_SPEED - 1
     minDistance = v * t + a * t* t/2
     if(minDistance > distance){
       this.canMoveSave = false
+    }
+    else{
+      this.canMoveSave = true
     }
   }
 
@@ -168,11 +181,16 @@ export default class Hero extends Sprite {
     let block = this.blockAhead
     let vx = databus.speed
     let a = databus.accel
-    let t = Math.sqrt(2 * (JUMPING_SPEED * JUMPING_SPEED) / (GRAVITY * GRAVITY) - 2 * block.lengthZ / GRAVITY)
-    let minUnsafeDistance = vx * t + a * t * t / 2
+    let t = (JUMPING_SPEED + Math.sqrt(JUMPING_SPEED * JUMPING_SPEED - 2 * block.lengthZ * GRAVITY))/GRAVITY
+    let minUnsafePos =  block.y - vx * t - a * t * t / 2 - 1                        //front of the brick hit back of the hero
+    //console.log(t)
+    //console.log(minUnsafePos)
     t = TOTALFRAME_Z
-    let maxUnsafeDistance = vx * t + a * t * t / 2 + block.lengthY
-    if(minUnsafeDistance < block.y && block.y < maxUnsafeDistance){
+    let maxUnsafePos = block.y - block.lengthY - vx * t - a * t * t / 2 + 1       //hit the foot of the brick
+    //console.log(t)
+    //console.log(maxUnsafePos)
+    if(minUnsafePos > this.y - this.lengthY && maxUnsafePos < this.y){
+      //console.log('will hit the wall')
       this.isJumpSafe = false
       return
     }
@@ -182,7 +200,7 @@ export default class Hero extends Sprite {
 
   checkMoveSafe(){
     this.blockAround = null    
-    if(this.direction === MOVE_LEFT){
+    if(this.direction === MOVE_LEFT){ 
       for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
         if (databus.blocks[this.row-1][i].y > this.y) {
           this.blockAround = databus.blocks[this.row-1][i]
@@ -207,10 +225,10 @@ export default class Hero extends Sprite {
     let v = databus.speed
     let t1 = TOTALFRAME_X
     let s1 = v * t1 + a * t1* t1/2
-    let t2 = TOTALFRAME_X/2
+    let t2 = 65 / MOVING_SPEED - 1
     let s2 = v * t2 + a * t2* t2/2
     let distance1 = block.y - block.lengthY - this.y      // move in
-    let distance2 = block.y - this.y                      // move out
+    let distance2 = block.y - this.y + this.lengthY                      // move out
     if(s1 > distance1 && s2 < distance2){
       this.isMoveSafe = false
       return
@@ -224,6 +242,14 @@ export default class Hero extends Sprite {
     if (this.moving) {
       if (this.direction === MOVE_UP) {
         if (this.movingframe === TOTALFRAME_Z) {
+          if(this.heroWillHit == true){
+            this.heroHit = true
+            network.sendFail(()=>{
+              console.log('fail')
+            }, ()=>{
+              console.log('didnt send')
+            })
+          }
           this.movingframe = 0
           this.moving = false
           this.direction = NO_MOVE
@@ -231,8 +257,8 @@ export default class Hero extends Sprite {
           this.speedZ = 0
           this.model.position.z = this.z + HERO_RADIUS
           if(this.blockAhead !==null && this.y - this.lengthY >= this.blockAhead.y){
-            console.log(this.blockAhead.y)
-            console.log('jump dodge')
+            //console.log(this.blockAhead.y)
+            //console.log('jump dodge')
             this.energy += ENERGY_REWARD
           }
           this.scanBlockAhead()
@@ -258,6 +284,14 @@ export default class Hero extends Sprite {
       else {
         if (this.movingframe === TOTALFRAME_X) {
           this.movingframe = 0
+          if(this.heroWillHit == true){
+            this.heroHit = true
+            network.sendFail(()=>{
+              console.log('fail')
+            }, ()=>{
+              console.log('didnt send')
+            })
+          }
           if (this.direction === MOVE_LEFT) {
             this.row -= 1
           }
@@ -300,8 +334,12 @@ export default class Hero extends Sprite {
       }
     }
     this.updateSaveInfo()
-    if((!this.isJumpSafe) || (!this.isMoveSafe) || ((!this.canJumpSave)&&(!this.canMoveSave))){
-      databus.heroWillHit = true
+    if((!this.isJumpSafe) || (!this.isMoveSafe) || (!this.canJumpSave && !this.canMoveSave)){
+      network.sendTransfer({
+        'info': 'danger'
+      }, ()=>{
+        databus.heroWillHit = true
+      })      
     }
     this.energy += 1
     if(this.energy > ENERGY_LIMIT){

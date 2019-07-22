@@ -15,6 +15,9 @@ export default class Stage {
     this.showHUD = false
     this.display = false
   }
+  restart(){
+    return
+  }
   displayHUD(){
     this.showHUD = true
   }
@@ -34,7 +37,7 @@ export default class Stage {
       renderer.render(hud)
     }
   }
-  handleTouchEvent(res = null){
+  handleTouchEvents(res = null){
     return
   }
 }

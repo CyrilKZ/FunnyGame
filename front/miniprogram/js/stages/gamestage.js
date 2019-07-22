@@ -16,11 +16,7 @@ const CAMERA_Y = -750
 const CAMERA_ROT_X = Math.PI / 4
 const ANIMATION_FRAME = 100
 const BLOCK_MIN_DISTANCE = 64
-const LEFT = 1
-const RIGHT = 2
-const TOUCHBAR = 300
-const SCREEN_WIDTH = 1920
-const SCREEN_HEIGHT = 1080
+
 
 let databus = new DataBus()
 let store = new GameStore()
@@ -37,9 +33,10 @@ export default class GameStage extends Stage{
     this.models = []
     this.hero = null
     this.enemy = null
+    this.gameOn = false
     
     let self = this
-    this.setUpScene
+    this.setUpScene()
 
 
     network.onBrick = ((res)=>{
@@ -57,8 +54,67 @@ export default class GameStage extends Stage{
     network.onWin = ((res)=>{
       databus.enemyHit = true
     })
+
+    network.onTransfer = ((res)=>{
+      if(res.info === 'restart'){
+        self.gameOn = true
+      }
+      else if(res.info === 'danger'){
+        if(self.enemy === null){
+          return
+        }
+        else{
+          databus.enemyWillHit = true
+        }
+      }
+      else if(res.info === 'frame'){
+        if(databus.heroHit || databus.enemyHit){
+          return
+        }
+        else{
+          let otherfrm = res.frm
+          while(otherfrm - databus.frame > 3){
+            console.log('force update')
+            self.updateWorld()
+          }
+        }
+      }
+      else if(res.info === 'pause'){
+        console.log(`remote pause: ${res.pause}`)
+        self.switchPause(res.pause)
+      }
+    })
+
+    wx.onHide(function(){
+      if(!store.socketOn){
+        return
+      }
+      network.sendTransfer({
+        info:'pause',
+        pause: true
+      },()=>{
+        console.log('pause')
+        databus.pause = true
+      })
+    })
+    wx.onShow(function(){
+      if(!store.socketOn){
+        return
+      }
+      network.sendTransfer({
+        info:'pause',
+        pause: false
+      },()=>{
+        databus.pause = false
+        console.log('pause')
+      })
+    })
   }
 
+  switchPause(pause){
+    databus.pause = pause
+  }
+  
   setUpScene(){
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
     let material = new THREE.MeshLambertMaterial({ color: 0xfefefe })
@@ -71,7 +127,7 @@ export default class GameStage extends Stage{
     
     this.light.castShadow = true
     this.ground.receiveShadow = true
-    this.light.position.set(0, 0, 100)
+    this.light.position.set(0, 0, 120)
     this.light.shadow.camera.near = 0.5
     this.light.shadow.camera.far = 500
     this.light.shadow.camera.left = -220
@@ -115,12 +171,12 @@ export default class GameStage extends Stage{
 
 
 
-
   restart(){  
     this.animationOn = false
     databus.reset()
     this.clearModels()
     this.hero = new Hero()
+    let self = this
     if(store.host){
       this.hero.initSelf(2)
       databus.setHeroSide(2)
@@ -129,6 +185,11 @@ export default class GameStage extends Stage{
       this.enemy.initEnemy(1)
       databus.setEnemySide(1)
       this.scene.add(this.enemy.model)
+      network.sendTransfer({
+        info:'restart'
+      }, ()=>{
+        self.gameOn = true
+      })
     }
     else{
       this.hero.initSelf(1)
@@ -138,33 +199,13 @@ export default class GameStage extends Stage{
       this.enemy.initEnemy(2)
       databus.setEnemySide(2)
       this.scene.add(this.enemy.model)
-    }    
+    } 
   }
 
   
 
-  loop() {
-    if(this.animationOn === true){
-      if(databus.frame === ANIMATION_FRAME){
-        this.animationOn = false
-        store.endFlag = true
-      }
-      databus.frame += 1
-      this.light.intensity -= 0.5 / ANIMATION_FRAME
-      return
-    }
-
-    if(databus.heroHit === true || databus.enemyHit === true){
-      databus.frame = 0
-      this.animationOn = true
-      return
-    }    
-    databus.frame++
-    if(databus.frame % 40 === 0){
-      
-     
-      
-    }
+  updateWorld(){
+    databus.frame += 1
     databus.absDistance += databus.speed
     databus.blocks.forEach((row)=>{
       row.forEach((item)=>{
@@ -175,7 +216,36 @@ export default class GameStage extends Stage{
       databus.speed += databus.accel
     }    
     this.hero.update()
-    this.enemy.update()
+    this.enemy.syncMove()
+  }
+
+  loop() {
+    if(!this.gameOn || databus.pause){
+      return
+    }
+
+    if(this.animationOn === true){
+      if(databus.aniFrame === ANIMATION_FRAME){
+        this.animationOn = false
+        store.endFlag = true
+      }
+      databus.aniFrame += 1
+      this.light.intensity -= 0.5 / ANIMATION_FRAME
+      return
+    }
+
+    if(databus.heroHit === true || databus.enemyHit === true){
+      databus.anFrame = 0
+      this.animationOn = true
+      return
+    }    
+    if(databus.frame % 120 === 60){
+      network.sendTransfer({
+        'info': 'frame',
+        'frm': databus.frame
+      })
+    }
+    this.updateWorld()
   }
 
   generateRandomBlock(){
@@ -184,7 +254,7 @@ export default class GameStage extends Stage{
 
   addBlockToSelf(row, absdis){
     let block = databus.pool.getItemByClass('block', Block)
-    block.init(row)
+    block.init(row, absdis - databus.absDistance)
     databus.blocks[block.row].push(block)
     this.addModel(block.model)
   }
@@ -217,36 +287,40 @@ export default class GameStage extends Stage{
     let block = null
 
     if(store.host){
+      self.hero.blockPonits -= 1
+      block = databus.pool.getItemByClass('block', Block)
+      block.init(row)
+      databus.blocks[block.row].push(block)
+      self.addModel(block.model)
       network.sendBrick({
         "self": false,
         "row": row,
-        "dis": databus.absDistance
+        "dis": databus.absDistance,
+        "frm": databus.frame
       }, (()=>{
-        self.hero.blockPonits -= 1
-        block = databus.pool.getItemByClass('block', Block)
-        block.init(row)
-        databus.blocks[block.row].push(block)
-        self.addModel(block.model)
+        
       }))
     }
     else{
+      self.hero.blockPonits -= 1
+      block = databus.pool.getItemByClass('block', Block)
+      block.init(row)
+      databus.blocks[block.row].push(block)
+      self.addModel(block.model)
       network.sendBrick({
         "self": false,
         "row": row - 2,
-        "dis": databus.absDistance
+        "dis": databus.absDistance,
+        "frm": databus.frame
       }, (()=>{
-        self.hero.blockPonits -= 1
-        block = databus.pool.getItemByClass('block', Block)
-        block.init(row)
-        databus.blocks[block.row].push(block)
-        self.addModel(block.model)
+        
       }))
     }
     
   }
 
   handleTouchEvents(res){
-    if(this.animationOn || databus.heroHit ||databus.enemyHit){
+    if(this.animationOn || databus.heroHit ||databus.enemyHit || !this.gameOn || this.pause){
       return
     }
     if(res.type === databus.heroSide){      

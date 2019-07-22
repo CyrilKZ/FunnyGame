@@ -14,10 +14,11 @@ export default class DataBus {
   }
   reset(){
     this.frame   = 0
+    this.aniFrame = 0
     this.score   = 0
     this.step    = 0
     this.speed   = 1
-    this.accel   = 1 / 10000
+    this.accel   = 0
     this.blocks  = [[],[],[],[]]
     this.gameOver    = false
     this.heroWillHit = false
@@ -27,6 +28,7 @@ export default class DataBus {
     this.enemyWillHit = false
     this.enemySide    = 0
 
+    this.pause = false
     this.gameFlag    = false
     this.endFlag     = false
     this.absDistance = 0
