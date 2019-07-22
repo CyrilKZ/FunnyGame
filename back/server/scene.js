@@ -4,6 +4,17 @@ function open(openid, wssSocket) {
     let user = team.userHandler.users[openid];
     if (user) {
         user.setSocket(wssSocket);
+        let companion = user.companion;
+        if (companion) {
+            companion.socket.send(JSON.stringify({
+                'msg':'join',
+                'userinfo':user.info
+            }), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
         return user;
     }
     else {
@@ -13,12 +24,6 @@ function open(openid, wssSocket) {
 
 function ready(user, data) {
     user.setReady(data.state);
-    let companion = user.companion;
-    companion.socket.send(JSON.stringify(data), (err) => {
-        if (err) {
-            console.log(`[ERROR]: ${err}`);
-        }
-    });
     if (user.team.checkReady()) {
         user.socket.send('{"msg":"start"}', (err) => {
             console.log({ "msg": "start" });
@@ -36,27 +41,27 @@ function ready(user, data) {
 
 function forwardData(user, data) {
     let companion = user.companion;
-    // if(companion){
-    companion.socket.send(JSON.stringify(data), (err) => {
-        if (err) {
-            console.log(`[ERROR]: ${err}`);
-        }
-        else{
-            console.log('Forwarded');
-        }
-    });
-    // }
+    if (companion) {
+        companion.socket.send(JSON.stringify(data), (err) => {
+            if (err) {
+                console.log(`[ERROR]: ${err}`);
+            }
+            else {
+                console.log('Forwarded');
+            }
+        });
+    }
 }
 
 function fail(user, data) {
     let companion = user.companion;
-    // if(companion){
-    companion.socket.send('{"msg":"win"}', (err) => {
-        if (err) {
-            console.log(`[ERROR]: ${err}`);
-        }
-    });
-    // }
+    if (companion) {
+        companion.socket.send('{"msg":"win"}', (err) => {
+            if (err) {
+                console.log(`[ERROR]: ${err}`);
+            }
+        });
+    }
 }
 
 function restart(user, data) {
@@ -69,6 +74,7 @@ module.exports = {
     'ready': ready,
     'brick': forwardData,
     'action': forwardData,
+    'transfer': forwardData,
     'fail': fail,
     'restart': restart
 }
