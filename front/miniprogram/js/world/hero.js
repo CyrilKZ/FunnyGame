@@ -26,7 +26,8 @@ let network = new Network()
 
 export default class Hero extends Sprite {
   constructor() {
-    super(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
+    let width = 2 * HERO_RADIUS
+    super(width, width, width)
   }
   initSelf(row) {
     let geometry = new THREE.BoxGeometry(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
@@ -242,7 +243,7 @@ export default class Hero extends Sprite {
     this.updateMove()
     if (this.moving) {
       if (this.direction === MOVE_UP) {
-        if (this.movingframe === TOTALFRAME_Z) {
+        if (this.movingframe >= TOTALFRAME_Z) {
           if(this.heroWillHit == true){
             this.heroHit = true
             network.sendFail(()=>{
@@ -281,7 +282,7 @@ export default class Hero extends Sprite {
         }
       }
       else {
-        if (this.movingframe === TOTALFRAME_X) {
+        if (this.movingframe >= TOTALFRAME_X) {
           this.movingframe = 0
           if(this.heroWillHit == true){
             this.heroHit = true

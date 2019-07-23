@@ -23,9 +23,11 @@ let store = new GameStore()
 let network = new Network()
 
 export default class GameStage extends Stage{
+  
   constructor() {
+    let camera =  new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
     super(
-      new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000),
+      camera,
       new THREE.DirectionalLight(0xffffff, 0.5),
       new THREE.AmbientLight(0xeeeeee, 0.5),
     )

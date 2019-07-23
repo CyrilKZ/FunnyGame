@@ -240,7 +240,7 @@ export default class Enemy extends Sprite {
     this.move()
     if (this.moving) {
       if (this.direction === MOVE_UP) {
-        if (this.movingframe === TOTALFRAME_Z) {
+        if (this.movingframe >= TOTALFRAME_Z) {
           this.movingframe = 0
           this.moving = false
           this.direction = NO_MOVE
@@ -266,7 +266,7 @@ export default class Enemy extends Sprite {
         }
       }
       else {
-        if (this.movingframe === TOTALFRAME_X) {
+        if (this.movingframe >= TOTALFRAME_X) {
           this.movingframe = 0
           if (this.direction === MOVE_LEFT) {
             this.row -= 1

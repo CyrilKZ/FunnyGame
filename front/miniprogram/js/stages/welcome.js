@@ -17,14 +17,16 @@ let network = new Network()
 
 export default class WelcomeStage extends Stage{
   constructor(){
+    let camera =  new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000)
     super(
-      new THREE.OrthographicCamera(-PLANE_WIDTH/2, PLANE_WIDTH/2, PLANE_LENGTH/2, -PLANE_LENGTH/2, 1, 1000),
+      camera,
       new THREE.DirectionalLight(0xffffff, 0.5),
       new THREE.AmbientLight(0xeeeeee, 0.5),
     )
     this.setUpScene()
   }
-  setUpScene(){
+  setUpScene(scene = this.scene){
+    this.scene = scene
     this.camera.position.z = CAMERA_Z
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
