@@ -1,43 +1,27 @@
-import Sprite from '../base/sprite'
-import DataBus from '../databus'
-import * as THREE from '../libs/three.min'
+import * as CONST from '../libs/constants'
+import GameStatus from '../status'
 
-const BLOCK_X = 110
-const BLOCK_Y = 5
-const BLOCK_Z = 12
-const OFFSET = 3
-
-let databus = new DataBus()
-
-
+let gamestatus = new GameStatus()
 
 export default class Block extends Sprite{
   constructor(){
-    super(BLOCK_X, BLOCK_Y, BLOCK_Z)
     let geometry = new THREE.CubeGeometry(BLOCK_X - OFFSET*2, BLOCK_Y, BLOCK_Z)
     let metarial = new THREE.MeshLambertMaterial({ color: 0xccddee })
-    this.model = new THREE.Mesh(geometry, metarial)  
+    let model = new THREE.Mesh(geometry, metarial)
+    model.receiveShadow = true
+    super(model, CONST.BLOCK_LENGTHX, CONST.BLOCK_LENGTHY, CONST.BLOCK_LENGTHZ)
   }
-  init(row ,y = 0){    
-    this.y = y
-    this.x = (row - 2) * BLOCK_X
-    this.z = 0
-    this.row = row
-    this.model.receiveShadow = true
-    this.model.position.set(this.x + BLOCK_X / 2, this.y - BLOCK_Y / 2, this.z + BLOCK_Z / 2)
-    this.model.visible = true
-    this.visible = true
+  init(row, scene, y = 0){
+    this.row = row    
+    let x = (row - 2) * CONST.ROW_WIDTH + CONST.BLOCK_OFFSET
+    this.initToScene(scene, x, y, 0)
+    gamestatus.blocks[row].push(this)
   }
-  setInvisible(){
-    this.visible = false
-    this.model.visible = false
-  }
-
   update(speed) {
     this.y -= speed
     this.model.position.y -= speed
     if( this.y < -550){
-      databus.removeBlocks(this)
+      gamestatus.removeBlock(this)
     }
   }
 }

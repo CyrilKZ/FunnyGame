@@ -1,23 +1,19 @@
-/**
- * 游戏基础的精灵类
- */
-
-//var THREE = require('../libs/three.min.js')
-
 /** 
-  * @param{x, y, x} (x, y, z) 物体正方体最左、下、右点的坐标
+  * @param{x, y, x} (x, y, z) 物体正方体最左、下、底点的坐标
  */
 export default class Sprite {
-  constructor(lengthX = 0, lengthY = 0, lengthZ = 0, x = 0, y = 0, z = 0) {
-    this.lengthX = lengthX
-    this.lengthY = lengthY
-    this.lengthZ = lengthZ
+  constructor(model, lengthX = 0, lengthY = 0, lengthZ = 0, x = 0, y = 0, z = 0){
+    this.model = model
     this.x = x
     this.y = y
     this.z = z
+    this.lengthX = lengthX
+    this.lengthY = lengthY
+    this.lengthZ = lengthZ
+    this.boundSecne = false
+    this.model.visible = false
     this.visible = false
   }
-
 
   /**
    * 简单的碰撞检测定义，二维
@@ -30,23 +26,23 @@ export default class Sprite {
     if ( !this.visible || !sp.visible )
       return false
 
-    let spXLeft = sp.x
-    let spXRight = spXLeft + sp.lengthX
-    let spYBack = sp.y
-    let spYFront = spYBack - sp.lengthY
+    let spXMin = sp.x
+    let spXMax = spXMin + sp.lengthX
+    let spYMin = sp.y
+    let spYMax = spYMin + sp.lengthY
 
-    let xLeft = this.x
-    let xRight = xLeft + this.lengthX
-    let yBack = this.y
-    let yFront = yBack - this.lengthY
+    let xMin = this.x
+    let xMax = xMin + this.lengthX
+    let yMin = this.y
+    let yMax = yMin + this.lengthY
 
     let xCollide = false
     let yCollide = false
 
-    if(spXLeft < xRight && spXRight > xLeft){
+    if(spXMin < xMax && spXMax > xMin){
       xCollide = true
     }
-    if(spYBack > yFront && spYFront < yBack){
+    if(spYMax > yMin && spYMin < yMax){
       yCollide = true
     }
     return (xCollide && yCollide)
@@ -62,28 +58,60 @@ export default class Sprite {
     let spZTop = spZBottom + sp.lengthZ
     let zBottom = this.z
     let zTop = zBottom + this.lengthZ
-    //console.log(`z of sp : ${spZBottom}, ${spZTop}`)
-    //console.log(`z of self: ${zBottom}, ${zTop}`)
     return (this.is2DCollideWith(sp) && spZBottom <= zTop && zBottom <= spZTop)
   }
   isCollideWithRect(rectX, rectY, rectLX, rectLY){
     if ( !this.visible || !sp.visible )
       return false
-    let xLeft = this.x
-    let xRight = xLeft + this.lengthX
-    let yBack = this.y
-    let yFront = yBack - this.lengthY
+    let xMin = this.x
+    let xMax = xMin + this.lengthX
+    let yMin = this.y
+    let yMax = yMin + this.lengthY
     let xCollide = false
     let yCollide = false
 
-    if(rectX < xRight && rectX + rectLX > xLeft){
+    if(rectX < xMax && rectX + rectLX > xMin){
       xCollide = true
     }
-    if(rectY < yFront && rectY - rectLY > yBack){
+    if(rectY < yMax && rectY + rectLY > yMin){
       yCollide = true
     }
 
     return (xCollide && yCollide)
   }
-
+  show(){
+    this.visible = true
+    this.model.visible = true
+  }
+  hide(){
+    this.visible = false
+    this.model.visible = false
+  }
+  initToScene(scene, x = this.x, y = this.y, z = this.z){
+    this.x = x
+    this.y = y
+    this.z = z
+    scene.add(this.model)
+    this.model.position.x = this.x + this.lengthX / 2
+    this.model.position.y = this.y + this.lengthY / 2
+    this.model.position.z = this.z + this.lengthZ / 2
+    this.boundSecne = true
+    this.show()
+  }
+  removeFromScene(scene){
+    if(!this.boundSecne){
+      console.error('not attached to any scene')
+      return
+    }
+    this.hide()
+    scene.remove(this.model)
+    this.boundSecne = false
+  }  
+  discard(){
+    if(this.boundSecne){
+      console.error('still attached to a scene')
+    }
+    this.model.material.dispose()
+    this.model.geometry.dispose()
+  }
 }
