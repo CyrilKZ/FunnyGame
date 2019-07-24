@@ -24,6 +24,14 @@ function open(openid, wssSocket) {
 
 function ready(user, data) {
     user.setReady(data.state);
+    if(user.companion){
+        user.companion.socket.send(JSON.stringify(data), (err) => {
+            if (err) {
+                console.log(`[ERROR]: ${err}`);
+            }
+        });
+    }
+
     if (user.team.checkReady()) {
         user.socket.send('{"msg":"start"}', (err) => {
             console.log({ "msg": "start" });

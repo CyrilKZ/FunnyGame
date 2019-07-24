@@ -18,7 +18,11 @@ export default class Network {
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
+<<<<<<< HEAD
+    this.onReady = function (data) { console.log(`onReady: ${data}`) }
+=======
     this.onClose = function (data) { console.log(`onClose`) }
+>>>>>>> c3017d1e2b3e35caea94c4a35ddfc2a466987730
   }
 
   login(openid, userinfo, sucess, fail) {
@@ -113,17 +117,17 @@ export default class Network {
   }
 
   onMessage(msg) {
-    console.log(msg)
-    // let data = JSON.parse(msg)
-    // let fun = {
-    //   'start': this.onStart,
-    //   'brick': this.onBrick,
-    //   'win': this.onWin,
-    //   'action': this.onAction,
-    //   'transfer': this.onTransfer,
-    //   'join': this.onJoin
-    // }
-    // fun[data.msg](data)
+    let data = JSON.parse(msg)
+    let fun = {
+      'start': this.onStart,
+      'brick': this.onBrick,
+      'win': this.onWin,
+      'action': this.onAction,
+      'transfer': this.onTransfer,
+      'join': this.onJoin,
+      'ready':this.onReady
+    }
+    fun[data.msg](data)
   }
 
   sendOpenid(openid, success, fail) {
