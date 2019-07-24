@@ -18,6 +18,7 @@ export default class Network {
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
+    this.onReady = function (data) { console.log(`onReady: ${data}`) }
   }
 
   login(openid, userinfo, sucess, fail) {
@@ -118,7 +119,8 @@ export default class Network {
       'win': this.onWin,
       'action': this.onAction,
       'transfer': this.onTransfer,
-      'join': this.onJoin
+      'join': this.onJoin,
+      'ready':this.onReady
     }
     fun[data.msg](data)
   }

@@ -13,16 +13,16 @@ class Server {
         this.httpsServer = https.createServer(options, app).listen(port);
         let wss = new ws.Server({ server: this.httpsServer });
         wss.on('connection', wssHandler);
-        const interval = setInterval(function ping() {
-            wss.clients.forEach(function each(ws) {
-                if (ws.isAlive === false) {
-                    return ws.terminate();
-                }
+        // const interval = setInterval(function ping() {
+        //     wss.clients.forEach(function each(ws) {
+        //         if (ws.isAlive === false) {
+        //             return ws.terminate();
+        //         }
         
-                ws.isAlive = false;
-                ws.ping();
-            });
-        }, 10000);
+        //         ws.isAlive = false;
+        //         ws.ping();
+        //     });
+        // }, 10000);
         this.wssServer = wss
     }
 }
@@ -81,7 +81,6 @@ function wssHandler(wssSocket) {
         this.isAlive = true;
     });
     wssSocket.on('message', function (msg) {
-        heartCheck.reset();
         let data = JSON.parse(msg);
         if (user) {
             console.log(`${user.id}: ${msg}`);
@@ -98,6 +97,9 @@ function wssHandler(wssSocket) {
         }
     });
     wssSocket.on('close', function (msg) {
+        // if(user){
+        //     user.setSocket(undefined);
+        // }
         console.log('close');
     });
 }
