@@ -63,7 +63,7 @@ export default class GameScene {
 
     network.onTransfer = ((res)=>{
       if(res.info === 'restart'){
-        self.gameOn = true
+        gamestatus.gameOn = true
       }
       else if(res.info === 'danger'){
         if(self.enemy === null){
@@ -288,6 +288,11 @@ export default class GameScene {
     })
     this.hero.update()
     this.enemy.sync()
+    if(gamestatus.heroHit === true || gamestatus.enemyHit === true){
+      this.endAnimation = true
+      gamestatus.gameOn = false
+      return
+    }
   }
   handleTouchEvents(res){
     if(this.startAnimation || gamestatus.heroHit || gamestatus.enemyHit || !gamestatus.gameOn || gamestatus.pause){

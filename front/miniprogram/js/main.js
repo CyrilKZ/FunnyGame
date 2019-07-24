@@ -91,8 +91,13 @@ export default class Game {
     }    
     this.gameScene.render(renderer)
   }
-  handleTouchEvents(res){
-    this.stages[this.currentStage].handleTouchEvents(res)
+  handleTouchEvents(res){  
+    if(this.currentStage !== -1){
+      this.stages[this.currentStage].handleTouchEvents(res)
+    }
+    else{
+      this.gameScene.handleTouchEvents(res)
+    }
   } 
   initTouchEvents(){
     touchevents.reset()
