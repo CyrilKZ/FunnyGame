@@ -61,7 +61,7 @@ export default class TouchEvents {
     }
     else {
       if(res.dY < 0){
-        res.swipe = CONST.DIR_TOP
+        res.swipe = CONST.DIR_UP
       }
       else{
         res.swipe = 0

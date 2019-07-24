@@ -15,6 +15,7 @@ export default class Hero extends Sprite{
     model.castShadow = true
     super(model, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
 
+    this.row = 0
     this.moving = false
     this.movingframe = 0
     this.direction = CONST.DIR_NONE
@@ -34,6 +35,7 @@ export default class Hero extends Sprite{
     this.row = row
     let x = (row - 2) * CONST.ROW_WIDTH + CONST.HERO_OFFSET
     this.initToScene(scene, x, CONST.HERO_BASELINE, 0)
+    gamestatus.heroSide = row < 2 ? CONST.DIR_LEFT: CONST.DIR_RIGHT
   }
   addMove(direction){
     if(this.moves.length < 2){
@@ -52,6 +54,7 @@ export default class Hero extends Sprite{
     else{
       return
     }
+    console.log(`new direction: ${direction}`)
     let safe = true
     this.scanBlockAhead()
     switch (direction) {
@@ -218,6 +221,7 @@ export default class Hero extends Sprite{
   update() {
     this.updateMove()
     if (this.moving) {
+      console.log(this.direction)
       if (this.direction === CONST.DIR_UP) {
         if (this.movingframe >= CONST.HERO_TOTAL_FZ) {
           if(this.heroWillHit == true){
@@ -274,24 +278,24 @@ export default class Hero extends Sprite{
           else {
             this.row += 1
           }
-          this.x = (this.row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - CONST.HERO_RADIUS
+          this.x = (this.row - 2) * CONST.ROW_WIDTH + CONST.ROW_WIDTH / 2 - CONST.HERO_RADIUS
           this.model.position.x = this.x + CONST.HERO_RADIUS
           this.moving = false
           this.direction = CONST.DIR_NONE
           this.speedX = 0
           this.scanBlockAhead()
         }
-        else if(this.movingframe === Math.round(CONST.HERO_TOTAL_FX / 2)){
-          if(!this.canMoveSave){
-            network.sendFail(()=>{
-              console.log('fail')
-            }, ()=>{
-              console.log('didnt send')
-            })
-            gamestatus.heroHit = true
-          }
-        }
         else {
+          if(this.movingframe === Math.round(CONST.HERO_TOTAL_FX / 2)){
+            if(!this.canMoveSave){
+              network.sendFail(()=>{
+                console.log('fail')
+              }, ()=>{
+                console.log('didnt send')
+              })
+              gamestatus.heroHit = true
+            }
+          }
           this.movingframe += 1
           this.x += this.speedX
           this.model.position.x += this.speedX

@@ -15,6 +15,7 @@ export default class Enemy extends Sprite {
     model.castShadow = true
     super(model, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
 
+    this.row = 0
     this.moving = false
     this.movingframe = 0
     this.direction = CONST.DIR_NONE
@@ -35,7 +36,7 @@ export default class Enemy extends Sprite {
     this.row = row
     let x = (row - 2) * CONST.ROW_WIDTH + CONST.HERO_OFFSET
     this.initToScene(scene, x, CONST.HERO_BASELINE, 0)
-  
+    gamestatus.enemySide = row < 2 ? CONST.DIR_LEFT: CONST.DIR_RIGHT
     let self = this
     network.onAction = ((res)=>{
       console.log(`action received ${res}`)
@@ -253,7 +254,7 @@ export default class Enemy extends Sprite {
           else {
             this.row += 1
           }
-          this.x = (this.row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - CONST.HERO_RADIUS
+          this.x = (this.row - 2) * CONST.ROW_WIDTH + CONST.ROW_WIDTH / 2 - CONST.HERO_RADIUS
           this.model.position.x = this.x + CONST.HERO_RADIUS
           this.moving = false
           this.direction = CONST.DIR_NONE

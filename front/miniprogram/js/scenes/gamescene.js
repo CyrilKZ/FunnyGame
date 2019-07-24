@@ -4,6 +4,7 @@ import Ground from '../world/ground'
 import GameStatus from '../status';
 import Hero from '../world/hero';
 import Enemy from '../world/enemy';
+import Block from '../world/block'
 import Network from '../base/network';
 
 
@@ -15,7 +16,7 @@ const FINAL_CAMERA  = {
 }
 
 const INITIAL_CAMERA = {
-  y: -250,
+  y: 0,
   z: 1600,
   rotX: 0,
   offsetX: 200,
@@ -64,6 +65,8 @@ export default class GameScene {
     network.onTransfer = ((res)=>{
       if(res.info === 'restart'){
         gamestatus.gameOn = true
+        gamestatus.frame = 0
+        gamestatus.absDistance = 0
       }
       else if(res.info === 'danger'){
         if(self.enemy === null){
@@ -97,9 +100,7 @@ export default class GameScene {
   }
   addBlockToSelf(row, absdis){
     let block = gamestatus.pool.getItemByClass('block', Block)
-    block.init(row, absdis - gamestatus.absDistance)
-    gamestatus.blocks[block.row].push(block)
-    this.addModel(block.model)
+    block.init(row, this.scene, absdis - gamestatus.absDistance)
   }
 
   addBlockToEnemy(x){
@@ -132,9 +133,7 @@ export default class GameScene {
     if(gamestatus.host){
       self.hero.blockPonits -= 1
       block = gamestatus.pool.getItemByClass('block', Block)
-      block.init(row)
-      gamestatus.blocks[block.row].push(block)
-      self.addModel(block.model)
+      block.init(row, this.scene)
       network.sendBrick({
         "self": false,
         "row": row,
@@ -147,9 +146,7 @@ export default class GameScene {
     else{
       self.hero.blockPonits -= 1
       block = gamestatus.pool.getItemByClass('block', Block)
-      block.init(row)
-      gamestatus.blocks[block.row].push(block)
-      self.addModel(block.model)
+      block.init(row, this.scene)
       network.sendBrick({
         "self": false,
         "row": row - 2,
@@ -194,13 +191,30 @@ export default class GameScene {
     this.camera.position.z = INITIAL_CAMERA.z
     this.camera.position.y = INITIAL_CAMERA.y
 
+    
+  } 
+    
+
+  initCharacters(){
     this.hero = new Hero()
-    this.hero.init(2, this.scene)
-
     this.enemy = new Enemy()
-    this.enemy.init(1, this.scene)
-
+    if(gamestatus.host){
+      this.hero.init(2, this.scene)
+      this.enemy.init(1, this.scene)
+    }
+    else{
+      this.hero.init(1, this.scene)
+      this.enemy.init(2, this.scene)
+    }
   }
+    
+  cleanCharacters(){
+    this.hero.removeFromScene(this.scene)
+    this.enemy.removeFromScene(this.scene)
+    this.hero.discard()
+    this.enemy.discard()
+  }
+
   initStartAnimation(){
     this.startAnimation = true
     let self = this
@@ -281,6 +295,7 @@ export default class GameScene {
   updateGame(){
     gamestatus.frame += 1
     gamestatus.absDistance += gamestatus.speed
+    this.arena.update(gamestatus.speed)
     gamestatus.blocks.forEach((row) => {
       row.forEach((item)=>{
         item.update(gamestatus.speed)
@@ -295,16 +310,19 @@ export default class GameScene {
     }
   }
   handleTouchEvents(res){
+    console.log(res)
+    console.log(this.startAnimation || gamestatus.heroHit || gamestatus.enemyHit || !gamestatus.gameOn || gamestatus.pause)
     if(this.startAnimation || gamestatus.heroHit || gamestatus.enemyHit || !gamestatus.gameOn || gamestatus.pause){
       return
     }
-    if(res.type === gamestatus.heroSide){      
+    console.log(res.type)
+    console.log(gamestatus.heroSide)
+    if(res.type === gamestatus.heroSide){  
+      console.log(`swipe: ${res.swipe}`)    
       this.hero.addMove(res.swipe)
     }
     else if(res.endY > window.innerHeight / 4 * 3 && res.endType !== gamestatus.heroSide){
-      {
-        this.addBlockToEnemy(res.endX)
-      }
+      this.addBlockToEnemy(res.endX)
     }
   }
 }

@@ -18,6 +18,7 @@ export default class Network {
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
+    this.onReady = function (data) { console.log(`onReady: ${data}`) }
     this.onClose = function (data) { console.log(`onClose`) }
   }
 
@@ -113,7 +114,7 @@ export default class Network {
   }
 
   onMessage(msg) {
-    console.log(msg)
+    //console.log(msg)
     let data = JSON.parse(msg)
     let fun = {
       'start': this.onStart,
@@ -121,7 +122,8 @@ export default class Network {
       'win': this.onWin,
       'action': this.onAction,
       'transfer': this.onTransfer,
-      'join': this.onJoin
+      'join': this.onJoin,
+      'ready':this.onReady
     }
     fun[data.msg](data)
   }

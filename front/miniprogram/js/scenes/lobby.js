@@ -163,10 +163,13 @@ export default class LobbyScene extends UI {
   }
   fade(){
     this.frame += 1
-    this.light.intensity -= 0.5 / CONST.SWITCH_SHORT_FRAME
+    this.light.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
+    this.aLight.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
     if(this.frame === CONST.SWITCH_SHORT_FRAME){
       this.frame = 0
       this.animation = false
+      this.light.intensity = 0
+      this.aLight.intensity = 0
       gamestatus.switchToGame = true
       this.display = false
     }

@@ -1,11 +1,13 @@
 import * as CONST from '../libs/constants'
 import GameStatus from '../status'
+import Sprite from '../base/sprite'
+import * as THREE from '../libs/three.min'
 
 let gamestatus = new GameStatus()
 
 export default class Block extends Sprite{
   constructor(){
-    let geometry = new THREE.CubeGeometry(BLOCK_X - OFFSET*2, BLOCK_Y, BLOCK_Z)
+    let geometry = new THREE.CubeGeometry(CONST.BLOCK_LENGTHX, CONST.BLOCK_LENGTHY, CONST.BLOCK_LENGTHZ)
     let metarial = new THREE.MeshLambertMaterial({ color: 0xccddee })
     let model = new THREE.Mesh(geometry, metarial)
     model.receiveShadow = true

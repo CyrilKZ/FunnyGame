@@ -28,24 +28,26 @@ export default class Game {
     this.frame = 0
     this.gameScene = new GameScene()
 
-    let self = this
-    network.onJoin = function(data){
-      console.log(data.userinfo)
-      gamestatus.setEnemyInfo(data.userinfo)
-      //self.stages[CONST.STAGE_LOBBY].enemyJoin()      
-    }
+    
     this.stages = [
       new WelcomScene(),
       new LobbyScene()
     ]
     this.currentStage = CONST.STAGE_WELCOME
     this.initTouchEvents()
-    this.restart()
-
     
+
+    let self = this
+    network.onJoin = function(data){
+      console.log(data.userinfo)
+      gamestatus.setEnemyInfo(data.userinfo)
+            
+    }    
     network.onStart = function(){
-      self.stages[CONST.STAGE_LOBBY].startFading()    
+      self.stages[CONST.STAGE_LOBBY].startFading()
+      self.gameScene.initCharacters()    
     }
+    this.restart()
     
   }
   restart(){  

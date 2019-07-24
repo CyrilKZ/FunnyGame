@@ -114,6 +114,7 @@ export default class Network {
   }
 
   onMessage(msg) {
+    console.log(msg)
     let data = JSON.parse(msg)
     let fun = {
       'start': this.onStart,

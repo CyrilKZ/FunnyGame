@@ -35,3 +35,4 @@ export const STAGE_LOBBY = 1
 export const STAGE_GAME = 2
 export const STAGE_END = 3
 export const BLOCK_MIN_DISTANCE = 64
+export const PATICLE_NUMBER = 100
