@@ -1,31 +1,27 @@
 import GameStatus from '../status'
 import UI from '../base/ui'
 import Network from '../base/network'
+import Button from '../world/button'
+import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
 
 let gamestatus = new GameStatus()
 let network = new Network()
 export default class WelcomeScene extends UI {
   constructor(){
-    super('resources/welcome.png')
+    super('resources/startbg.png')
     this.handlingAuth = false
     this.setUpScene()
   }
   setUpScene(){
     this.doWeHaveToUseThis = wx.createUserInfoButton({
-      type: 'text',
-      text: '开始游戏',
+      type: 'image',
+      image: 'resources/start.png',
       style: {
-        left: window.innerWidth / 2  - 250,
-        top: window.innerHeight / 2 + 100,
-        width: 200,
-        height: 40,
-        lineHeight: 40,
-        backgroundColor: '#ffffff',
-        color: '#000000',
-        textAlign: 'center',
-        fontSize: 16,
-        borderRadius: 4
+        left: 608 * window.innerWidth / 1920,
+        top: 632 * window.innerHeight / 1080,
+        width: 510 * window.innerWidth / 1920,
+        height: 154 * window.innerHeight / 1080
       }
     })
     this.doWeHaveToUseThis.onTap((info) => {
@@ -41,9 +37,30 @@ export default class WelcomeScene extends UI {
         }
       })      
     })
+    this.buttonsSet = false
+    this.btnRanklist = new Button('resources/rank_button.png', 152, 152, 0 , 0)
+    this.btnBack = new Button('resources/back_button.png',121, 123,-650,-385)
+    this.tryToInitButtons()
   }
   fail(res){
     console.log(`fail info: ${res}`)
+  }
+
+  tryToInitButtons() {
+    if (!this.loaded) {
+      return
+    }
+    if (this.btnRanklist.loaded && !this.btnRanklist.boundScene) {
+      this.btnRanklist.init(this.scene)
+      this.btnRanklist.showButton()
+    }
+
+    if (this.btnBack.loaded && !this.btnBack.boundScene) {
+      this.btnBack.init(this.scene)
+      this.btnBack.hideButton()
+    }
+
+    this.buttonsSet = this.buttonsSet || (this.btnRanklist.boundScene && this.btnBack.boundScene)
   }
   handleAuthorizeEvent(res){
     if(this.handlingAuth){
@@ -88,6 +105,22 @@ export default class WelcomeScene extends UI {
       }, this.fail)
     }
   }
+  showRanklist() {
+    let openDataContext = wx.getOpenDataContext()
+    let sharedCanvas = openDataContext.canvas
+    let texture = new THREE.CanvasTexture(sharedCanvas)
+    let material = new THREE.MeshLambertMaterial({
+      map: texture
+    })
+    let geometry = new THREE.PlaneGeometry(1450, 800, 1, 1)
+    this.rankList = new THREE.Mesh(geometry, material)
+    this.scene.add(this.rankList)
+  }
+
+  hideRanklist() {
+    this.scene.remove(this.rankList)
+  }
+
   loop(){
     if(!this.loaded){
       return
@@ -95,6 +128,7 @@ export default class WelcomeScene extends UI {
     if(this.animation){
       this.fade()
     }
+    this.tryToInitButtons()
   }
   fade(){
     this.frame += 1
@@ -105,6 +139,27 @@ export default class WelcomeScene extends UI {
       this.animation = false
       gamestatus.switchToLobby = true
       this.display = false
+    }
+  }
+  handleTouchEvents(res) {
+    if (!this.buttonsSet) {
+      return
+    }
+    let endX = res.endX
+    let endY = res.endY
+    let initX = res.initX
+    let initY = res.initY
+    if (this.btnRanklist.checkTouch(endX, endY, initX, initY)) {
+      this.doWeHaveToUseThis.hide()
+      this.btnRanklist.hideButton()
+      this.btnBack.showButton()
+      this.showRanklist()
+    }
+    else if (this.btnBack.checkTouch(endX, endY, initX, initY)) {
+      this.btnBack.hideButton()
+      this.doWeHaveToUseThis.show()
+      this.btnRanklist.showButton()
+      this.hideRanklist()
     }
   }
 }

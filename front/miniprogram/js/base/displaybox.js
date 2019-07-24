@@ -18,7 +18,7 @@ export default class DisplayBox {
       url,
       function(texture){
         console.log(`${url} loaded`)
-        let material = new THREE.MeshLambertMaterial({map:texture})
+        let material = new THREE.MeshLambertMaterial({map:texture, transparent:true})
         let geometry = new THREE.PlaneGeometry(self.lengthX, self.lengthY)
         self.model = new THREE.Mesh(geometry, material)
         self.loaded = true        

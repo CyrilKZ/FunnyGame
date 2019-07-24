@@ -8,8 +8,10 @@ let sharedCanvas = openDataContext.canvas
 sharedCanvas.width = 1450
 sharedCanvas.height = 800
 
-openDataContext.postMessage({
-  command: 'render'
-})
+setTimeout(function(){
+  wx.postMessage({
+    command:'renderRanklist'
+  })
+}, 500)
 
 new Game()
