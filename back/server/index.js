@@ -52,7 +52,7 @@ app.post('/team/create', function (req, res) {
 });
 
 app.post('/team/join', function (req, res) {
-    if (team.teamHandler.join(req.body.openid, req.body.teamid, req.body.userinfo)) {
+    if (team.teamHandler.join(req.body.openid, req.body.teamid)) {
         res.json({
             'result': 0
         });
