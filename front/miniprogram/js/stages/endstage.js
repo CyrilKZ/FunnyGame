@@ -22,22 +22,17 @@ export default class EndStage {
 
     this.selfReady = false
     this.enemyReady = false
-    this.startAnimation = false
+    this.animation = false
 
 
     this.setUpScene()
 
-    let self = this
-
-    // network.onStart = (()=>{
-    //   self.startAnimation = true
-    // })
   }
   setUpScene(){
     this.camera.position.z = CAMERA_Z
     this.light.position.set(0, 0, 100)
     let geometry = new THREE.PlaneGeometry(PLANE_WIDTH, PLANE_LENGTH, 1, 1)
-    let texture = new THREE.TextureLoader().load( './resources/startbg.png' )
+    let texture = new THREE.TextureLoader().load( 'resources/startbg.png' )
     let material = new THREE.MeshLambertMaterial({ map: texture })
     this.backgound = new THREE.Mesh(geometry, material)
     this.scene.add(this.backgound)
@@ -47,29 +42,26 @@ export default class EndStage {
   restart(){
     this.selfReady = false
     this.enemyReady = false
-    this.startAnimation = false
+    this.animation = false
     this.light.intensity = 1
     databus.reset()
   }
 
   handleTouchEvents(res){
-    // if in range
     console.log(res)
     network.sendReady(true)
-    //this.startAnimation = true
   }
   setEnemyStatus(status){
     this.enemyReady = status
   }
   loop(){
-    //console.log(this.startAnimation)
-    if(this.startAnimation === false){
+    if(this.animation === false){
       return
     }
     databus.frame += 1
     this.light.intensity -= 1 / ANIMATION_FRAME
     if(databus.frame === ANIMATION_FRAME){
-      this.startAnimation = false
+      this.animation = false
       store.gameFlag = true
     }
   }

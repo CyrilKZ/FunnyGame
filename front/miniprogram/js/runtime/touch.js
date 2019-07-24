@@ -38,12 +38,13 @@ export default class TouchEvents {
   }
   removeEvent(e){
     let info = this.touchMap.get(e.identifier)
-    //console.log(info)
     if(info === undefined){
       return null
     }
     this.touchMap.delete(e.identifier)
     let res = {
+      initX: info.initX,
+      initY: info.initY,
       endX: info.endX,
       endY: info.endY,
       dX: info.endX - info.initX,
