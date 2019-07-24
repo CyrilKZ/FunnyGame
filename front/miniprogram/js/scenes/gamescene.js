@@ -4,6 +4,8 @@ import Ground from '../world/ground'
 import GameStatus from '../status';
 import Hero from '../world/hero';
 import Enemy from '../world/enemy';
+import Network from '../base/network';
+
 
 const FINAL_CAMERA  = {
   y: -750,
@@ -22,6 +24,8 @@ const INITIAL_CAMERA = {
 }
 
 let gamestatus = new GameStatus()
+let network = new Network()
+
 export default class GameScene {
   constructor(){
     this.scene = new THREE.Scene()
@@ -40,7 +44,124 @@ export default class GameScene {
     this.animationFrame = 0
     this.startAnimation = false
     this.endAnimation = false
+
+    this.initNetwork()
   }
+  initNetwork(){
+    let self = this
+    network.onBrick = ((res)=>{
+      if(gamestatus.host){
+        self.addBlockToSelf(res.row + 2, res.dis)
+      }
+      else{
+        self.addBlockToSelf(res.row, res.dis)
+      }      
+    })
+    network.onWin = ((res)=>{
+      gamestatus.enemyHit = true
+    })
+
+    network.onTransfer = ((res)=>{
+      if(res.info === 'restart'){
+        self.gameOn = true
+      }
+      else if(res.info === 'danger'){
+        if(self.enemy === null){
+          return
+        }
+        else{
+          gamestatus.enemyWillHit = true
+        }
+      }
+      else if(res.info === 'frame'){
+        if(gamestatus.heroHit || gamestatus.enemyHit){
+          return
+        }
+        else{
+          let otherfrm = res.frm
+          while(otherfrm - gamestatus.frame > 3){
+            console.log('force update')
+            self.updateGame()
+          }
+        }
+      }
+      else if(res.info === 'pause'){
+        console.log(`remote pause: ${res.pause}`)
+        self.switchPause(res.pause)
+      }
+    })
+  }
+
+  switchPause(pause){
+    gamestatus.pause = pause
+  }
+  addBlockToSelf(row, absdis){
+    let block = gamestatus.pool.getItemByClass('block', Block)
+    block.init(row, absdis - gamestatus.absDistance)
+    gamestatus.blocks[block.row].push(block)
+    this.addModel(block.model)
+  }
+
+  addBlockToEnemy(x){
+    if(this.hero.blockPonits < 1){
+      return
+    }
+    console.log(x)
+    let row
+    if(x < window.innerWidth / 4){
+      row = 0
+    }
+    else if(x < window.innerWidth / 2){
+      row = 1
+    }
+    else if(x < window.innerWidth *3 / 4){
+      row = 2
+    }
+    else{
+      row = 3
+    }
+    if(
+        gamestatus.blocks[row].length > 0 && 
+        gamestatus.blocks[row][gamestatus.blocks[row].length - 1].y > -CONST.BLOCK_MIN_DISTANCE
+      ){
+      return
+    }
+    let self = this
+    let block = null
+
+    if(gamestatus.host){
+      self.hero.blockPonits -= 1
+      block = gamestatus.pool.getItemByClass('block', Block)
+      block.init(row)
+      gamestatus.blocks[block.row].push(block)
+      self.addModel(block.model)
+      network.sendBrick({
+        "self": false,
+        "row": row,
+        "dis": gamestatus.absDistance,
+        "frm": gamestatus.frame
+      }, (()=>{
+        
+      }))
+    }
+    else{
+      self.hero.blockPonits -= 1
+      block = gamestatus.pool.getItemByClass('block', Block)
+      block.init(row)
+      gamestatus.blocks[block.row].push(block)
+      self.addModel(block.model)
+      network.sendBrick({
+        "self": false,
+        "row": row - 2,
+        "dis": gamestatus.absDistance,
+        "frm": gamestatus.frame
+      }, (()=>{
+        
+      }))
+    }
+    
+  }
+
   tryToSetUp(){
     if(this.arena.loaded){
       this.loaded = true
@@ -102,14 +223,29 @@ export default class GameScene {
       this.camera.position.y = FINAL_CAMERA.y
       this.animationFrame = 0
       this.startAnimation = false
-      gamestatus.gameOn = true
+      if(gamestatus.host){
+        network.sendTransfer({
+          info: 'restart'
+        }, ()=>{
+          gamestatus.gameOn = true
+        })
+      }
+      
     }
     if(this.animationFrame > CONST.GAME_START_FRAME){
       this.camera.position.z += (FINAL_CAMERA.z - INITIAL_CAMERA.z) / CONST.GAME_START_FRAME
       this.camera.position.y += (FINAL_CAMERA.y - INITIAL_CAMERA.y) / CONST.GAME_START_FRAME
       this.camera.rotateX(Math.PI/4 /CONST.GAME_START_FRAME)
-    }
-    
+    }  
+  }
+  updateEndAnimation(){
+    this.endAnimation = false
+    gamestatus.blocks.forEach((row) => {
+      row.forEach((item)=>{
+        item.update(600)
+      })
+    })
+    gamestatus.switchToLobby = true
   }
   setUpRenderer(renderer){
     renderer.setScissor(1200, 0, 1920, 1080)
@@ -125,18 +261,45 @@ export default class GameScene {
   loop(){
     if(this.startAnimation){
       this.updateStartAnimation()
+      return
     }
+    if(this.endAnimation){
+      this.updateEndAnimation()
+      return
+    }
+    if(gamestatus.pause || !gamestatus.gameOn){
+      return
+    }
+    if(gamestatus.frame % 60 === 30){
+      network.sendTransfer({
+        'info': 'frame',
+        'frm': gamestatus.frame
+      })
+    }
+    this.updateGame()
   }
   updateGame(){
     gamestatus.frame += 1
     gamestatus.absDistance += gamestatus.speed
     gamestatus.blocks.forEach((row) => {
       row.forEach((item)=>{
-        item.update(databus.speed)
+        item.update(gamestatus.speed)
       })
     })
     this.hero.update()
     this.enemy.sync()
   }
-
+  handleTouchEvents(res){
+    if(this.startAnimation || gamestatus.heroHit || gamestatus.enemyHit || !gamestatus.gameOn || gamestatus.pause){
+      return
+    }
+    if(res.type === gamestatus.heroSide){      
+      this.hero.addMove(res.swipe)
+    }
+    else if(res.endY > window.innerHeight / 4 * 3 && res.endType !== gamestatus.heroSide){
+      {
+        this.addBlockToEnemy(res.endX)
+      }
+    }
+  }
 }

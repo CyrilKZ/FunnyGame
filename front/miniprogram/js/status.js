@@ -54,7 +54,7 @@ export default class GameStatus {
     this.enemyWillHit = false
     this.enemySide    = 0
 
-    this.gameOn = true
+    this.gameOn = false
     this.pause = false
     this.absDistance = 0
   }
@@ -64,4 +64,12 @@ export default class GameStatus {
     this.pool.recover('block',block)
   }
 
+  setSelfInfo(info){
+    this.selfInfo.nickName = info.nickName
+    this.selfInfo.picUrl = info.avatarUrl
+  }
+  setEnemyInfo(info){
+    this.enemyInfo.nickName = info.nickName
+    this.enemyInfo.picUrl = info.picUrl
+  }
 }

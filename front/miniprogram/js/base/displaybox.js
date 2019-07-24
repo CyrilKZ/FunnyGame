@@ -1,4 +1,4 @@
-import * as THREE from '../base/three.min'
+import * as THREE from '../libs/three.min'
 export default class DisplayBox {
   constructor(url, lengthX = 0, lengthY = 0, x = 0, y = 0, z = 0){
     this.loaded = false
@@ -57,21 +57,21 @@ export default class DisplayBox {
     scene.add(this.model)
     this.model.position.x = this.x + this.lengthX / 2
     this.model.position.y = this.y + this.lengthY / 2
-    this.model.position.z = this.z + this.lengthZ / 2
-    this.boundSecne = true
+    this.model.position.z = this.z
+    this.boundScene = true
     this.show()
   }
   removeFromScene(scene){
-    if(!this.boundSecne){
+    if(!this.boundScene){
       console.error('not attached to any scene')
       return
     }
     this.hide()
     scene.remove(this.model)
-    this.boundSecne = false
+    this.boundScene = false
   }  
   discard(){
-    if(this.boundSecne){
+    if(this.boundScene){
       console.error('still attached to a scene')
     }
     if(!this.loaded){

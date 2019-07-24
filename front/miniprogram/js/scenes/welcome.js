@@ -1,6 +1,7 @@
 import GameStatus from '../status'
 import UI from '../base/ui'
 import Network from '../base/network'
+import * as CONST from '../libs/constants'
 
 let gamestatus = new GameStatus()
 let network = new Network()
@@ -32,7 +33,7 @@ export default class WelcomeScene extends UI {
         name: 'login',
         success: res => {
           console.log('called cloud function')
-          status.openID = res.result.openid
+          gamestatus.openID = res.result.openid
           this.handleAuthorizeEvent(info)
         },
         fail: err => {
@@ -97,7 +98,9 @@ export default class WelcomeScene extends UI {
   }
   fade(){
     this.frame += 1
+    //console.log(this.frame)
     this.light.intensity -= 0.5 / CONST.SWITCH_SHORT_FRAME
+    this.aLight.intensity -= 0.5 / CONST.SWITCH_SHORT_FRAME
     if(this.frame === CONST.SWITCH_SHORT_FRAME){
       this.animation = false
       gamestatus.switchToLobby = true

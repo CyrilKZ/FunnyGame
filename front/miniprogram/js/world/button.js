@@ -3,14 +3,13 @@ import * as CONST from '../libs/constants'
 import DisplayBox from '../base/displaybox'
 
 export default class Button extends DisplayBox{
-  constructor(url, onTouch, lengthX = 0, lengthY = 0, x = 0, y = 0){
+  constructor(url, lengthX = 0, lengthY = 0, x = 0, y = 0){
     super(url, lengthX, lengthY, x, y, 1)
     this.available = false
     this.hitBoxLeft = 0
     this.hitBoxRight = 0
     this.hitBoxUp = 0
     this.hitBoxDown = 0
-    this.onTouch = onTouch
   }
   init(scene, x = this.x, y = this.y){
     if(!this.loaded){
@@ -21,12 +20,13 @@ export default class Button extends DisplayBox{
       return
     }
     this.initToScene(scene, x, y, 1)
+    
     let screenlx = this.lengthX * window.innerWidth / CONST.SCREEN_X
     let screenly = this.lengthY * window.innerHeight / CONST.SCREEN_Y
-    this.hitBoxLeft = x * window.innerWidth / CONST.SCREEN_X
-    this.hitBoxDown = x * window.innerHeight / CONST.SCREEN_Y
+    this.hitBoxLeft = (x + CONST.SCREEN_X / 2) * window.innerWidth / CONST.SCREEN_X
+    this.hitBoxDown = (CONST.SCREEN_Y / 2 - y) * window.innerHeight / CONST.SCREEN_Y
     this.hitBoxRight = this.hitBoxLeft + screenlx
-    this.hitBoxUp = this.hitBoxRight + screenly
+    this.hitBoxUp = this.hitBoxDown - screenly
     this.showButton()  
   }
   showButton(){
@@ -37,16 +37,15 @@ export default class Button extends DisplayBox{
     this.hide()
     this.available = false
   }
-  checkTouch(sx, sy){
+  checkTouch(screenEndX, screenEndY, screenInitX, screenInitY){
+    console.log(this.available)
     if(!this.available){
-      return
+      return false
     }
-    if(this.hitBoxLeft < sx && sx < this.hitBoxRight && this.hitBoxDown < sy && sy < this.hitBoxUp){
-      return this.onTouch()
+    if(this.hitBoxLeft < screenEndX && screenEndX < this.hitBoxRight && this.hitBoxDown > screenEndY && screenEndY > this.hitBoxUp
+      && this.hitBoxLeft < screenInitX && screenInitX < this.hitBoxRight && this.hitBoxDown > screenInitY && screenInitY > this.hitBoxUp){
+      return true
     }
-    return
-  }
-  onTouch(){
-    return
+    return false
   }
 }

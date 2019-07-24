@@ -10,7 +10,7 @@ export default class Sprite {
     this.lengthX = lengthX
     this.lengthY = lengthY
     this.lengthZ = lengthZ
-    this.boundSecne = false
+    this.boundScene = false
     this.model.visible = false
     this.visible = false
   }
@@ -95,20 +95,20 @@ export default class Sprite {
     this.model.position.x = this.x + this.lengthX / 2
     this.model.position.y = this.y + this.lengthY / 2
     this.model.position.z = this.z + this.lengthZ / 2
-    this.boundSecne = true
+    this.boundScene = true
     this.show()
   }
   removeFromScene(scene){
-    if(!this.boundSecne){
+    if(!this.boundScene){
       console.error('not attached to any scene')
       return
     }
     this.hide()
     scene.remove(this.model)
-    this.boundSecne = false
+    this.boundScene = false
   }  
   discard(){
-    if(this.boundSecne){
+    if(this.boundScene){
       console.error('still attached to a scene')
     }
     this.model.material.dispose()

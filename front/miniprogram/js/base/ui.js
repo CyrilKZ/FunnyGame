@@ -22,7 +22,7 @@ export default class UI {
       url,
       function(texture){
         let geometry = new THREE.PlaneGeometry(CONST.SCREEN_X, CONST.SCREEN_Y, 1, 1)
-        let material = new THREE.MeshBasicMaterial({map:texture})
+        let material = new THREE.MeshLambertMaterial({map:texture})
         self.backgound = new THREE.Mesh(geometry, material)
         self.scene.add(self.backgound)
         self.loaded = true

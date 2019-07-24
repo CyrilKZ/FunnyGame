@@ -12,20 +12,23 @@ export default class LobbyScene extends UI {
   constructor(){
     super('resources/startbg.png')
 
-    this.imReady = new Button('resources/ready.png', this.readySelf, CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 200)
-    this.imNotReady = new Button('resources/notready.png', this.unreadySelf, CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 200)
-    this.selfPhoto = null
-
-    this.othersReady = new DisplayBox('resources/ready.png', this.readySelf, CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
-    this.othersNotReady = new DisplayBox('resources/notready.png', this.readySelf, CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
-    this.inviteButton = new Button('resources/invite.png', this.inviteEnemy, CONST.PHOTO_SIZE, CONST/PHOTO_SIZE, -800, -200)
-    this.enemyPhoto = null
-
     this.enemyJoined = false
     this.isSetUp = false
     this.buttonsSet = false
     this.selfPhotoSet = false
     this.enemyPhotoSet = false
+
+    let self = this
+    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
+    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
+    this.selfPhoto = null
+
+    this.othersReady = new DisplayBox('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
+    this.othersNotReady = new DisplayBox('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
+    this.inviteButton = new Button('resources/invite.png', CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300)
+    this.enemyPhoto = null
+
+    
     this.tryToInitButtons()
   }
   tryToInitButtons(){
@@ -34,6 +37,7 @@ export default class LobbyScene extends UI {
     }
     if(this.imReady.loaded && !this.imReady.boundScene){
       this.imReady.init(this.scene)
+      this.imReady.hideButton()
     }
     if(this.imNotReady.loaded && !this.imNotReady.boundScene){
       this.imNotReady.init(this.scene)
@@ -41,26 +45,31 @@ export default class LobbyScene extends UI {
     if(this.inviteButton.loaded && !this.inviteButton.boundScene){
       this.inviteButton.init(this.scene)
     }
-    this.isSetUp = this.isSetUp || (this.imReady.boundScene && this.imNotReady.boundScene && this.inviteButton.boundScene)
+    this.buttonsSet = this.buttonsSet || (this.imReady.boundScene && this.imNotReady.boundScene && this.inviteButton.boundScene)
   }
   readySelf(){
-    if(!this.enemyJoined){
+    let self = this
+    console.log('ready')
+    console.log(self.enemyJoined)
+    if(!self.enemyJoined){
       return
     }
+    
     network.sendReady(true, ()=>{
       gamestatus.selfReady = true
-      this.imNotReady.hideButton()
-      this.imReady.showButton()
+      self.imNotReady.hideButton()
+      self.imReady.showButton()
     })
   }
   unreadySelf(){
-    if(!this.enemyJoined){
+    let self = this
+    if(!self.enemyJoined){
       return
     }
     network.sendReady(false, ()=>{
       gamestatus.selfReady = false
-      this.imReady.hideButton()
-      this.imNotReady.showButton()
+      self.imReady.hideButton()
+      self.imNotReady.showButton()
     })
   }
   setEnemyReady(ready){
@@ -74,7 +83,7 @@ export default class LobbyScene extends UI {
       this.othersReady.hide()
     }
   }
-  tryShowSelfInfo(){
+  tryShowSelfInfo(){  
     if(this.selfPhotoSet){
       return
     }
@@ -82,7 +91,7 @@ export default class LobbyScene extends UI {
       return
     }
     if(this.selfPhoto){
-      if(this.selfPhoto.boundScene){
+      if(this.selfPhoto.boundScene){        
         this.selfPhotoSet = true
         return
       }
@@ -91,7 +100,7 @@ export default class LobbyScene extends UI {
         return
       }
     }
-    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, 800, 500, 1)
+    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -100,20 +109,26 @@ export default class LobbyScene extends UI {
     if(gamestatus.enemyInfo.picUrl === ''){
       return
     }
-    if(this.enemyInfo){
+    if(this.enemyPhoto){
       if(this.enemyPhoto.boundScene){
         this.enemyPhotoSet = true
         return
       }
       if(this.enemyPhoto.loaded){
+        console.log(this.enemyPhoto)
         this.enemyPhoto.initToScene(this.scene)
         return
       }
     }
-    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, 800, -200, 1)
+    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
+    this.enemyJoined = true
+    this.inviteButton.hideButton()
   }
   inviteEnemy(){
-    this.enemyJoined = false
+    console.log('invite')
+    wx.shareAppMessage({
+      query: 'teamid=' + gamestatus.roomID.toString()
+    })
   }
   enemyLeave(){
     this.enemyPhoto.removeFromScene(this.scene)
@@ -124,12 +139,7 @@ export default class LobbyScene extends UI {
       picUrl: ''
     }
     this.inviteButton.showButton()   
-    this.enemyJoined = false 
-  }
-  enemyJoin(){
-    this.tryShowEnemyInfo()
-    this.inviteButton.hideButton()
-    this.enemyJoined = true
+    this.enemyJoined = false
   }
   update(){
     if(!this.buttonsSet){
@@ -141,12 +151,12 @@ export default class LobbyScene extends UI {
     if(!this.enemyPhotoSet){
       this.tryShowEnemyInfo()
     }
+    this.isSetUp = this.isSetUp || (this.buttonsSet && this.selfPhotoSet && this.enemyPhotoSet)
   }
   loop(){
-    if(!this.isSetUp){
-      return
-    }
     this.update()
+    
+    
     if(this.animation){
       this.fade()
     }
@@ -161,7 +171,28 @@ export default class LobbyScene extends UI {
       this.display = false
     }
   }
+  startFading(){
+    this.animation = true
+  }
   restore(){
     this.light.intensity = 0.5
+  }
+  handleTouchEvents(res){
+    if(!this.buttonsSet){
+      return
+    }
+    let endX = res.endX
+    let endY = res.endY
+    let initX = res.initX
+    let initY = res.initY
+    if(this.imReady.checkTouch(endX, endY, initX, initY)){
+      this.unreadySelf()
+    }
+    if(this.imNotReady.checkTouch(endX, endY, initX, initY)){
+      this.readySelf()
+    }
+    if(this.inviteButton.checkTouch(endX, endY, initX, initY)){
+      this.inviteEnemy()
+    }
   }
 }
