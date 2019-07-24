@@ -282,7 +282,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //databus.enemyHit = true
             }            
           }
         }
@@ -293,7 +293,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //databus.enemyHit = true
             }            
           }
         }

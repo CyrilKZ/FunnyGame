@@ -159,9 +159,10 @@ export default class Hero extends Sprite {
     else{
       this.canJumpSave = true
     }    
-    t = (107 - (55 - this.lengthX)) / MOVING_SPEED - 1
+    t = 52 / MOVING_SPEED - 1
     minDistance = v * t + a * t* t/2
     if(minDistance > distance){
+      console.log(`move half time: ${t}, will hit`)
       this.canMoveSave = false
     }
     else{
@@ -183,14 +184,9 @@ export default class Hero extends Sprite {
     let a = databus.accel
     let t = (JUMPING_SPEED + Math.sqrt(JUMPING_SPEED * JUMPING_SPEED - 2 * block.lengthZ * GRAVITY))/GRAVITY
     let minUnsafePos =  block.y - vx * t - a * t * t / 2 - 1                        //front of the brick hit back of the hero
-    //console.log(t)
-    //console.log(minUnsafePos)
     t = TOTALFRAME_Z
     let maxUnsafePos = block.y - block.lengthY - vx * t - a * t * t / 2 + 1       //hit the foot of the brick
-    //console.log(t)
-    //console.log(maxUnsafePos)
     if(minUnsafePos > this.y - this.lengthY && maxUnsafePos < this.y){
-      //console.log('will hit the wall')
       this.isJumpSafe = false
       return
     }
@@ -217,7 +213,7 @@ export default class Hero extends Sprite {
       }
     }
     if(this.blockAround === null){
-      this.isMoveSafe = false
+      this.isMoveSafe = true
       return
     }
     let block = this.blockAround
@@ -230,6 +226,11 @@ export default class Hero extends Sprite {
     let distance1 = block.y - block.lengthY - this.y      // move in
     let distance2 = block.y - this.y + this.lengthY                      // move out
     if(s1 > distance1 && s2 < distance2){
+      console.log('unsafe move')
+      console.log(`s1: ${s1}`)
+      console.log(`s2: ${s2}`)
+      console.log(`dis1: ${distance1}`)
+      console.log(`dis2: ${distance2}`)
       this.isMoveSafe = false
       return
     }
@@ -257,8 +258,6 @@ export default class Hero extends Sprite {
           this.speedZ = 0
           this.model.position.z = this.z + HERO_RADIUS
           if(this.blockAhead !==null && this.y - this.lengthY >= this.blockAhead.y){
-            //console.log(this.blockAhead.y)
-            //console.log('jump dodge')
             this.energy += ENERGY_REWARD
           }
           this.scanBlockAhead()
