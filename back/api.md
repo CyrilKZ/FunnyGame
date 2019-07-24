@@ -4,7 +4,16 @@
 请求
 
 ```
-GET https://game.lbjthu.tech:10443/login?openid={Open ID}
+POST https://game.lbjthu.tech:10443/login
+```
+
+```json
+{
+    "openid":"",
+    "userinfo":{
+        // 用户数据
+    }
+}
 ```
 
 返回
@@ -55,10 +64,7 @@ POST https://game.lbjthu.tech:10443/team/join
 ```json
 {
     "openid": "asdfghjkl",
-    "teamid": "asdfghjkl",
-    "userinfo":{
-        // 任何你发的用户信息，会在稍后通过WebSocket发给房间的另一个用户
-    }
+    "teamid": "asdfghjkl"
 }
 ```
 

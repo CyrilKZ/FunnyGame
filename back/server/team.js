@@ -30,16 +30,18 @@ accessToken.get = function () {
 // 用户管理
 var userHandler = function () { };
 userHandler.users = {};
-userHandler.login = function (openid) {
-    if(this.users[openid]){
-        this.logout(openid);
+userHandler.login = function (openid, userinfo) {
+    if(!this.users[openid]){
+        this.users[openid] = new User(openid, userinfo);
     }
-
-    this.users[openid] = new User(openid);
 }
 
 userHandler.logout = function (openid) {
     let user = this.users[openid];
+    if(!user){
+        return false;
+    }
+
     if(user.team){
         user.team.delUser(user);
     }
@@ -48,8 +50,9 @@ userHandler.logout = function (openid) {
 
 // 用户类
 class User {
-    constructor(openid) {
+    constructor(openid, userinfo) {
         this.id = openid;
+        this.info = userinfo;
         this.team = undefined;
         this.companion = undefined;
         this.socket = undefined;
@@ -74,6 +77,10 @@ var teamHandler = function () { };
 teamHandler.teams = [];
 teamHandler.create = function (openid) {
     let user = userHandler.users[openid];
+    if(!user){
+        return false;
+    }
+
     let teamid = this.teams.length;
     let newteam = new Team(user, teamid);
     this.teams[teamid] = newteam;
@@ -81,7 +88,7 @@ teamHandler.create = function (openid) {
     return teamid;
 }
 
-teamHandler.join = function (openid, teamid, userinfo){
+teamHandler.join = function (openid, teamid){
     let team = this.teams[teamid];
     let user = userHandler.users[openid];
     if(!team){
@@ -94,7 +101,10 @@ teamHandler.join = function (openid, teamid, userinfo){
     if(team.addUser(user)){
         let socket = user.companion.socket;
         if(socket){
-            socket.send(JSON.stringify(userinfo), (err) => {
+            socket.send(JSON.stringify({
+                'msg':'join',
+                'userinfo': user.info
+            }), (err) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
                 }
