@@ -1,46 +1,24 @@
 import Sprite from '../base/sprite'
-import DataBus from '../databus'
-import GameStore from '../gamestore'
-import Network from '../network'
+import GameStatus from '../status'
+import Network from '../base/network'
 import * as THREE from '../libs/three.min'
+import * as CONST from '../libs/constants'
 
-const HERO_RADIUS = 7
-const HERO_BASELINE = -450
-const ROW_WIDTH = 110
-const MOVING_SPEED = 10
-const JUMPING_SPEED = 9
-const GRAVITY = 0.4
-const NO_MOVE = 0
-const MOVE_UP = 3
-const MOVE_LEFT = 1
-const MOVE_RIGHT = 2
-const TOTALFRAME_X = ROW_WIDTH / MOVING_SPEED
-const TOTALFRAME_Z = 2 * JUMPING_SPEED / GRAVITY
-
-
-let databus = new DataBus()
-let store = new GameStore()
+let gamestatus = new GameStatus()
 let network = new Network()
 
 export default class Enemy extends Sprite {
   constructor() {
-    super(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
-  }
-  initEnemy(row) {
-    let geometry = new THREE.BoxGeometry(2 * HERO_RADIUS, 2 * HERO_RADIUS, 2 * HERO_RADIUS)
+    let geometry = new THREE.BoxGeometry(CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
     let metarial = new THREE.MeshLambertMaterial({ color: 0xee22ff })
-    this.model = new THREE.Mesh(geometry, metarial)
-    this.row = row
-    this.x = (row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - HERO_RADIUS
-    this.y = HERO_BASELINE
-    this.z = 0
-    this.movingframe = 0
-    this.model.position.set(this.x + HERO_RADIUS, this.y - HERO_RADIUS, this.z + HERO_RADIUS)
-    this.model.castShadow = true
-    this.model.visible = true
-    this.visible = true
+    let model = new THREE.Mesh(geometry, metarial)
+    model.castShadow = true
+    super(model, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
+
+    this.row = 0
     this.moving = false
-    this.direction = NO_MOVE
+    this.movingframe = 0
+    this.direction = CONST.DIR_NONE
     this.speedX = 0
     this.speedZ = 0
     this.canJumpSave = true
@@ -53,7 +31,12 @@ export default class Enemy extends Sprite {
     this.blockAround = null
     this.moves = []
     this.diffFrame = 0
-
+  }
+  init(row, scene) {
+    this.row = row
+    let x = (row - 2) * CONST.ROW_WIDTH + CONST.HERO_OFFSET
+    this.initToScene(scene, x, CONST.HERO_BASELINE, 0)
+    gamestatus.enemySide = row < 2 ? CONST.DIR_LEFT: CONST.DIR_RIGHT
     let self = this
     network.onAction = ((res)=>{
       console.log(`action received ${res}`)
@@ -61,19 +44,16 @@ export default class Enemy extends Sprite {
       console.log(res.dir)
       console.log(res.safe)
       self.addToMove(res.dir, res.safe, res.frm)
-    })
-
-    
+    })  
   }
-
-  syncMove(){
+  sync(){
     this.update()
     if(!this.moving){
       return
     }
-    if(this.direction === MOVE_UP){
+    if(this.direction === CONST.DIR_UP){
       if(!this.localJumpSafe && this.isJumpSafe){
-        if(this.diffFrame > TOTALFRAME_Z / 2){          
+        if(this.diffFrame > CONST.HERO_TOTAL_FZ / 2){          
           this.update()
           this.update()
           this.diffFrame -= 2
@@ -86,7 +66,7 @@ export default class Enemy extends Sprite {
     }
     else{
       if(!this.localMoveSafe && this.isMoveSafe){
-        if(this.diffFrame > TOTALFRAME_X / 2){
+        if(this.diffFrame > CONST.HERO_TOTAL_FX / 2){
           this.update()
           this.update()
           this.diffFrame -= 2
@@ -107,11 +87,11 @@ export default class Enemy extends Sprite {
       return
     }    
     let block = this.blockAhead
-    let vx = databus.speed
-    let a = databus.accel
-    let t = (JUMPING_SPEED + Math.sqrt(JUMPING_SPEED * JUMPING_SPEED - 2 * block.lengthZ * GRAVITY))/GRAVITY
+    let vx = gamestatus.speed
+    let a = gamestatus.accel
+    let t = (CONST.HERO_JUMPINGSPEED + Math.sqrt(CONST.HERO_JUMPINGSPEED * CONST.HERO_JUMPINGSPEED - 2 * block.lengthZ * CONST.GRAVITY))/CONST.GRAVITY
     let minUnsafePos =  block.y - vx * t - a * t * t / 2 - 1                        //front of the brick hit back of the hero
-    t = TOTALFRAME_Z
+    t = CONST.HERO_TOTAL_FZ
     let maxUnsafePos = block.y - block.lengthY - vx * t + a * t * t / 2 + 1       //hit the foot of the brick
     if(minUnsafePos > this.y - this.lengthY && maxUnsafePos < this.y){
       this.localJumpSafe = false
@@ -126,11 +106,11 @@ export default class Enemy extends Sprite {
       return
     }
     let block = this.blockAround
-    let a = databus.accel
-    let v = databus.speed
-    let t1 = TOTALFRAME_X
+    let a = gamestatus.accel
+    let v = gamestatus.speed
+    let t1 = CONST.HERO_TOTAL_FX
     let s1 = v * t1 + a * t1* t1/2
-    let t2 = TOTALFRAME_X/2
+    let t2 = CONST.HERO_TOTAL_FX/2
     let s2 = v * t2 + a * t2* t2/2
     let distance1 = block.y - block.lengthY - this.y      // move in
     let distance2 = block.y - this.y                      // move out
@@ -164,34 +144,34 @@ export default class Enemy extends Sprite {
     }
     let direction = nextMove.direction
     let safe = nextMove.safe
-    this.diffFrame = nextMove.frame - databus.frame
+    this.diffFrame = nextMove.frame - gamestatus.frame
     switch (direction) {
-      case MOVE_LEFT:
+      case CONST.DIR_LEFT:
         if (this.row === 0 || this.row === 2) {
           return
         }
         this.moving = true
-        this.direction = MOVE_LEFT
-        this.speedX = -MOVING_SPEED
+        this.direction = CONST.DIR_LEFT
+        this.speedX = -CONST.HERO_MOVINGSPEED
         this.isMoveSafe = safe
         this.findBlockAround()
         this.checkMoveSafe()
         break
-      case MOVE_RIGHT:
+      case CONST.DIR_RIGHT:
         if (this.row === 1 || this.row === 3) {
           return
         }
         this.moving = true
-        this.direction = MOVE_RIGHT
-        this.speedX = MOVING_SPEED
+        this.direction = CONST.DIR_RIGHT
+        this.speedX = CONST.HERO_MOVINGSPEED
         this.isMoveSafe = safe
         this.findBlockAround()
         this.checkMoveSafe()
         break
-      case MOVE_UP:
+      case CONST.DIR_UP:
         this.moving = true
-        this.direction = MOVE_UP
-        this.speedZ = JUMPING_SPEED
+        this.direction = CONST.DIR_UP
+        this.speedZ = CONST.HERO_JUMPINGSPEED
         this.isJumpSafe = safe
         this.checkJumpSafe()
         break
@@ -202,9 +182,9 @@ export default class Enemy extends Sprite {
 
   findBlockAhead(){
     this.blockAhead = null
-    for (let i = 0; i < databus.blocks[this.row].length; ++i) {
-      if (databus.blocks[this.row][i].y > this.y  - this.lengthY + 1) {
-        this.blockAhead = databus.blocks[this.row][i]
+    for (let i = 0; i < gamestatus.blocks[this.row].length; ++i) {
+      if (gamestatus.blocks[this.row][i].y > this.y  - this.lengthY + 1) {
+        this.blockAhead = gamestatus.blocks[this.row][i]
         break
       }
     }
@@ -213,18 +193,18 @@ export default class Enemy extends Sprite {
 
   findBlockAround(){
     this.blockAround = null
-    if(this.direction === MOVE_LEFT){
-      for (let i = 0; i < databus.blocks[this.row-1].length; ++i) {
-        if (databus.blocks[this.row-1][i].y > this.y) {
-          this.blockAround = databus.blocks[this.row-1][i]
+    if(this.direction === CONST.DIR_LEFT){
+      for (let i = 0; i < gamestatus.blocks[this.row-1].length; ++i) {
+        if (gamestatus.blocks[this.row-1][i].y > this.y) {
+          this.blockAround = gamestatus.blocks[this.row-1][i]
           break
         }
       }
     }
     else{
-      for (let i = 0; i < databus.blocks[this.row+1].length; ++i) {
-        if (databus.blocks[this.row+1][i].y > this.y) {
-          this.blockAround = databus.blocks[this.row+1][i]
+      for (let i = 0; i < gamestatus.blocks[this.row+1].length; ++i) {
+        if (gamestatus.blocks[this.row+1][i].y > this.y) {
+          this.blockAround = gamestatus.blocks[this.row+1][i]
           break
         }
       }
@@ -233,56 +213,56 @@ export default class Enemy extends Sprite {
   }
 
   setEnemyHit(){
-    databus.enemyHit = true
+    gamestatus.enemyHit = true
   }
 
   update() {
     this.move()
     if (this.moving) {
-      if (this.direction === MOVE_UP) {
-        if (this.movingframe === TOTALFRAME_Z) {
+      if (this.direction === CONST.DIR_UP) {
+        if (this.movingframe >= CONST.HERO_TOTAL_FZ) {
           this.movingframe = 0
           this.moving = false
-          this.direction = NO_MOVE
+          this.direction = CONST.DIR_NONE
           this.z = 0
           this.speedZ = 0
-          this.model.position.z = this.z + HERO_RADIUS
+          this.model.position.z = this.z + CONST.HERO_RADIUS
           if(!(this.canJumpSave && this.isJumpSafe)){
             if(this.is3DCollideWith(this.blockAhead)){
-              databus.enemyHit = true
+              gamestatus.enemyHit = true
             }
           }
         }
         else {
           this.movingframe += 1
           this.z += this.speedZ
-          this.speedZ -= GRAVITY
-          this.model.position.z = this.z + HERO_RADIUS
+          this.speedZ -= CONST.GRAVITY
+          this.model.position.z = this.z + CONST.HERO_RADIUS
         }
         if(!(this.canJumpSave && this.isJumpSafe)){
           if(this.is3DCollideWith(this.blockAhead)){
-            databus.enemyHit = true
+            gamestatus.enemyHit = true
           }
         }
       }
       else {
-        if (this.movingframe === TOTALFRAME_X) {
+        if (this.movingframe >= CONST.HERO_TOTAL_FX) {
           this.movingframe = 0
-          if (this.direction === MOVE_LEFT) {
+          if (this.direction === CONST.DIR_LEFT) {
             this.row -= 1
           }
           else {
             this.row += 1
           }
-          this.x = (this.row - 2) * ROW_WIDTH + ROW_WIDTH / 2 - HERO_RADIUS
-          this.model.position.x = this.x + HERO_RADIUS
+          this.x = (this.row - 2) * CONST.ROW_WIDTH + CONST.ROW_WIDTH / 2 - CONST.HERO_RADIUS
+          this.model.position.x = this.x + CONST.HERO_RADIUS
           this.moving = false
-          this.direction = NO_MOVE
+          this.direction = CONST.DIR_NONE
           this.speedX = 0
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //gamestatus.enemyHit = true
             }            
           }
         }
@@ -293,18 +273,18 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              databus.enemyHit = true
+              //gamestatus.enemyHit = true
             }            
           }
         }
       }
     }
-    if(databus.enemyWillHit && this.is3DCollideWith(this.blockAhead)){
-      databus.enemyHit = true
+    if(gamestatus.enemyWillHit && this.is3DCollideWith(this.blockAhead)){
+      gamestatus.enemyHit = true
     }
     this.findBlockAhead()
     if((!this.isJumpSafe) || (!this.isMoveSafe)){
-      databus.enemyWillHit = true
+      gamestatus.enemyWillHit = true
     }    
   }
 }

@@ -53,7 +53,6 @@ class User {
     constructor(openid, userinfo) {
         this.id = openid;
         this.info = userinfo;
-        this.info = undefined;
         this.team = undefined;
         this.companion = undefined;
         this.socket = undefined;
@@ -89,7 +88,7 @@ teamHandler.create = function (openid) {
     return teamid;
 }
 
-teamHandler.join = function (openid, teamid, userinfo){
+teamHandler.join = function (openid, teamid){
     let team = this.teams[teamid];
     let user = userHandler.users[openid];
     if(!team){

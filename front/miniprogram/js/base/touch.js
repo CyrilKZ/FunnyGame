@@ -1,8 +1,6 @@
 const SCREEN_WIDTH = window.innerWidth
+import * as CONST from '../libs/constants'
 //const SCREEN_HEIGHT = 1080
-const LEFT = 1
-const RIGHT = 2
-const TOP = 3
 
 export default class TouchEvents {
   constructor(){
@@ -12,9 +10,9 @@ export default class TouchEvents {
     let x = e.clientX
     //console.log(x)
     let y = e.clientY
-    let type = RIGHT
+    let type = CONST.DIR_RIGHT
     if(x < SCREEN_WIDTH / 2){
-      type = LEFT
+      type = CONST.DIR_LEFT
     }
     let info = {
       initX: x,
@@ -55,25 +53,25 @@ export default class TouchEvents {
     }
     if(Math.abs(res.dX) > Math.abs(res.dY)){
       if(res.dX > 0){
-        res.swipe = RIGHT
+        res.swipe = CONST.DIR_RIGHT
       }
       else if (res.dX < 0){
-        res.swipe = LEFT
+        res.swipe = CONST.DIR_LEFT
       }
     }
     else {
       if(res.dY < 0){
-        res.swipe = TOP
+        res.swipe = CONST.DIR_UP
       }
       else{
         res.swipe = 0
       }
     }
     if(res.endX < innerWidth / 2){
-      res.endType = LEFT
+      res.endType = CONST.DIR_LEFT
     }
     else{
-      res.endType = RIGHT
+      res.endType = CONST.DIR_RIGHT
     }
     return res
   }

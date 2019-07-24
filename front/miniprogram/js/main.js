@@ -1,76 +1,57 @@
-import DataBus from './databus'
-import GameStore from './gamestore'
-import Block from './world/block'
-import Hero from './world/hero'
-import TouchEvent from './runtime/touch'
-import GameStage from './stages/gamestage'
-import StartStage from './stages/startstage'
-import EndStage from './stages/endstage'
-import WelcomeStage from './stages/welcome'
-import Network from './network'
-import netDemo from './net-demo'
-
+import GameScene from './scenes/gamescene'
+import WelcomScene from './scenes/welcome'
 import * as THREE from './libs/three.min'
-
-wx.cloud.init()
-let databus = new DataBus()
-let store = new GameStore()
-let network = new Network()
-let db = wx.cloud.database()
-
-const SCREEN_WIDTH = 1920
-const SCREEN_HEIGHT = 1080
+import * as CONST from './libs/constants'
+import GameStatus from './status';
+import LobbyScene from './scenes/lobby'
+import TouchEvents from './base/touch'
+import Network from './base/network';
 
 let ctx = canvas.getContext('webgl')
 let renderer = new THREE.WebGLRenderer(ctx)
-let touchevents = new TouchEvent()
+canvas.appendChild(renderer.domElement)
+renderer.setSize(1920, 1080)
+renderer.shadowMapEnabled = true
+renderer.autoClear = true
+renderer.setScissorTest(true)
 
+wx.cloud.init()
+let db = wx.cloud.database()
 
-
-
+let gamestatus = new GameStatus()
+let touchevents = new TouchEvents()
+let network = new Network()
 
 export default class Game {
-  constructor() {
-    
-
+  constructor(){
     this.aniID = 0
-    this.initTouchEvents()
-    canvas.appendChild(renderer.domElement)
-    renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT)
-    renderer.shadowMapEnabled = true
-    renderer.autoClear = false
+    this.frame = 0
+    this.gameScene = new GameScene()
 
-    this.stages = []
-    this.stages[store.welcome] = new WelcomeStage()
-    this.stages[store.start] = new StartStage()
-    this.stages[store.game] = new GameStage()
-    this.stages[store.end] = new EndStage()
-    this.currentStage = store.welcome
-
-
-    this.restart()
-    let self = this
-    network.onStart = function(){
-      self.stages[store.start].startFading()
-    }
-    network.onJoin = function(data){
-      self.stages[store.start].showEnemyInfo(data)
-    }
     
-    wx.showShareMenu({
-      withShareTicket: true
-    })
-    wx.onShareAppMessage(() => {
-      console.log('share successful')
-      console.log(store.roomID)
-      return {
-        query: 'teamid=' + store.roomID.toString()
-      }
-    })
+    this.stages = [
+      new WelcomScene(),
+      new LobbyScene()
+    ]
+    this.currentStage = CONST.STAGE_WELCOME
+    this.initTouchEvents()
+    
+
+    let self = this
+    network.onJoin = function(data){
+      console.log(data.userinfo)
+      gamestatus.setEnemyInfo(data.userinfo)
+            
+    }    
+    network.onStart = function(){
+      self.stages[CONST.STAGE_LOBBY].startFading()
+      self.gameScene.initCharacters()    
+    }
+    this.restart()
+    
   }
-
   restart(){  
-
+    this.frame = 0
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
     this.aniID = window.requestAnimationFrame(
@@ -78,45 +59,48 @@ export default class Game {
       canvas
     )
   }
-
-  
-
   loop() {
-    if(store.startFlag){
-      console.log('switch to start')
-      this.currentStage = store.start
-      store.startFlag = false
-      this.stages[store.start].restart()
+    if(gamestatus.switchToLobby){
+      this.currentStage = CONST.STAGE_LOBBY
+      gamestatus.switchToLobby = false
     }
-    else if(store.gameFlag){
-      console.log('switch to game')
-      this.currentStage = store.game
-      store.gameFlag = false
-      this.stages[store.game].restart()
-      //renderer.clear()
+    else if(gamestatus.switchToGame){
+      this.currentStage = -1
+      this.gameScene.initStartAnimation()
+      gamestatus.switchToGame = false
     }
-    else if(store.endFlag){
-      console.log('switch to start')
-      this.currentStage = store.start
-      store.endFlag = false
-      this.stages[store.start].restart()
-      //renderer.clear()
+
+    if(!this.gameScene.loaded){
+      this.gameScene.tryToSetUp()
     }
-    this.stages[this.currentStage].loop()
+    else{
+      this.gameScene.loop()
+    }
+    this.frame += 1
+    this.stages.forEach((stage)=>{
+      stage.loop()
+    })
+
     this.render()
-    
   }
   render() {
     this.aniID = window.requestAnimationFrame(
       this.bindLoop,
       canvas
       )
-    this.stages[this.currentStage].render(renderer)
+    if(this.currentStage !== -1){
+      this.stages[this.currentStage].render(renderer)
+    }    
+    this.gameScene.render(renderer)
   }
-  handleTouchEvents(res){
-    this.stages[this.currentStage].handleTouchEvents(res)
-  }
-
+  handleTouchEvents(res){  
+    if(this.currentStage !== -1){
+      this.stages[this.currentStage].handleTouchEvents(res)
+    }
+    else{
+      this.gameScene.handleTouchEvents(res)
+    }
+  } 
   initTouchEvents(){
     touchevents.reset()
     canvas.addEventListener('touchstart', ((e)=>{
@@ -135,9 +119,9 @@ export default class Game {
       e.preventDefault()
       e.changedTouches.forEach((item)=>{
         let res = touchevents.removeEvent(item)
+        console.log(res)
         this.handleTouchEvents(res)        
       })
     }))
-  }
-
+  } 
 }
