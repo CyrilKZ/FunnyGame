@@ -17,6 +17,7 @@ export default class Network {
     this.onBrick = function (data) { console.log(`onBrick: ${data}`) }
     this.onAction = function (data) { console.log(`onAction: ${data}`) }
     this.onTransfer = function (data) { console.log(`onTransfer: ${data}`) }
+    this.onPause = function (data) { console.log(`onPause: ${data}`) }
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
     this.onReady = function (data) { console.log(`onReady: ${data}`) }
     this.onClose = function (data) { console.log(`onClose`) }
@@ -32,21 +33,6 @@ export default class Network {
       'method': 'POST',
       'success': function (res) {
         sucess(res.data)  // 正常data为'Welcome'
-      },
-      'fail': fail
-    }
-    wx.request(options)
-  }
-
-  logout(openid, sucess, fail) {
-    let options = {
-      'url': this.url + 'logout',
-      'data': {
-        'openid': openid
-      },
-      'method': 'GET',
-      'success': function (res) {
-        sucess(res.data)  // 正常data为'Bye'
       },
       'fail': fail
     }
@@ -122,6 +108,7 @@ export default class Network {
       'win': this.onWin,
       'action': this.onAction,
       'transfer': this.onTransfer,
+      'pause': this.onPause,
       'join': this.onJoin,
       'ready':this.onReady
     }
@@ -166,6 +153,17 @@ export default class Network {
       'success': success,
       'fail': fail
     })
+  }
+
+  sendPause(state, success, fail){
+    this.socket.send({
+        'data': JSON.stringify({
+          'msg': 'pause',
+          'state': state
+        }),
+        'success': success,
+        'fail': fail
+      })
   }
 
   sendFail(success, fail) {
