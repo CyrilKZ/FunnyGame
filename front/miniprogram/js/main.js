@@ -25,7 +25,6 @@ let network = new Network()
 export default class Game {
   constructor(){
     this.aniID = 0
-    this.frame = 0
     this.gameScene = new GameScene()
 
     
@@ -61,6 +60,7 @@ export default class Game {
   }
   loop() {
     if(gamestatus.switchToLobby){
+      this.stages[CONST.STAGE_LOBBY].restore()
       this.currentStage = CONST.STAGE_LOBBY
       gamestatus.switchToLobby = false
     }
@@ -76,7 +76,6 @@ export default class Game {
     else{
       this.gameScene.loop()
     }
-    this.frame += 1
     this.stages.forEach((stage)=>{
       stage.loop()
     })

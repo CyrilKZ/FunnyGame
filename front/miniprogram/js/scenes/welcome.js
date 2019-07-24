@@ -99,8 +99,8 @@ export default class WelcomeScene extends UI {
   fade(){
     this.frame += 1
     //console.log(this.frame)
-    this.light.intensity -= 0.5 / CONST.SWITCH_SHORT_FRAME
-    this.aLight.intensity -= 0.5 / CONST.SWITCH_SHORT_FRAME
+    this.light.intensity += 4 / CONST.SWITCH_SHORT_FRAME
+    this.aLight.intensity += 4 / CONST.SWITCH_SHORT_FRAME
     if(this.frame === CONST.SWITCH_SHORT_FRAME){
       this.animation = false
       gamestatus.switchToLobby = true

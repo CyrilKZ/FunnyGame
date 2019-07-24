@@ -10,7 +10,7 @@ let network = new Network()
 export default class Hero extends Sprite{
   constructor(){
     let geometry = new THREE.BoxGeometry(CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
-    let metarial = new THREE.MeshLambertMaterial({ color: 0x2bae85 })
+    let metarial = new THREE.MeshLambertMaterial({ color: CONST.HERO_COLOR })
     let model = new THREE.Mesh(geometry, metarial)
     model.castShadow = true
     super(model, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)

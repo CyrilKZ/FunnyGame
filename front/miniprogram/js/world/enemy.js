@@ -10,7 +10,7 @@ let network = new Network()
 export default class Enemy extends Sprite {
   constructor() {
     let geometry = new THREE.BoxGeometry(CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
-    let metarial = new THREE.MeshLambertMaterial({ color: 0xee22ff })
+    let metarial = new THREE.MeshLambertMaterial({ color: CONST.ENEMY_COLOR })
     let model = new THREE.Mesh(geometry, metarial)
     model.castShadow = true
     super(model, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
@@ -262,7 +262,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              //gamestatus.enemyHit = true
+              gamestatus.enemyHit = true
             }            
           }
         }
@@ -273,7 +273,7 @@ export default class Enemy extends Sprite {
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              //gamestatus.enemyHit = true
+              gamestatus.enemyHit = true
             }            
           }
         }

@@ -6,7 +6,7 @@ import Hero from '../world/hero';
 import Enemy from '../world/enemy';
 import Block from '../world/block'
 import Network from '../base/network';
-
+import ParticleCubeSystem from '../base/particles'
 
 const FINAL_CAMERA  = {
   y: -750,
@@ -33,9 +33,7 @@ export default class GameScene {
 
     this.camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.boarderLight1 = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.boarderLight2 = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
+    this.aLight = new THREE.AmbientLight(0xffffff, 1)
     this.arena = new Ground()
     this.models = []
     this.hero = null
@@ -45,6 +43,9 @@ export default class GameScene {
     this.animationFrame = 0
     this.startAnimation = false
     this.endAnimation = false
+
+    this.heroParticle = new ParticleCubeSystem(CONST.HERO_COLOR, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
+    this.enemyParticle = new ParticleCubeSystem(CONST.ENEMY_COLOR, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
 
     this.initNetwork()
   }
@@ -169,8 +170,6 @@ export default class GameScene {
     this.arena.addToScene(this.scene)
     this.scene.add(this.light)
     this.scene.add(this.aLight)
-    this.scene.add(this.boarderLight1)
-    this.scene.add(this.boarderLight2)
 
     this.light.castShadow = true
     this.light.position.set(0, 0, 400)
@@ -182,15 +181,9 @@ export default class GameScene {
     this.light.shadow.camera.top = 500
     this.light.target.position.set(0, 0, 0)
 
-    this.boarderLight1.position.set(219, 0, 0)
-    this.boarderLight1.target.position.set(220, 0 ,0)
-
-    this.boarderLight2.position.set(-219, 0, 0)
-    this.boarderLight2.target.position.set(-220, 0 ,0)
-
     this.camera.position.z = INITIAL_CAMERA.z
     this.camera.position.y = INITIAL_CAMERA.y
-
+    this.camera.rotateX(INITIAL_CAMERA.rotX)
     
   } 
     
@@ -223,6 +216,18 @@ export default class GameScene {
       renderer.setViewport(600 - 600 / CONST.GAME_START_FRAME * self.animationFrame, 0, 1920, 1080)
     }
   }
+  initEndAnimation(){
+    this.animationFrame = 0
+    this.endAnimation = true
+    if(gamestatus.enemyHit){
+      this.enemy.hide()
+      this.enemyParticle.initToScene(this.scene, this.enemy.speedX, -gamestatus.speed / 2, this.enemy.speedZ, this.enemy.x, this.enemy.y, this.enemy.z)
+    }
+    else {
+      this.hero.hide()
+      this.heroParticle.initToScene(this.scene, this.hero.speedX, -gamestatus.speed / 2, this.hero.speedZ, this.hero.x, this.hero.y, this.hero.z)
+    }
+  }
   updateStartAnimation(){
     this.animationFrame += 1
     if(this.animationFrame === CONST.GAME_START_FRAME){
@@ -249,17 +254,43 @@ export default class GameScene {
     if(this.animationFrame > CONST.GAME_START_FRAME){
       this.camera.position.z += (FINAL_CAMERA.z - INITIAL_CAMERA.z) / CONST.GAME_START_FRAME
       this.camera.position.y += (FINAL_CAMERA.y - INITIAL_CAMERA.y) / CONST.GAME_START_FRAME
-      this.camera.rotateX(Math.PI/4 /CONST.GAME_START_FRAME)
+      this.camera.rotateX((FINAL_CAMERA.rotX - INITIAL_CAMERA.rotX) /CONST.GAME_START_FRAME)
     }  
   }
-  updateEndAnimation(){
-    this.endAnimation = false
+  reset(){
     gamestatus.blocks.forEach((row) => {
       row.forEach((item)=>{
         item.update(600)
       })
     })
-    gamestatus.switchToLobby = true
+    if(gamestatus.heroHit){
+      this.heroParticle.removeFromScene(this.scene)
+    }
+    else{
+      this.enemyParticle.removeFromScene(this.scene)
+    }
+    this.setUpRenderer = function(renderer){
+      renderer.setScissor(1200, 0, 1920, 1080)
+      renderer.setViewport(600, 0, 1920, 1080)
+    }
+    this.cleanCharacters()
+  }
+  updateEndAnimation(){
+    if(this.animationFrame === CONST.PARICLE_LIFESPAN){
+      this.endAnimation = false
+      
+      this.reset()
+      gamestatus.switchToLobby = true
+      
+    }
+    if(gamestatus.heroHit){
+      this.heroParticle.playAnimation()
+    }
+    else{
+      this.enemyParticle.playAnimation()
+    }
+    this.light.intensity -= 0.5 / CONST.PARICLE_LIFESPAN
+    this.aLight.intensity -= 1 / CONST.PARICLE_LIFESPAN
   }
   setUpRenderer(renderer){
     renderer.setScissor(1200, 0, 1920, 1080)
@@ -304,7 +335,7 @@ export default class GameScene {
     this.hero.update()
     this.enemy.sync()
     if(gamestatus.heroHit === true || gamestatus.enemyHit === true){
-      this.endAnimation = true
+      this.initEndAnimation()
       gamestatus.gameOn = false
       return
     }

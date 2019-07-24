@@ -5,8 +5,8 @@ export default class UI {
   constructor(url){
     this.scene = new THREE.Scene()
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 1000)
-    this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xeeeeee, 0.5)
+    this.light = new THREE.DirectionalLight(0xffffff, 0)
+    this.aLight = new THREE.AmbientLight(0xffffff, 1)
     this.camera.position.z = 100
     this.light.position.set(0, 0, 100)
     this.scene.add(this.light)

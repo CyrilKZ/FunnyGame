@@ -18,7 +18,6 @@ export default class LobbyScene extends UI {
     this.selfPhotoSet = false
     this.enemyPhotoSet = false
 
-    let self = this
     this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
     this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
     this.selfPhoto = null
@@ -178,7 +177,9 @@ export default class LobbyScene extends UI {
     this.animation = true
   }
   restore(){
-    this.light.intensity = 0.5
+    this.light.intensity = 0
+    this.aLight.intensity = 1
+    this.display = true
   }
   handleTouchEvents(res){
     if(!this.buttonsSet){

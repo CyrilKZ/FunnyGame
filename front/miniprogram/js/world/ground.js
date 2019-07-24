@@ -4,12 +4,12 @@ import * as CONST from '../libs/constants'
 export default class Ground {
   constructor(){
     this.loaded = false
-    this.leftLoaded = false
-    this.rightLoaded = false
-    this.midLoaded = false
+    this.allLoadings = [false, false, false, false]
+
+    this.bars = []
 
     let groundGeometry = new THREE.PlaneGeometry(CONST.PLANE_WIDTH, CONST.PLANE_LENGTH, 1, 1)
-    let groundMaterial = new THREE.MeshLambertMaterial({color: 0xfefefe})
+    let groundMaterial = new THREE.MeshBasicMaterial({color: 0xfefefe})
     this.ground = new THREE.Mesh(groundGeometry, groundMaterial)
     this.ground.receiveShadow = true
 
@@ -22,11 +22,11 @@ export default class Ground {
       'resources/leftside.png',
       function(texture){
         console.log(`left texture ${texture} loaded`)
-        let material = new THREE.MeshBasicMaterial({map:texture})
-        self.leftBar1 = new THREE.Mesh(sideGeometry, material)
-        self.leftBar2 = new THREE.Mesh(sideGeometry, material)
-        self.leftLoaded = true
-        self.loaded = self.loaded || (self.leftLoaded && self.rightLoaded && self.midLoaded)
+        let material = new THREE.MeshLambertMaterial({map:texture})
+        self.bars[0] = new THREE.Mesh(sideGeometry, material)
+        self.bars[1] = new THREE.Mesh(sideGeometry, material)
+        self.allLoadings[0] = true
+        self.checkLoading()
       }
     )
 
@@ -35,11 +35,11 @@ export default class Ground {
       'resources/rightside.png',
       function(texture){
         console.log(`right texture ${texture} loaded`)
-        let material = new THREE.MeshBasicMaterial({map:texture})
-        self.rightBar1 = new THREE.Mesh(sideGeometry, material)
-        self.rightBar2 = new THREE.Mesh(sideGeometry, material)
-        self.rightLoaded = true
-        self.loaded = self.loaded || (self.leftLoaded && self.rightLoaded && self.midLoaded)
+        let material = new THREE.MeshLambertMaterial({map:texture})
+        self.bars[2] = new THREE.Mesh(sideGeometry, material)
+        self.bars[3] = new THREE.Mesh(sideGeometry, material)
+        self.allLoadings[1] = true
+        self.checkLoading()
       }
     )
 
@@ -49,16 +49,33 @@ export default class Ground {
       function(texture){
         console.log(`mid texture ${texture} loaded`)
         let material = new THREE.MeshBasicMaterial({map:texture})
-        self.midBarL1 = new THREE.Mesh(midGeometry, material)
-        self.midBarL2 = new THREE.Mesh(midGeometry, material)
-        self.midBarM1 = new THREE.Mesh(midGeometry, material)
-        self.midBarM2 = new THREE.Mesh(midGeometry, material)
-        self.midBarR1 = new THREE.Mesh(midGeometry, material)
-        self.midBarR2 = new THREE.Mesh(midGeometry, material)
-        self.midLoaded = true
-        self.loaded = self.loaded || (self.leftLoaded && self.rightLoaded && self.midLoaded)
+        for(let k = 4; k < 8; ++k){
+          self.bars[k] = new THREE.Mesh(midGeometry, material)
+        }
+        self.allLoadings[2] = true
+        self.checkLoading()
       }
     )
+
+    let centerLoader = new THREE.TextureLoader()
+    centerLoader.load(
+      'resources/centerbar.png',
+      function(texture){
+        console.log(`mid texture ${texture} loaded`)
+        let material = new THREE.MeshBasicMaterial({map:texture})
+        self.bars[8] = new THREE.Mesh(midGeometry, material)
+        self.bars[9] = new THREE.Mesh(midGeometry, material)
+        self.allLoadings[3] = true
+        self.checkLoading()
+      }
+    )
+  }
+  checkLoading(){
+    let flag = true
+    this.allLoadings.forEach((f)=>{
+      flag = flag && f
+    })
+    this.loaded = this.loaded || flag
   }
   addToScene(scene){
     if(!this.loaded){
@@ -68,100 +85,44 @@ export default class Ground {
 
     scene.add(this.ground)
     
-    scene.add(this.leftBar1)
-    scene.add(this.leftBar2)
-    scene.add(this.midBarL1)
-    scene.add(this.midBarL2)
-    scene.add(this.midBarM1)
-    scene.add(this.midBarM2)
-    scene.add(this.midBarR1)
-    scene.add(this.midBarR2)
-    scene.add(this.rightBar1)
-    scene.add(this.rightBar2)
+    this.bars.forEach((bar)=>{
+      scene.add(bar)
+    })
 
-    this.leftBar1.position.set(-CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
-    this.leftBar1.rotateY(Math.PI / 2)
+    this.bars[0].position.set(-CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
+    this.bars[0].rotateY(Math.PI / 2)
 
-    this.leftBar2.position.set(-CONST.PLANE_WIDTH/2, CONST.PLANE_LENGTH, CONST.SIDE_BAR_WIDTH/2)
-    this.leftBar2.rotateY(Math.PI / 2)
+    this.bars[1].position.set(-CONST.PLANE_WIDTH/2, CONST.PLANE_LENGTH, CONST.SIDE_BAR_WIDTH/2)
+    this.bars[1].rotateY(Math.PI / 2)
 
-    this.rightBar1.position.set(CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
-    this.rightBar1.rotateY(-Math.PI / 2)
+    this.bars[2].position.set(CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
+    this.bars[2].rotateY(-Math.PI / 2)
 
-    this.rightBar2.position.set(CONST.PLANE_WIDTH/2, CONST.PLANE_LENGTH, CONST.SIDE_BAR_WIDTH/2)
-    this.rightBar2.rotateY(-Math.PI / 2)
+    this.bars[3].position.set(CONST.PLANE_WIDTH/2, CONST.PLANE_LENGTH, CONST.SIDE_BAR_WIDTH/2)
+    this.bars[3].rotateY(-Math.PI / 2)
 
-    this.midBarL1.position.set(-CONST.ROW_WIDTH, 0, 1)
-    this.midBarL2.position.set(-CONST.ROW_WIDTH, CONST.PLANE_LENGTH, 1)
-    
-    this.midBarM1.position.set(0, 0, 1)
-    this.midBarM2.position.set(0, CONST.ROW_WIDTH, 1)
+    this.bars[4].position.set(-CONST.ROW_WIDTH, 0, 1)
+    this.bars[5].position.set(-CONST.ROW_WIDTH, CONST.PLANE_LENGTH, 1)
 
-    this.midBarR1.position.set(CONST.ROW_WIDTH, 0, 1)
-    this.midBarR2.position.set(CONST.ROW_WIDTH, CONST.PLANE_LENGTH, 1)
+    this.bars[6].position.set(CONST.ROW_WIDTH, 0, 1)
+    this.bars[7].position.set(CONST.ROW_WIDTH, CONST.PLANE_LENGTH, 1)
+
+        
+    this.bars[8].position.set(0, 0, 1)
+    this.bars[9].position.set(0, CONST.ROW_WIDTH, 1)
   }
   removeFromScene(scene){
     scene.remove(this.ground)
-    scene.remove(this.leftBar1)
-    scene.remove(this.leftBar2)
-    scene.remove(this.midBarL1)
-    scene.remove(this.midBarL2)
-    scene.remove(this.midBarM1)
-    scene.remove(this.midBarM2)
-    scene.remove(this.midBarR1)
-    scene.remove(this.midBarR2)
-    scene.remove(this.rightBar1)
-    scene.remove(this.rightBar2)
+    this.bars.forEach((bar)=>{
+      scene.remove(bar)
+    })
   }
   update(speed){
-    this.leftBar1.position.y -= speed
-    if(this.leftBar1.position.y < -CONST.PLANE_LENGTH){
-      this.leftBar1.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.leftBar2.position.y -= speed
-    if(this.leftBar2.position.y < -CONST.PLANE_LENGTH){
-      this.leftBar2.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.rightBar1.position.y -= speed
-    if(this.rightBar1.position.y < -CONST.PLANE_LENGTH){
-      this.rightBar1.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.rightBar2.position.y -= speed
-    if(this.rightBar2.position.y < -CONST.PLANE_LENGTH){
-      this.rightBar2.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarL1.position.y -= speed
-    if(this.midBarL1.position.y < -CONST.PLANE_LENGTH){
-      this.midBarL1.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarL2.position.y -= speed
-    if(this.midBarL2.position.y < -CONST.PLANE_LENGTH){
-      this.midBarL2.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarR1.position.y -= speed
-    if(this.midBarR1.position.y < -CONST.PLANE_LENGTH){
-      this.midBarR1.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarR2.position.y -= speed
-    if(this.midBarR2.position.y < -CONST.PLANE_LENGTH){
-      this.midBarR2.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarM1.position.y -= speed
-    if(this.midBarM1.position.y < -CONST.PLANE_LENGTH){
-      this.midBarM1.position += 2*CONST.PLANE_LENGTH
-    }
-
-    this.midBarM2.position.y -= speed
-    if(this.midBarM2.position.y < -CONST.PLANE_LENGTH){
-      this.midBarM2.position += 2*CONST.PLANE_LENGTH
-    }
+    this.bars.forEach((bar)=>{
+      bar.position.y -= speed
+      if(bar.position.y < -CONST.PLANE_LENGTH){
+        bar.position.y += 2*CONST.PLANE_LENGTH
+      }
+    })
   }
 }
