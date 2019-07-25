@@ -10,7 +10,7 @@ let gamestatus = new GameStatus()
 let network = new Network()
 export default class LobbyScene extends UI {
   constructor(){
-    super('resources/startbg.png')
+    super('resources/lobbybg.png')
 
     this.enemyJoined = false
     this.isSetUp = false
@@ -18,13 +18,14 @@ export default class LobbyScene extends UI {
     this.selfPhotoSet = false
     this.enemyPhotoSet = false
 
-    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
-    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, 50)
+    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -825, 300)
+    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -820, -300)
+    this.exitButton = new Button('resources/exit.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -820, -450)
+    this.inviteButton = new Button('resources/invite.png', CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5)
     this.selfPhoto = null
 
     this.othersReady = new DisplayBox('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
     this.othersNotReady = new DisplayBox('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
-    this.inviteButton = new Button('resources/invite.png', CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300)
     this.enemyPhoto = null
 
     
@@ -44,15 +45,18 @@ export default class LobbyScene extends UI {
     if(this.inviteButton.loaded && !this.inviteButton.boundScene){
       this.inviteButton.init(this.scene)
     }
-    this.buttonsSet = this.buttonsSet || (this.imReady.boundScene && this.imNotReady.boundScene && this.inviteButton.boundScene)
+    if(this.exitButton.loaded && !this.exitButton.boundScene){
+        this.exitButton.init(this.scene)
+      }
+    this.buttonsSet = this.buttonsSet || (this.imReady.boundScene && this.imNotReady.boundScene && this.inviteButton.boundScene && this.exitButton.boundScene)
   }
   readySelf(){
     let self = this
     console.log('ready')
     console.log(self.enemyJoined)
-    if(!self.enemyJoined){
-      return
-    }
+    // if(!self.enemyJoined){
+    //   return
+    // }
     
     network.sendReady(true, ()=>{
       gamestatus.selfReady = true
@@ -62,9 +66,10 @@ export default class LobbyScene extends UI {
   }
   unreadySelf(){
     let self = this
-    if(!self.enemyJoined){
-      return
-    }
+    // if(!self.enemyJoined){
+    //   return
+    // }
+
     network.sendReady(false, ()=>{
       gamestatus.selfReady = false
       self.imReady.hideButton()
@@ -99,7 +104,8 @@ export default class LobbyScene extends UI {
         return
       }
     }
-    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
+    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -725, 5, 1)
+    this.renderName()
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -119,9 +125,34 @@ export default class LobbyScene extends UI {
         return
       }
     }
-    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
+    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5, 1)
     this.enemyJoined = true
     this.inviteButton.hideButton()
+  }
+
+  renderName(){
+    let canvas = wx.createCanvas()
+    canvas.width = 100
+    canvas.height = 200
+    let context = canvas.getContext('2d')
+    context.fillStyle = "#FFF"
+    context.fillRect(0, 0, canvas.width, canvas.height)
+
+    context.fillStyle = "#000"
+    context.font = "48px 微软雅黑"
+    context.textBaseline = 'middle'
+    context.fillText(gamestatus.selfInfo.nickName, 0, 50, 250)
+    if (gamestatus.enemyInfo.picUrl === ''){
+
+    }
+
+    let texture = new THREE.CanvasTexture(canvas)
+    let material = new THREE.MeshLambertMaterial({
+      map: texture
+    })
+    let geometry = new THREE.PlaneGeometry(canvas.width, canvas.height, 1, 1)
+    let mesh = new THREE.Mesh(geometry, material)
+    this.scene.add(mesh)
   }
   inviteEnemy(){
     console.log('invite')
@@ -160,6 +191,9 @@ export default class LobbyScene extends UI {
       this.fade()
     }
   }
+  exit(){
+
+  }
   fade(){
     this.frame += 1
     this.light.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
@@ -192,11 +226,14 @@ export default class LobbyScene extends UI {
     if(this.imReady.checkTouch(endX, endY, initX, initY)){
       this.unreadySelf()
     }
-    if(this.imNotReady.checkTouch(endX, endY, initX, initY)){
+    else if(this.imNotReady.checkTouch(endX, endY, initX, initY)){
       this.readySelf()
     }
-    if(this.inviteButton.checkTouch(endX, endY, initX, initY)){
+    else if(this.inviteButton.checkTouch(endX, endY, initX, initY)){
       this.inviteEnemy()
     }
+    else if(this.exitButton.checkTouch(endX, endY, initX, initY)){
+        this.exit()
+      }
   }
 }
