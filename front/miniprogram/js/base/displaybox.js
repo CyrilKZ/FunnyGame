@@ -36,7 +36,7 @@ export default class DisplayBox {
     else{
       this.loaded = true
       let material
-      if(self.basic){
+      if(this.basic){
         material = new THREE.MeshBasicMaterial({map:texture, transparent:true})
       }
       else{
