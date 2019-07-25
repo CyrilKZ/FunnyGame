@@ -220,7 +220,7 @@ export default class HUD {
       return
     }
     console.log('showing hud')
-    renderer.setScissor(0, 960, 1920, 320)
+    renderer.setScissor(0, 760, 1920, 320)
     renderer.setViewport(0, 0, 1920, 1080)
     renderer.render(this.scene, this.camera)
   }

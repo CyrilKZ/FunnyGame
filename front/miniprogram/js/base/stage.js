@@ -31,7 +31,6 @@ export default class Stage {
     this.display = false
   }
   render(renderer){
-    renderer.clear()
     renderer.render(this.scene, this.camera)
     if(this.showHUD){
       renderer.render(hud)
