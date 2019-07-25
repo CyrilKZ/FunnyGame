@@ -37,10 +37,10 @@ export default class DisplayBox {
       this.loaded = true
       let material
       if(this.basic){
-        material = new THREE.MeshBasicMaterial({map:texture, transparent:true})
+        material = new THREE.MeshBasicMaterial({map:url, transparent:true})
       }
       else{
-        material = new THREE.MeshLambertMaterial({map:texture, transparent:true})
+        material = new THREE.MeshLambertMaterial({map:url, transparent:true})
       }
       let geometry = new THREE.PlaneGeometry(this.lengthX, this.lengthY)
       this.model = new THREE.Mesh(geometry, material)
