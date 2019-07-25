@@ -1,4 +1,7 @@
 // js/openDataContext/index.js
+let sharedCanvas = wx.getSharedCanvas()
+let context = sharedCanvas.getContext('2d')
+
 const image = wx.createImage()
 image.onload = function () {
   // context.drawImage(image, 0, 0)
@@ -7,29 +10,43 @@ image.src = 'resources/ranklist.png'
 
 wx.onMessage(data => {
   let fun = {
-    render: render
+    render: render,
+    update: update
   }
   fun[data.command](data)
 })
 
+function update(data){
+  wx.getUserCloudStorage({
+    keyList: ['score'],
+    success: res => {
+      let oldScore = res.KVDataList[0].value - 0
+      if(oldScore < data.score){
+        wx.setUserCloudStorage({
+          KVDataList: [{ key: 'score', value: `${data.score}`}],
+          success: res => {
+            console.log(res)
+          },
+          fail: res => {
+            console.log(res)
+          }
+        });
+        render()
+      }
+    }
+  })
+}
+
 
 function render(data) {
-  let sharedCanvas = wx.getSharedCanvas()
-  let context = sharedCanvas.getContext('2d')
+  context.height = context.height;
   context.drawImage(image, 0, 0);
   wx.getFriendCloudStorage({
-    keyList: ['score', 'maxScore'],
+    keyList: ['score'],
     success: res => {
       drawRankList(res.data)
     }
   })
-  context.fillStyle = '#66CCFF'
-  context.fillRect(0, 0, 100, 100)
-
-  // context.strokeStyle = '#fff'
-  // // context.font = "bold 40px '字体','字体','微软雅黑','宋体'"
-  // context.textBaseline = 'hanging'
-  // context.fillText('text', 0, 0)
 }
 
 function drawRankList(data) {
@@ -43,11 +60,18 @@ function drawRankList(data) {
       let y = 150 + 125 * (index % 4)
       // context.fillStyle = '#66CCFF'
       // context.fillRect(x, y, 100, 100)
+      const image = wx.createImage()
+      image.onload=function(){
+        context.drawImage(image, x + 125, y + 12.5, 100, 100)
+      }
+      image.src = item.avatarUrl
+
       context.font = "42px 微软雅黑"
       context.fillStyle = "#FFF"
       context.textBaseline = 'top'
-      context.fillText(item.nickname, x + 200, y + 30)
-      context.fillText(item.KVDataList[0].value, x + 400, y + 30)
+      context.fillText(index + 1, x + 50, y + 30)
+      context.fillText(item.nickname, x + 250, y + 30, 250)
+      context.fillText(item.KVDataList[0].value, x + 550, y + 30, 159)
     }
   })
 }
