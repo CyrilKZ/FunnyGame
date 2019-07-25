@@ -2,6 +2,9 @@ import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
 import GameStatus from '../status'
 
+const bg2 = wx.createImage()
+bg2.src = 'resources/finishbg.png'
+
 let gamestatus = new GameStatus()
 
 export default class ResultPanel {
