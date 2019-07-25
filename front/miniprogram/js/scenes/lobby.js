@@ -18,16 +18,15 @@ export default class LobbyScene extends UI {
     this.selfPhotoSet = false
     this.enemyPhotoSet = false
 
-    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -825, 300)
-    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -820, -300)
-    this.exitButton = new Button('resources/exit.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -820, -450)
+    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -775, -375)
+    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -775, -375)
+    this.exitButton = new Button('resources/exit.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -275, -375)
     this.inviteButton = new Button('resources/invite.png', CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5)
     this.selfPhoto = null
 
-    this.othersReady = new DisplayBox('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
-    this.othersNotReady = new DisplayBox('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -500, 1)
+    this.othersReady = new DisplayBox('resources/onready.png', 170, 147, -50, -50, 2)
+    this.selfReady = new DisplayBox('resources/onready.png', 170, 147, -660, -50, 2)
     this.enemyPhoto = null
-
     
     this.tryToInitButtons()
   }
@@ -52,6 +51,9 @@ export default class LobbyScene extends UI {
   }
   readySelf(){
     let self = this
+    this.selfReady.initToScene(this.scene)
+    this.selfReady.show()
+
     console.log('ready')
     console.log(self.enemyJoined)
     // if(!self.enemyJoined){
@@ -65,6 +67,7 @@ export default class LobbyScene extends UI {
     })
   }
   unreadySelf(){
+    this.selfReady.hide()
     let self = this
     // if(!self.enemyJoined){
     //   return
@@ -79,11 +82,10 @@ export default class LobbyScene extends UI {
   setEnemyReady(ready){
     gamestatus.enemyReady = ready
     if(ready){
+      this.othersReady.initToScene(this.scene)
       this.othersReady.show()
-      this.othersNotReady.hide()
     }
     else{
-      this.othersNotReady.show()
       this.othersReady.hide()
     }
   }
@@ -97,10 +99,10 @@ export default class LobbyScene extends UI {
 
     if(gamestatus.selfInfo.texture){
       this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -725, 5, 1)
+      this.renderSelfName()
       this.selfPhoto.initToScene(this.scene)
       this.selfPhotoSet = true
     }
-    this.renderName()
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -116,39 +118,51 @@ export default class LobbyScene extends UI {
       this.enemyPhotoSet = true
       this.enemyJoined = true
       this.inviteButton.hideButton()
+      this.renderEnemyName()
     }
   }
 
-  renderName(){
+  renderSelfName(){
     let canvas = wx.createCanvas()
-    canvas.width = 100
-    canvas.height = 200
+    canvas.width = 400
+    canvas.height = 100
     let context = canvas.getContext('2d')
-    context.fillStyle = "#FFF"
-    context.fillRect(0, 0, canvas.width, canvas.height)
 
     context.fillStyle = "#000"
-    context.font = "48px 微软雅黑"
+    context.font = "54px 微软雅黑"
     context.textBaseline = 'middle'
-    context.fillText(gamestatus.selfInfo.nickName, 0, 50, 250)
-    if (gamestatus.enemyInfo.picUrl === ''){
-
-    }
+    context.textAlign = 'center'
+    context.fillText(gamestatus.selfInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let material = new THREE.MeshLambertMaterial({
-      map: texture
-    })
-    let geometry = new THREE.PlaneGeometry(canvas.width, canvas.height, 1, 1)
-    let mesh = new THREE.Mesh(geometry, material)
-    this.scene.add(mesh)
+    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -830, -150)
+    displayBox.initToScene(this.scene)
   }
+
+  renderEnemyName() {
+    let canvas = wx.createCanvas()
+    canvas.width = 400
+    canvas.height = 100
+    let context = canvas.getContext('2d')
+
+    context.fillStyle = "#000"
+    context.font = "54px 微软雅黑"
+    context.textBaseline = 'middle'
+    context.textAlign = 'center'
+    context.fillText(gamestatus.enemyInfo.nickName, 200, 50, 400)
+
+    let texture = new THREE.CanvasTexture(canvas)
+    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -220, -150)
+    displayBox.initToScene(this.scene)
+  }
+
   inviteEnemy(){
     console.log('invite')
     wx.shareAppMessage({
       query: 'teamid=' + gamestatus.roomID.toString()
     })
   }
+
   enemyLeave(){
     this.enemyPhoto.removeFromScene(this.scene)
     this.enemyPhotoSet = false
@@ -157,6 +171,7 @@ export default class LobbyScene extends UI {
       nickName: '',
       picUrl: ''
     }
+    renderEnemyName()
     this.inviteButton.showButton()   
     this.enemyJoined = false
   }

@@ -5,6 +5,9 @@ import GameStatus from '../status'
 const bg2 = wx.createImage()
 bg2.src = 'resources/finishbg.png'
 
+const winner = wx.createImage()
+winner.src = 'resources/winner.png'
+
 let gamestatus = new GameStatus()
 
 export default class ResultPanel {

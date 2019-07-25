@@ -2,6 +2,7 @@ import GameStatus from '../status'
 import UI from '../base/ui'
 import Network from '../base/network'
 import Button from '../world/button'
+import DisplayBox from '../base/displaybox'
 import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
 
@@ -109,16 +110,12 @@ export default class WelcomeScene extends UI {
     let openDataContext = wx.getOpenDataContext()
     let sharedCanvas = openDataContext.canvas
     let texture = new THREE.CanvasTexture(sharedCanvas)
-    let material = new THREE.MeshLambertMaterial({
-      map: texture
-    })
-    let geometry = new THREE.PlaneGeometry(1450, 800, 1, 1)
-    this.rankList = new THREE.Mesh(geometry, material)
-    this.scene.add(this.rankList)
+    this.rankList = new DisplayBox(texture, 1450, 800, -725, -400, 2, true)
+    this.scene.add(this.rankList.model)
   }
 
   hideRanklist() {
-    this.scene.remove(this.rankList)
+    this.scene.remove(this.rankList.model)
   }
 
   loop(){

@@ -10,7 +10,7 @@ sharedCanvas.height = 800
 
 setTimeout(function(){
   wx.postMessage({
-    command:'renderRanklist'
+    command:'render'
   })
 }, 500)
 

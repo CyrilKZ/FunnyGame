@@ -51,7 +51,6 @@ export default class GameStatus {
   reset(){
     this.frame   = 0
     this.aniFrame = 0
-    this.score   = 0
     this.step    = 0
     this.speed   = 1
     this.accel   = 0
@@ -63,6 +62,8 @@ export default class GameStatus {
     this.enemyWillHit = false
     this.enemySide    = 0
 
+    this.selfScore   = 0
+    this.enemyScore  = 0
     this.gameOn = false
     this.pause = false
     this.absDistance = 0
