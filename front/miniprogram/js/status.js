@@ -25,13 +25,17 @@ export default class GameStatus {
 
     this.selfInfo = {
       nickName: '',
-      picUrl:''
+      picUrl:'',
+      image: null,
+      texture: null
     }
     this.heroSide = 0
 
     this.enemyInfo = {
       nickName: '',
-      picUrl:''
+      picUrl:'',
+      image: null,
+      texture: null
     }
     this.enemySide = 0
 
@@ -52,7 +56,6 @@ export default class GameStatus {
     this.speed   = 1
     this.accel   = 0
     this.blocks  = [[],[],[],[]]
-    this.gameOver    = false
     this.heroWillHit = false
     this.heroSide    = 0
     this.heroHit     = false
@@ -73,9 +76,29 @@ export default class GameStatus {
   setSelfInfo(info){
     this.selfInfo.nickName = info.nickName
     this.selfInfo.picUrl = info.avatarUrl
+    this.selfInfo.image = wx.createImage()
+    this.selfInfo.image.src = this.selfInfo.picUrl
+    let loader = new THREE.TextureLoader()
+    let self = this
+    loader.load(
+      self.selfInfo.picUrl,
+      function(texture){
+        self.selfInfo.texture = texture
+      }
+    )
   }
   setEnemyInfo(info){
     this.enemyInfo.nickName = info.nickName
     this.enemyInfo.picUrl = info.picUrl
+    this.enemyInfo.image = wx.createImage()
+    this.enemyInfo.image.src = this.enemyInfo.picUrl
+    let loader = new THREE.TextureLoader()
+    let self = this
+    loader.load(
+      self.enemyInfo.picUrl,
+      function(texture){
+        self.enemyInfo.texture = texture
+      }
+    )
   }
 }

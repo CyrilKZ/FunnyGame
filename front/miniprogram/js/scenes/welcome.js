@@ -9,7 +9,7 @@ let gamestatus = new GameStatus()
 let network = new Network()
 export default class WelcomeScene extends UI {
   constructor(){
-    super('resources/startbg.png')
+    super('resources/welcome.png')
     this.handlingAuth = false
     this.setUpScene()
   }

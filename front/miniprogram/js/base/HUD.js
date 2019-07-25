@@ -11,7 +11,7 @@ export default class HUD {
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 1000)
     //this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
 
-    this.scene.background = 'rgba(0,0,0,0)'
+    this.scene.background = 'rgba(0,0,0, 0)'
     this.camera.position.z = 100
 
 

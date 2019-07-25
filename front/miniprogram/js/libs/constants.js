@@ -41,3 +41,5 @@ export const HERO_COLOR = 0x2bae85
 export const ENEMY_COLOR = 0xbbccdd
 export const HUD_PHOTO_SIZE = 120
 export const HUD_MANA_RADUIS = 10
+export const PANEL_WIDTH = 1450
+export const PANEL_HEIGHT = 800

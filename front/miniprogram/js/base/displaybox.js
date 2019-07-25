@@ -13,24 +13,32 @@ export default class DisplayBox {
     this.visible = false
     this.basic = basic
 
-    let self = this
-    let loader = new THREE.TextureLoader()
-    loader.load(
-      url,
-      function(texture){
-        console.log(`${url} loaded`)
-        let material
-        if(self.basic){
-          material = new THREE.MeshBasicMaterial({map:texture, transparent:true})
+    if(typeof(url) === 'string'){
+      let self = this
+      let loader = new THREE.TextureLoader()
+      loader.load(
+        url,
+        function(texture){
+          console.log(`${url} loaded`)
+          let material
+          if(self.basic){
+            material = new THREE.MeshBasicMaterial({map:texture, transparent:true})
+          }
+          else{
+            material = new THREE.MeshLambertMaterial({map:texture, transparent:true})
+          }
+          let geometry = new THREE.PlaneGeometry(self.lengthX, self.lengthY)
+          self.model = new THREE.Mesh(geometry, material)
+          self.loaded = true        
         }
-        else{
-          material = new THREE.MeshLambertMaterial({map:texture, transparent:true})
-        }
-        let geometry = new THREE.PlaneGeometry(self.lengthX, self.lengthY)
-        self.model = new THREE.Mesh(geometry, material)
-        self.loaded = true        
-      }
-    )
+      )
+    }
+    else{
+      this.loaded = true
+      let material = new THREE.MeshBasicMaterial({map:url, transparent:true})
+      let geometry = new THREE.PlaneGeometry(this.lengthX, this.lengthY)
+      this.model = new THREE.Mesh(geometry, material)
+    }
   }
 
   show(){
@@ -97,6 +105,7 @@ export default class DisplayBox {
       console.log('texture loading in progress')
       return
     }
+    this.loaded = false
     this.model.material.dispose()
     this.model.geometry.dispose()
     this.model = null

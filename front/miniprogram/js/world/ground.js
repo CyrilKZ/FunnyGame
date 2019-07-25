@@ -89,8 +89,8 @@ export default class Ground {
       scene.add(bar)
     })
 
-    this.bars[0].position.set(-CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
-    this.bars[0].rotateY(Math.PI / 2)
+    //this.bars[0].position.set(-CONST.PLANE_WIDTH/2, 0, CONST.SIDE_BAR_WIDTH/2)
+    //this.bars[0].rotateY(Math.PI / 2)
 
     this.bars[1].position.set(-CONST.PLANE_WIDTH/2, CONST.PLANE_LENGTH, CONST.SIDE_BAR_WIDTH/2)
     this.bars[1].rotateY(Math.PI / 2)

@@ -31,7 +31,8 @@ let network = new Network()
 export default class GameScene {
   constructor(){
     this.scene = new THREE.Scene()
-    this.scene.background = 'rgba(255,255,255,0)'
+    this.scene.background = 'rgba(0,0,0, 0.01)'
+    //this.scene.background = 'rgba(255,255,255,0)'
     this.camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0.5)
     this.aLight = new THREE.AmbientLight(0xffffff, 0)

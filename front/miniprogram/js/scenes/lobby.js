@@ -89,19 +89,11 @@ export default class LobbyScene extends UI {
     if(gamestatus.selfInfo.picUrl === ''){
       return
     }
-    if(this.selfPhoto){
-      if(this.selfPhoto.boundScene){        
-        this.selfPhotoSet = true
-        return
-      }
-      if(this.selfPhoto.loaded){
-        this.selfPhoto.initToScene(this.scene)
-        return
-      }
-    }
-    else{
-      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
-    }    
+    if(gamestatus.selfInfo.texture){
+      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
+      this.selfPhoto.initToScene(this.scene)
+      this.selfPhotoSet = true
+    }   
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -110,22 +102,14 @@ export default class LobbyScene extends UI {
     if(gamestatus.enemyInfo.picUrl === ''){
       return
     }
-    if(this.enemyPhoto){
-      if(this.enemyPhoto.boundScene){
-        this.enemyPhotoSet = true
-        return
-      }
-      if(this.enemyPhoto.loaded){
-        console.log(this.enemyPhoto)
-        this.enemyPhoto.initToScene(this.scene)
-        return
-      }
-    }
-    else{
-      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
+    if(gamestatus.enemyInfo.texture){
+      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.texture, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
+      this.enemyPhoto.initToScene(this.scene)
+      this.enemyPhotoSet = true
       this.enemyJoined = true
       this.inviteButton.hideButton()
-    }   
+    }  
+  
   }
   inviteEnemy(){
     console.log('invite')
