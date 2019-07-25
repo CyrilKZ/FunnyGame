@@ -209,7 +209,7 @@ export default class GameScene {
     this.animationFrame += 1
   }
   setUpRenderer(renderer){
-    renderer.setScissor(1200, 0, 1920, 1080)
+    renderer.setScissor(1920, 0, 1920, 1080)
     renderer.setViewport(600, 0, 1920, 1080)
   }
   

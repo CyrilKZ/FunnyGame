@@ -7,7 +7,7 @@ export default class UI {
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0)
     this.aLight = new THREE.AmbientLight(0xffffff, 1)
-    this.camera.position.z = 2000
+    this.camera.position.z = 120
     this.light.position.set(0, 0, 100)
     this.scene.add(this.light)
     this.scene.add(this.aLight)
@@ -20,10 +20,11 @@ export default class UI {
     this.endAnimation = false
 
     let self = this
-    let loader = new THREE.TextureLoader()
+    let loader = new THREE.TextureLoader(new THREE.LoadingManager())
     loader.load(
       url,
       function(texture){
+        console.log(`backgound texture @ ${url} loaded`)
         let geometry = new THREE.PlaneGeometry(CONST.SCREEN_X, CONST.SCREEN_Y, 1, 1)
         let material = new THREE.MeshLambertMaterial({map:texture})
         self.backgound = new THREE.Mesh(geometry, material)

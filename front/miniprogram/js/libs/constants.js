@@ -1,7 +1,7 @@
 export const SCREEN_X = 1920
 export const SCREEN_Y = 1080
 export const PLANE_WIDTH = 440
-export const PLANE_LENGTH = 2000
+export const PLANE_LENGTH = 1200
 export const SIDE_BAR_WIDTH = 400
 export const BLOCK_RANGE_LOW = -560
 export const BLOCK_LENGTHX = 104
@@ -40,6 +40,6 @@ export const PARICLE_LIFESPAN = 120
 export const HERO_COLOR = 0x2bae85
 export const ENEMY_COLOR = 0xbbccdd
 export const HUD_PHOTO_SIZE = 160
-export const HUD_MANA_SIZE = 16
+export const HUD_MANA_SIZE = 32
 export const PANEL_WIDTH = 1450
 export const PANEL_HEIGHT = 800

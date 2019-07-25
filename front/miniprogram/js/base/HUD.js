@@ -24,43 +24,28 @@ export default class HUD {
     this.enemyBorder = null
     this.frame = 0
     
-    this.fullyInit = [false, false]
+    this.fullyInit = [false, false, false]
+    this.loaded = false
     
     this.hasText = false
     this.text = null
 
     this.manaIcons = []
-    let geometry = new THREE.CircleGeometry(CONST.HUD_MANA_RADUIS, 32)
-    let material = new THREE.MeshBasicMaterial({color: 0xaabbcc})
-    for(let i = 0 ; i < 10; ++i){
-      let model = new THREE.Mesh(geometry, material)
-      model.position.x = 855 - i * (2*CONST.HUD_MANA_RADUIS + 10)
-      model.position.y = 400
-      this.manaIcons.push(model)
-      this.scene.add(model)
-    }
+    this. manaGeometry = new THREE.PlaneGeometry(CONST.HUD_MANA_SIZE, CONST.HUD_MANA_SIZE, 1, 1)
+    this. manaMaterial = new THREE.MeshBasicMaterial({color: 0xaabbcc})
   }
-  tryShowSelfInfo(){
+  tryShowSelfInfo(){  
     if(this.selfPhotoSet){
       return
     }
     if(gamestatus.selfInfo.picUrl === ''){
       return
     }
-    if(this.selfPhoto){
-      if(this.selfPhoto.boundScene){        
-        this.selfPhotoSet = true
-        return
-      }
-      if(this.selfPhoto.loaded){
-        this.selfPhoto.initToScene(this.scene)
-        return
-      }
+    if(gamestatus.selfInfo.texture){
+      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
+      this.selfPhoto.initToScene(this.scene)
+      this.selfPhotoSet = true
     }
-    else{
-      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
-    }
-    
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -69,32 +54,24 @@ export default class HUD {
     if(gamestatus.enemyInfo.picUrl === ''){
       return
     }
-    if(this.enemyPhoto){
-      if(this.enemyPhoto.boundScene){
-        this.enemyPhotoSet = true
-        return
-      }
-      if(this.enemyPhoto.loaded){
-        this.enemyPhoto.initToScene(this.scene)
-        return
-      }
-    }
-    else{
-      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
+    if(gamestatus.enemyInfo.texture){
+      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
+      this.enemyPhoto.initToScene(this.scene)
+      this.enemyPhotoSet = true
     }
   }
   tryToInit(){
-    if(this.fullyInit[0] && this.fullyInit[1]){
+    if(this.loaded){
       return
     }
     if(this.enemyPhotoSet) {
       if(!this.fullyInit[0]){
         this.fullyInit[0] = true
         if(gamestatus.host){
-          this.enemyPhoto.resetPos(-860, 370, 0)
+          this.enemyPhoto.resetPos(-860, 440 - CONST.HUD_PHOTO_SIZE, 0)
         }
         else{
-          this.enemyPhoto.resetPos(740, 370, 0)
+          this.enemyPhoto.resetPos(860 - CONST.HUD_PHOTO_SIZE, 440 - CONST.HUD_PHOTO_SIZE, 0)
         }
         let edges = new THREE.EdgesGeometry(this.enemyPhoto.model.geometry)
         this.enemyBorder = new THREE.LineSegments(
@@ -115,10 +92,10 @@ export default class HUD {
       if(!this.fullyInit[1]){
         this.fullyInit[1] = true
         if(gamestatus.host){
-          this.selfPhoto.resetPos(740, 370, 0)
+          this.selfPhoto.resetPos(860 - CONST.HUD_PHOTO_SIZE, 440 - CONST.HUD_PHOTO_SIZE, 0)
         }
         else{
-          this.selfPhoto.resetPos(-860, 370, 0)
+          this.selfPhoto.resetPos(-860, 440 - CONST.HUD_PHOTO_SIZE, 0)
         }
         let edges = new THREE.EdgesGeometry(this.selfPhoto.model.geometry)
         this.selfBorder = new THREE.LineSegments(
@@ -135,6 +112,42 @@ export default class HUD {
     else{
       this.tryShowSelfInfo()
     }
+    if(!this.fullyInit[2]){
+      let geometry = this.manaGeometry
+      let material = this.manaMaterial
+      if(gamestatus.host){
+        for(let i = 0 ; i < 5; ++i){
+          let model = new THREE.Mesh(geometry, material)
+          model.position.x = 860 - i * CONST.HUD_MANA_SIZE - CONST.HUD_MANA_SIZE / 2
+          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
+          this.manaIcons.push(model)
+          this.scene.add(model)
+
+          model = new THREE.Mesh(geometry, material)
+          model.position.x = 860 - i * CONST.HUD_MANA_SIZE - CONST.HUD_MANA_SIZE / 2
+          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2 - 32
+          this.manaIcons.push(model)
+          this.scene.add(model)
+        }
+      }
+      else{
+        for(let i = 0 ; i < 5; ++i){
+          let model = new THREE.Mesh(geometry, material)
+          model.position.x = -860 + i * CONST.HUD_MANA_SIZE + CONST.HUD_MANA_SIZE / 2
+          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
+          this.manaIcons.push(model)
+          this.scene.add(model)
+
+          model = new THREE.Mesh(geometry, material)
+          model.position.x = -860 + i * CONST.HUD_MANA_SIZE + CONST.HUD_MANA_SIZE / 2
+          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2 - 32
+          this.manaIcons.push(model)
+          this.scene.add(model)
+        }
+      }
+      this.fullyInit[2] = true
+    }
+    this.loaded = this.fullyInit[0] && this.fullyInit[1] && this.fullyInit[2]
   }
   clean(){
     this.enemyPhoto.removeFromScene(this.scene)
@@ -179,7 +192,7 @@ export default class HUD {
     }    
   }
   showText(s){
-    if(!this.visible ||!this.fullyInit[0] || !this.fullyInit[1]){
+    if(!this.visible ||!this.loaded){
       return
     }
     if(!gamestatus.font){
@@ -207,7 +220,7 @@ export default class HUD {
     }
   }
   update(point){
-    if(!this.visible ||!this.fullyInit[0] || !this.fullyInit[1]){
+    if(!this.visible ||!this.loaded){
       return
     }
     if(this.text){
@@ -216,12 +229,33 @@ export default class HUD {
     this.updateMana(point)
   }
   render(renderer){
-    if(!this.visible || !this.fullyInit[0] || !this.fullyInit[1]){
+    return
+    if(!this.visible || !this.loaded){
       return
     }
     console.log('showing hud')
-    renderer.setScissor(0, 760, 1920, 320)
-    renderer.setViewport(0, 0, 1920, 1080)
-    renderer.render(this.scene, this.camera)
+
+    if(gamestatus.host){
+      // left photo
+      renderer.setScissor(100, 1080 - 262, 162, 164)
+      renderer.setViewport(0, 0, 1920, 1080)
+      renderer.render(this.scene, this.camera)
+
+      // right photo
+      renderer.setScissor(1920 - 262, 1080 - 262 - 64, 162, 164 + 64)
+      renderer.setViewport(0, 0, 1920, 1080)
+      renderer.render(this.scene, this.camera)
+    }
+    else{
+      // left photo
+      renderer.setScissor(100, 1080 - 262 - 64, 162, 164 + 64)
+      renderer.setViewport(0, 0, 1920, 1080)
+      renderer.render(this.scene, this.camera)
+
+      // right photo
+      renderer.setScissor(1920 - 262, 1080 - 262, 162, 164)
+      renderer.setViewport(0, 0, 1920, 1080)
+      renderer.render(this.scene, this.camera)
+    }    
   }
 }
