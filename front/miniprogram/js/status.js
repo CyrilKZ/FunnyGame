@@ -1,4 +1,6 @@
 import Pool from './base/pool'
+import * as THREE from './libs/three.min'
+import MAIN_FONT from '../resources/font'
 //import * as CONST from './libs/constants'
 
 let instance
@@ -9,6 +11,8 @@ export default class GameStatus {
     }
     instance = this
     this.pool = new Pool()
+
+    this.font = new THREE.FontLoader().parse(MAIN_FONT)
     this.init()
     this.reset()
   }
@@ -37,6 +41,8 @@ export default class GameStatus {
 
     this.selfReady = false
     this.enemyReady = false
+
+    
   }
   reset(){
     this.frame   = 0

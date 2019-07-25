@@ -22,7 +22,7 @@ export default class Ground {
       'resources/leftside.png',
       function(texture){
         console.log(`left texture ${texture} loaded`)
-        let material = new THREE.MeshLambertMaterial({map:texture})
+        let material = new THREE.MeshBasicMaterial({map:texture})
         self.bars[0] = new THREE.Mesh(sideGeometry, material)
         self.bars[1] = new THREE.Mesh(sideGeometry, material)
         self.allLoadings[0] = true
@@ -35,7 +35,7 @@ export default class Ground {
       'resources/rightside.png',
       function(texture){
         console.log(`right texture ${texture} loaded`)
-        let material = new THREE.MeshLambertMaterial({map:texture})
+        let material = new THREE.MeshBasicMaterial({map:texture})
         self.bars[2] = new THREE.Mesh(sideGeometry, material)
         self.bars[3] = new THREE.Mesh(sideGeometry, material)
         self.allLoadings[1] = true
@@ -109,7 +109,7 @@ export default class Ground {
 
         
     this.bars[8].position.set(0, 0, 1)
-    this.bars[9].position.set(0, CONST.ROW_WIDTH, 1)
+    this.bars[9].position.set(0, CONST.PLANE_LENGTH, 1)
   }
   removeFromScene(scene){
     scene.remove(this.ground)

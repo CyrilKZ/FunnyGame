@@ -99,7 +99,9 @@ export default class LobbyScene extends UI {
         return
       }
     }
-    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
+    else{
+      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, 200, 1)
+    }    
   }
   tryShowEnemyInfo(){
     if(this.enemyPhotoSet){
@@ -119,9 +121,11 @@ export default class LobbyScene extends UI {
         return
       }
     }
-    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
-    this.enemyJoined = true
-    this.inviteButton.hideButton()
+    else{
+      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -800, -300, 1)
+      this.enemyJoined = true
+      this.inviteButton.hideButton()
+    }   
   }
   inviteEnemy(){
     console.log('invite')
@@ -152,29 +156,48 @@ export default class LobbyScene extends UI {
     }
     this.isSetUp = this.isSetUp || (this.buttonsSet && this.selfPhotoSet && this.enemyPhotoSet)
   }
+
+  initStartAnimation(){
+    this.startAnimation = true
+    this.light.intensity = 20
+    this.animationFrame = 0
+  }
+  updateStartAnimation(){
+    if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
+      this.light.intensity = 0
+      this.startAnimation = false
+      this.animationFrame = 0
+      return
+    }
+    this.light.intensity -= 20 / CONST.SWITCH_SHORT_FRAME
+    this.animationFrame += 1
+  }
+
+  initEndAnimation(){
+    this.endAnimation = true
+    this.light.intensity = 0
+    this.animationFrame = 0
+  }
+  updateEndAnimation(){
+    if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
+      this.light.intensity = 20
+      this.endAnimation = false
+      this.animationFrame = 0
+      gamestatus.switchToGame = true
+      return
+    }
+    this.light.intensity += 20 / CONST.SWITCH_SHORT_FRAME
+    this.animationFrame += 1
+  }
+
   loop(){
     this.update()
-    
-    
-    if(this.animation){
-      this.fade()
+    if(this.startAnimation){
+      this.updateStartAnimation()
     }
-  }
-  fade(){
-    this.frame += 1
-    this.light.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
-    this.aLight.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
-    if(this.frame === CONST.SWITCH_SHORT_FRAME){
-      this.frame = 0
-      this.animation = false
-      this.light.intensity = 0
-      this.aLight.intensity = 0
-      gamestatus.switchToGame = true
-      this.display = false
+    else if(this.endAnimation){
+      this.updateEndAnimation()
     }
-  }
-  startFading(){
-    this.animation = true
   }
   restore(){
     this.light.intensity = 0
@@ -182,7 +205,7 @@ export default class LobbyScene extends UI {
     this.display = true
   }
   handleTouchEvents(res){
-    if(!this.buttonsSet){
+    if(!this.buttonsSet || this.startAnimation || this.endAnimation){
       return
     }
     let endX = res.endX

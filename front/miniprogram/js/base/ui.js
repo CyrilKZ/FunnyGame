@@ -11,10 +11,13 @@ export default class UI {
     this.light.position.set(0, 0, 100)
     this.scene.add(this.light)
     this.scene.add(this.aLight)
-    this.animation = false
+    
     this.display = false
     this.loaded = false
-    this.frame = 0
+
+    this.animationFrame = 0
+    this.startAnimation = false
+    this.endAnimation = false
 
     let self = this
     let loader = new THREE.TextureLoader()

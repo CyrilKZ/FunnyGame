@@ -113,5 +113,6 @@ export default class Sprite {
     }
     this.model.material.dispose()
     this.model.geometry.dispose()
+    this.model = null
   }
 }

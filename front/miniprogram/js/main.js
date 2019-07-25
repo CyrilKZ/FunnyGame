@@ -8,12 +8,18 @@ import TouchEvents from './base/touch'
 import Network from './base/network';
 
 let ctx = canvas.getContext('webgl')
-let renderer = new THREE.WebGLRenderer(ctx)
+let renderer = new THREE.WebGLRenderer({
+  canvas: canvas,
+  context: ctx,
+  alpha: true,
+  antialias: true
+})
 canvas.appendChild(renderer.domElement)
 renderer.setSize(1920, 1080)
-renderer.shadowMapEnabled = true
 renderer.autoClear = true
+renderer.shadowMapEnabled = true
 renderer.setScissorTest(true)
+renderer.setClearColor(new THREE.Color( 0x000000 ), 0.01)
 
 wx.cloud.init()
 let db = wx.cloud.database()
@@ -43,7 +49,7 @@ export default class Game {
             
     }    
     network.onStart = function(){
-      self.stages[CONST.STAGE_LOBBY].startFading()
+      self.stages[CONST.STAGE_LOBBY].initEndAnimation()
       self.gameScene.initCharacters()    
     }
     this.restart()
@@ -61,6 +67,8 @@ export default class Game {
   loop() {
     if(gamestatus.switchToLobby){
       this.stages[CONST.STAGE_LOBBY].restore()
+      this.stages[CONST.STAGE_LOBBY].initStartAnimation()
+      this.gameScene.initSyncAnimation()
       this.currentStage = CONST.STAGE_LOBBY
       gamestatus.switchToLobby = false
     }
@@ -87,9 +95,11 @@ export default class Game {
       this.bindLoop,
       canvas
       )
+    
     if(this.currentStage !== -1){
       this.stages[this.currentStage].render(renderer)
-    }    
+    }
+        
     this.gameScene.render(renderer)
   }
   handleTouchEvents(res){  
