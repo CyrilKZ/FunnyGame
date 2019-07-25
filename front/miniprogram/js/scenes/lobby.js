@@ -18,9 +18,9 @@ export default class LobbyScene extends UI {
     this.selfPhotoSet = false
     this.enemyPhotoSet = false
 
-    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -775, -375)
-    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -775, -375)
-    this.exitButton = new Button('resources/exit.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -275, -375)
+    this.imReady = new Button('resources/ready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -375)
+    this.imNotReady = new Button('resources/notready.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -800, -375)
+    this.exitButton = new Button('resources/exit.png', CONST.READY_BUTTON_LX, CONST.READY_BUTTON_LY, -250, -375)
     this.inviteButton = new Button('resources/invite.png', CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5)
     this.selfPhoto = null
 
@@ -135,7 +135,7 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.selfInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -830, -150)
+    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -830, -130)
     displayBox.initToScene(this.scene)
   }
 
@@ -152,7 +152,7 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.enemyInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -220, -150)
+    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -220, -130)
     displayBox.initToScene(this.scene)
   }
 

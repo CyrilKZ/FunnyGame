@@ -3,15 +3,15 @@ import * as CONST from '../libs/constants'
 import DisplayBox from '../base/displaybox'
 
 export default class Button extends DisplayBox{
-  constructor(url, lengthX = 0, lengthY = 0, x = 0, y = 0){
-    super(url, lengthX, lengthY, x, y, 1)
+  constructor(url, lengthX = 0, lengthY = 0, x = 0, y = 0, z = 1){
+    super(url, lengthX, lengthY, x, y, z)
     this.available = false
     this.hitBoxLeft = 0
     this.hitBoxRight = 0
     this.hitBoxUp = 0
     this.hitBoxDown = 0
   }
-  init(scene, x = this.x, y = this.y){
+  init(scene, x = this.x, y = this.y, z = this.z){
     if(!this.loaded){
       console.log(`loading`)
       return
@@ -19,7 +19,7 @@ export default class Button extends DisplayBox{
     if(this.boundScene){
       return
     }
-    this.initToScene(scene, x, y, 1)
+    this.initToScene(scene, x, y, z)
     
     let screenlx = this.lengthX * window.innerWidth / CONST.SCREEN_X
     let screenly = this.lengthY * window.innerHeight / CONST.SCREEN_Y
