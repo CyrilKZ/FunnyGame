@@ -13,17 +13,17 @@ class Server {
         this.httpsServer = https.createServer(options, app).listen(port);
         let wss = new ws.Server({ server: this.httpsServer });
         wss.on('connection', wssHandler);
-        // const interval = setInterval(function ping() {
-        //     wss.clients.forEach(function each(ws) {
-        //         if (ws.isAlive === false) {
-        //             return ws.terminate();
-        //         }
-        
-        //         ws.isAlive = false;
-        //         ws.ping();
-        //     });
-        // }, 10000);
         this.wssServer = wss
+        setInterval(function ping() {
+            wss.clients.forEach(function each(ws) {
+                if (ws.isAlive === false) {
+                    return ws.close();
+                }
+
+                ws.isAlive = false;
+                ws.ping();
+            });
+        }, 10000);
     }
 }
 
@@ -34,41 +34,56 @@ app.get('/reset', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-    team.userHandler.login(req.body.openid, req.body.userinfo);
-    res.status(200).send('Welcome');
-});
-
-app.get('/logout', function (req, res) {
-    team.userHandler.logout(req.query.openid);
-    res.status(200).send('Bye');
+    try {
+        team.userHandler.login(req.body.openid, req.body.userinfo);
+        res.status(200).send('Welcome');
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 
 app.post('/team/create', function (req, res) {
-    let teamid = team.teamHandler.create(req.body.openid);
-    res.json({
-        'result': 0,
-        'teamid': teamid
-    });
+    try {
+        let teamid = team.teamHandler.create(req.body.openid);
+        res.json({
+            'result': 0,
+            'teamid': teamid
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 
 app.post('/team/join', function (req, res) {
-    if (team.teamHandler.join(req.body.openid, req.body.teamid)) {
-        res.json({
-            'result': 0
-        });
+    try {
+        if (team.teamHandler.join(req.body.openid, req.body.teamid)) {
+            res.json({
+                'result': 0
+            });
+        }
+        else {
+            res.json({
+                'result': 1
+            });
+        }
     }
-    else {
-        res.json({
-            'result': 1
-        });
+    catch (err) {
+        console.log(err);
     }
 });
 
 app.post('/team/exit', function (req, res) {
-    team.teamHandler.exit(req.body.openid, req.body.teamid);
-    res.json({
-        'result': 0
-    });
+    try {
+        team.teamHandler.exit(req.body.openid, req.body.teamid);
+        res.json({
+            'result': 0
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 
 function wssHandler(wssSocket) {
@@ -81,25 +96,30 @@ function wssHandler(wssSocket) {
         this.isAlive = true;
     });
     wssSocket.on('message', function (msg) {
-        let data = JSON.parse(msg);
-        if (user) {
-            console.log(`${user.id}: ${msg}`);
-            scene[data.msg](user, data);
-        }
-        else {
-            if (data.msg === 'open') {
-                user = scene.open(data.openid, wssSocket);
+        try {
+            let data = JSON.parse(msg);
+            if (user) {
+                console.log(`${user.id}: ${msg}`);
+                scene[data.msg](user, data);
             }
             else {
-                console.log(`[SERVER] Received: ${msg}`);
-                wssSocket.send(`Unauthorized:${data.msg}`);
+                if (data.msg === 'open') {
+                    user = scene.open(data.openid, wssSocket);
+                }
+                else {
+                    console.log(`[SERVER] Received: ${msg}`);
+                    wssSocket.send(`Unauthorized:${data.msg}`);
+                }
             }
+        }
+        catch (err) {
+            console.log(err);
         }
     });
     wssSocket.on('close', function (msg) {
-        // if(user){
-        //     user.setSocket(undefined);
-        // }
+        if (!user.pause) {
+            team.userHandler.logout(user);
+        }
         console.log('close');
     });
 }

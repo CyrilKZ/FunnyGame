@@ -8,10 +8,4 @@ let sharedCanvas = openDataContext.canvas
 sharedCanvas.width = 1450
 sharedCanvas.height = 800
 
-setTimeout(function(){
-  wx.postMessage({
-    command:'render'
-  })
-}, 500)
-
 new Game()
