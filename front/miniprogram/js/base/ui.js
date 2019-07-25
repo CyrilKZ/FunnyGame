@@ -4,17 +4,20 @@ import * as CONST from '../libs/constants'
 export default class UI {
   constructor(url){
     this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 1000)
+    this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0)
     this.aLight = new THREE.AmbientLight(0xffffff, 1)
-    this.camera.position.z = 100
+    this.camera.position.z = 2000
     this.light.position.set(0, 0, 100)
     this.scene.add(this.light)
     this.scene.add(this.aLight)
-    this.animation = false
+    
     this.display = false
     this.loaded = false
-    this.frame = 0
+
+    this.animationFrame = 0
+    this.startAnimation = false
+    this.endAnimation = false
 
     let self = this
     let loader = new THREE.TextureLoader()

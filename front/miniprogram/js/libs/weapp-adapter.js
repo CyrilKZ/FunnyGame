@@ -1214,6 +1214,17 @@
 
 
 	  _createClass(XMLHttpRequest, [{
+			key: 'addEventListener',
+			value: function addEventListener(type, listener) {
+				if (typeof listener === 'function') {
+					let event = { target: this }
+					let that = this
+					this['on' + type] = function () {
+						listener.call(that, event)
+					}
+				}
+			}
+		},{
 	    key: 'abort',
 	    value: function abort() {
 	      var myRequestTask = _requestTask.get(this)
@@ -1312,7 +1323,7 @@
 	        })
 	      }
 	    }
-	  }, {
+	  },{
 	    key: 'setRequestHeader',
 	    value: function setRequestHeader(header, value) {
 	      var myHeader = _requestHeader.get(this)

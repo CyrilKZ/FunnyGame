@@ -94,17 +94,12 @@ export default class LobbyScene extends UI {
     if(gamestatus.selfInfo.picUrl === ''){
       return
     }
-    if(this.selfPhoto){
-      if(this.selfPhoto.boundScene){        
-        this.selfPhotoSet = true
-        return
-      }
-      if(this.selfPhoto.loaded){
-        this.selfPhoto.initToScene(this.scene)
-        return
-      }
+
+    if(gamestatus.selfInfo.texture){
+      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -725, 5, 1)
+      this.selfPhoto.initToScene(this.scene)
+      this.selfPhotoSet = true
     }
-    this.selfPhoto = new DisplayBox(gamestatus.selfInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -725, 5, 1)
     this.renderName()
   }
   tryShowEnemyInfo(){
@@ -114,20 +109,14 @@ export default class LobbyScene extends UI {
     if(gamestatus.enemyInfo.picUrl === ''){
       return
     }
-    if(this.enemyPhoto){
-      if(this.enemyPhoto.boundScene){
-        this.enemyPhotoSet = true
-        return
-      }
-      if(this.enemyPhoto.loaded){
-        console.log(this.enemyPhoto)
-        this.enemyPhoto.initToScene(this.scene)
-        return
-      }
+
+    if(gamestatus.enemyInfo.texture){
+      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.texture, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5, 1)
+      this.enemyPhoto.initToScene(this.scene)
+      this.enemyPhotoSet = true
+      this.enemyJoined = true
+      this.inviteButton.hideButton()
     }
-    this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.picUrl, CONST.PHOTO_SIZE, CONST.PHOTO_SIZE, -118, 5, 1)
-    this.enemyJoined = true
-    this.inviteButton.hideButton()
   }
 
   renderName(){
@@ -183,32 +172,53 @@ export default class LobbyScene extends UI {
     }
     this.isSetUp = this.isSetUp || (this.buttonsSet && this.selfPhotoSet && this.enemyPhotoSet)
   }
-  loop(){
-    this.update()
-    
-    
-    if(this.animation){
-      this.fade()
-    }
+
+  initStartAnimation(){
+    this.startAnimation = true
+    this.light.intensity = 20
+    this.animationFrame = 0
   }
+  
   exit(){
 
   }
-  fade(){
-    this.frame += 1
-    this.light.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
-    this.aLight.intensity -= 1 / CONST.SWITCH_SHORT_FRAME
-    if(this.frame === CONST.SWITCH_SHORT_FRAME){
-      this.frame = 0
-      this.animation = false
+
+  updateStartAnimation(){
+    if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
       this.light.intensity = 0
-      this.aLight.intensity = 0
-      gamestatus.switchToGame = true
-      this.display = false
+      this.startAnimation = false
+      this.animationFrame = 0
+      return
     }
+    this.light.intensity -= 20 / CONST.SWITCH_SHORT_FRAME
+    this.animationFrame += 1
   }
-  startFading(){
-    this.animation = true
+
+  initEndAnimation(){
+    this.endAnimation = true
+    this.light.intensity = 0
+    this.animationFrame = 0
+  }
+  updateEndAnimation(){
+    if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
+      this.light.intensity = 20
+      this.endAnimation = false
+      this.animationFrame = 0
+      gamestatus.switchToGame = true
+      return
+    }
+    this.light.intensity += 20 / CONST.SWITCH_SHORT_FRAME
+    this.animationFrame += 1
+  }
+
+  loop(){
+    this.update()
+    if(this.startAnimation){
+      this.updateStartAnimation()
+    }
+    else if(this.endAnimation){
+      this.updateEndAnimation()
+    }
   }
   restore(){
     this.light.intensity = 0
@@ -216,7 +226,7 @@ export default class LobbyScene extends UI {
     this.display = true
   }
   handleTouchEvents(res){
-    if(!this.buttonsSet){
+    if(!this.buttonsSet || this.startAnimation || this.endAnimation){
       return
     }
     let endX = res.endX

@@ -8,7 +8,7 @@
 		"newFeature": true
 	},
 	"compileType": "game",
-	"libVersion": "2.6.6",
+	"libVersion": "2.7.7",
 	"appid": "wxe19dbe01bf7a3e44",
 	"projectname": "FunnyGame",
 	"miniprogramRoot": "miniprogram/",
