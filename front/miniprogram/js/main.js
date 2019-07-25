@@ -16,10 +16,9 @@ let renderer = new THREE.WebGLRenderer({
 })
 canvas.appendChild(renderer.domElement)
 renderer.setSize(1920, 1080)
-renderer.autoClear = false
+renderer.autoClear = true
 renderer.shadowMapEnabled = true
 renderer.setScissorTest(true)
-renderer.setClearColor(new THREE.Color( 0xffffff ), 0.0)
 
 wx.cloud.init()
 let db = wx.cloud.database()
@@ -95,7 +94,6 @@ export default class Game {
       this.bindLoop,
       canvas
       )
-    renderer.clear()
     if(this.currentStage !== -1){
       this.stages[this.currentStage].render(renderer)
     }
