@@ -4,48 +4,28 @@ var fs = require('fs'); //文件模块
 var qs = require('querystring');
 
 // 获取AccessToken
-let accessToken = function () { };
-accessToken.token = '';
-accessToken.expire = -1;
-accessToken.get = function () {
-    if (this.expire > Date.parse(new Date())) {
+let accessToken = { 
+    token : '',
+    expire : -1,
+    get : function () {
+        if (this.expire > Date.parse(new Date())) {
+            return this.token;
+        }
+    
+        let file = path.join(__dirname, 'app-config.json');
+        let data = fs.readFileSync(file);
+        app = JSON.parse(data);
+        query = qs.stringify({
+            'grant_type': 'client_credential',
+            'appid': app.AppID,
+            'secret': app.AppSecret
+        });
+        let res = request('https://api.weixin.qq.com/cgi-bin/token?' + query);
+        token = JSON.parse(res.data);
+        this.token = token.access_token;
+        this.expire = Date.parse(new Date()) + token.expires_in * 1000;
         return this.token;
     }
-
-    let file = path.join(__dirname, 'app-config.json');
-    let data = fs.readFileSync(file);
-    app = JSON.parse(data);
-    query = qs.stringify({
-        'grant_type': 'client_credential',
-        'appid': app.AppID,
-        'secret': app.AppSecret
-    });
-    let res = request('https://api.weixin.qq.com/cgi-bin/token?' + query);
-    token = JSON.parse(res.data);
-    this.token = token.access_token;
-    this.expire = Date.parse(new Date()) + token.expires_in * 1000;
-    return this.token;
-}
-
-// 用户管理
-var userHandler = function () { };
-userHandler.users = {};
-userHandler.login = function (openid, userinfo) {
-    if(!this.users[openid]){
-        this.users[openid] = new User(openid, userinfo);
-    }
-}
-
-userHandler.logout = function (openid) {
-    let user = this.users[openid];
-    if(!user){
-        return false;
-    }
-
-    if(user.team){
-        user.team.delUser(user);
-    }
-    delete this.users[openid];
 }
 
 // 用户类
@@ -53,90 +33,43 @@ class User {
     constructor(openid, userinfo) {
         this.id = openid;
         this.info = userinfo;
+        this.msgBuffer = [];
+        this.pause = false;
         this.team = undefined;
         this.companion = undefined;
         this.socket = undefined;
         this.ready = false;
     }
 
-    setSocket(wssSocket){
+    setSocket(wssSocket) {
         this.socket = wssSocket;
     }
 
-    setReady(bool){
+    setReady(bool) {
         this.ready = bool;
     }
 
-    reset(){
+    setPause(bool){
+        this.pause = bool;
+    }
+
+    reset() {
         this.ready = false;
     }
-}
-
-// Team管理
-var teamHandler = function () { };
-teamHandler.teams = [];
-teamHandler.create = function (openid) {
-    let user = userHandler.users[openid];
-    if(!user){
-        return false;
-    }
-
-    let teamid = this.teams.length;
-    let newteam = new Team(user, teamid);
-    this.teams[teamid] = newteam;
-    user.team = newteam;
-    return teamid;
-}
-
-teamHandler.join = function (openid, teamid){
-    let team = this.teams[teamid];
-    let user = userHandler.users[openid];
-    if(!team){
-        return false;
-    }
-    if(!user){
-        return false;
-    }
-
-    if(team.addUser(user)){
-        let socket = user.companion.socket;
-        if(socket){
-            socket.send(JSON.stringify({
-                'msg':'join',
-                'userinfo': user.info
-            }), (err) => {
-                if (err) {
-                    console.log(`[ERROR]: ${err}`);
-                }
-            });
-        }
-        return true;
-    }
-    else{
-        return false;
-    }
-}
-
-teamHandler.exit = function (openid, teamid){
-    let team = this.teams[teamid];
-    let user = userHandler.users[openid];
-    team.delUser(user);
-}
-
-teamHandler.destroy = function (team) {
-    delete this.teams[team.id];
 }
 
 // Team类
 class Team {
     constructor(user, id) {
         this.id = id;
-        this.users = [ user ];
+        this.users = [user];
+        this.started = false;
         user.team = this;
     }
 
-    restart(){
-        for(let user of this.users){
+    restart() {
+        this.started = false;
+        for (let user of this.users) {
             user.reset();
         }
     }
@@ -162,27 +95,139 @@ class Team {
         if (this.users.length === 0) {
             teamHandler.destroy(this);
         }
-        else{
+        else {
             this.users[0].companion = undefined;
         }
     }
 
-    checkReady(){
-        if(this.users.length !== 2){
+    checkReady() {
+        if(user.team.started === true){
             return false;
         }
 
-        for(let user of this.users){
-            if(user.ready === false){
+        if (this.users.length !== 2) {
+            return false;
+        }
+
+        for (let user of this.users) {
+            if (user.ready === false || user.pause === true) {
                 return false;
             }
         }
         return true;
     }
+
+    start(){
+        this.started = true;
+        for(let user of this.users){
+            user.socket.send('{"msg":"start"}', (err) => {
+                // console.log({ "msg": "start" });
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
+    }
 }
+
+// 用户管理
+var userHandler = {
+    users: {},
+    login: function (openid, userinfo) {
+        if (!this.users[openid]) {
+            this.users[openid] = new User(openid, userinfo);
+        }
+    },
+    logout: function (user) {
+        if (!user) {
+            return false;
+        }
+
+        if(user.socket){
+            user.socket.close();
+        }
+
+        if (user.team) {
+            user.team.delUser(user);
+        }
+        delete this.users[user.id];
+    }
+};
+
+// Team管理
+var teamHandler = {
+    teams: [],
+    create: function (openid) {
+        let user = userHandler.users[openid];
+        if (!user) {
+            return false;
+        }
+
+        let teamid = this.teams.length;
+        let newteam = new Team(user, teamid);
+        this.teams[teamid] = newteam;
+        user.team = newteam;
+        return teamid;
+    },
+    join: function (openid, teamid) {
+        let team = this.teams[teamid];
+        let user = userHandler.users[openid];
+        if (!team) {
+            return false;
+        }
+        if (!user) {
+            return false;
+        }
+
+        if (team.addUser(user)) {
+            if(user.companion.pause){
+                user.companion.msgBuffer.push({
+                    'msg': 'join',
+                    'userinfo': user.info
+                });
+            }
+            else{
+                let socket = user.companion.socket;
+                if (socket) {
+                    socket.send(JSON.stringify({
+                        'msg': 'join',
+                        'userinfo': user.info
+                    }), (err) => {
+                        if (err) {
+                            console.log(`[ERROR]: ${err}`);
+                        }
+                    });
+                }
+            }
+            return true;
+        }
+        else {
+            return false;
+        }
+    },
+    exit: function (openid, teamid) {
+        let user = userHandler.users[openid];
+        if(user.compaion){
+            if(user.companion.pause){
+                user.companion.msgBuffer.push({'msg': 'exit'});
+            }
+            else{
+                user.companion.socket.send('{"msg": "exit"}', (err) => {
+                    if (err) {
+                        console.log(`[ERROR]: ${err}`);
+                    }
+                });
+            }
+        }
+        userHandler.logout(user);
+    },
+    destroy: function (team) {
+        delete this.teams[team.id];
+    }
+};
 
 module.exports = {
     'token': accessToken,
-    'teamHandler' : teamHandler,
-    'userHandler' : userHandler,
+    'teamHandler': teamHandler,
+    'userHandler': userHandler,
 }

@@ -4,11 +4,26 @@ function open(openid, wssSocket) {
     let user = team.userHandler.users[openid];
     if (user) {
         user.setSocket(wssSocket);
-        let companion = user.companion;
-        if (companion) {
-            companion.socket.send(JSON.stringify({
-                'msg':'join',
-                'userinfo':user.info
+        if (user.companion) {
+            user.socket.send(JSON.stringify({
+                'msg': 'join',
+                'userinfo': user.companion.info
+            }), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+            user.socket.send(JSON.stringify({
+                'msg': 'ready',
+                'state': user.companion.ready
+            }), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+            user.socket.send(JSON.stringify({
+                'msg': 'pause',
+                'state': user.companion.pause
             }), (err) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
@@ -24,51 +39,88 @@ function open(openid, wssSocket) {
 
 function ready(user, data) {
     user.setReady(data.state);
-    if(user.companion){
-        user.companion.socket.send(JSON.stringify(data), (err) => {
-            if (err) {
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
+    if (user.companion) {
+        if (user.companion.pause) {
+            user.companion.msgBuffer.push(data);
+        }
+        else {
+            user.companion.socket.send(JSON.stringify(data), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
     }
 
     if (user.team.checkReady()) {
-        user.socket.send('{"msg":"start"}', (err) => {
-            console.log({ "msg": "start" });
-            if (err) {
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
-        user.companion.socket.send('{"msg":"start"}', (err) => {
-            if (err) {
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
+        user.team.start();
     }
 }
 
 function forwardData(user, data) {
     let companion = user.companion;
     if (companion) {
-        companion.socket.send(JSON.stringify(data), (err) => {
-            if (err) {
-                console.log(`[ERROR]: ${err}`);
-            }
-            else {
-                console.log('Forwarded');
-            }
-        });
+        if (companion.pause) {
+            companion.msgBuffer.push(data);
+        }
+        else {
+            companion.socket.send(JSON.stringify(data), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+                else {
+                    console.log('Forwarded');
+                }
+            });
+        }
     }
 }
 
 function fail(user, data) {
     let companion = user.companion;
     if (companion) {
-        companion.socket.send('{"msg":"win"}', (err) => {
-            if (err) {
-                console.log(`[ERROR]: ${err}`);
-            }
-        });
+        if (companion.pause) {
+            companion.msgBuffer.push({'msg':'win'});
+        }
+        else {
+            companion.socket.send('{"msg":"win"}', (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
+    }
+}
+
+function pause(user, data) {
+    user.setPause(data.state);
+    if (data.state === false) {
+        for (let msg of user.msgBuffer) {
+            user.socket.send(JSON.stringify(msg), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            })
+        }
+        user.msgBuffer = [];
+
+        if (user.team.checkReady()) {
+            user.team.start();
+        }
+    }
+    
+    let companion = user.companion;
+    if (companion) {
+        if(companion.pause){
+            companion.msgBuffer.push(data);
+        }
+        else{
+            companion.socket.send(JSON.stringify(data), (err) => {
+                if (err) {
+                    console.log(`[ERROR]: ${err}`);
+                }
+            });
+        }
     }
 }
 
@@ -84,5 +136,6 @@ module.exports = {
     'action': forwardData,
     'transfer': forwardData,
     'fail': fail,
+    'pause': pause,
     'restart': restart
 }
