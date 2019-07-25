@@ -44,7 +44,11 @@ export default class WelcomeScene extends UI {
     this.tryToInitButtons()
   }
   fail(res){
-    console.log(`fail info: ${res}`)
+    console.log(res)
+    wx.showToast({
+      title: res,
+      icon: 'none'
+    })
   }
 
   tryToInitButtons() {
@@ -76,12 +80,13 @@ export default class WelcomeScene extends UI {
       gamestatus.host = true
       network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
         network.createTeam(gamestatus.openID, (res)=>{
-          gamestatus.roomID = res.teamid
+          gamestatus.lobbyID = res.teamid
           network.initSocket(()=>{
             gamestatus.socketOn = true
             network.sendOpenid(gamestatus.openID, ()=>{
               this.animation = true
               this.doWeHaveToUseThis.hide()
+              this.handlingAuth = false
             }, this.fail)
           }, this.fail)
         }, this.fail)
@@ -89,17 +94,18 @@ export default class WelcomeScene extends UI {
     }
     else{
       gamestatus.host = false
-      gamestatus.roomID = shareData
+      gamestatus.lobbyID = shareData
       network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
         console.log(gamestatus.openID)
-        console.log(gamestatus.roomID)
-        network.joinTeam(gamestatus.openID, gamestatus.roomID ,(res)=>{
+        console.log(gamestatus.lobbyID)
+        network.joinTeam(gamestatus.openID, gamestatus.lobbyID ,(res)=>{
           console.log('gest')
           network.initSocket(()=>{
             gamestatus.socketOn = true
             network.sendOpenid(gamestatus.openID, ()=>{
               this.animation = true
               this.doWeHaveToUseThis.hide()
+              this.handlingAuth = false
             }, this.fail)
           }, this.fail)
         }, this.fail)

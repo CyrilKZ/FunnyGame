@@ -192,32 +192,9 @@ export default class HUD {
     }    
   }
   showText(s){
-    if(!this.visible ||!this.loaded){
-      return
-    }
-    if(!gamestatus.font){
-      return
-    }
-    if(this.text){
-      this.scene.remove(this.text)
-      this.text.geometry.dispose()
-      this.text.material.dispose()
-    }
-    let geometry = new THREE.TextGeometry(s,{
-      font: gamestatus.font,
-      size: 40,
-      height: 1
+    wx.showToast({
+      title: s
     })
-    let materil = new THREE.MeshBasicMaterial({color: 0xaaaaaa})
-    this.text = new THREE.Mesh(geometry, materil)
-    this.scene.add(this.text)
-    this.frame = 0
-  }
-  updateText(){
-    this.frame += 1
-    if(this.frame === 60){
-      this.text.visible = false
-    }
   }
   update(point){
     if(!this.visible ||!this.loaded){

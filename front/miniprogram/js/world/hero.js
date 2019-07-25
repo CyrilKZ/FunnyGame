@@ -206,11 +206,6 @@ export default class Hero extends Sprite{
     let distance1 = block.y - block.lengthY - this.y      // move in
     let distance2 = block.y - this.y + this.lengthY                      // move out
     if(s1 > distance1 && s2 < distance2){
-      console.log('unsafe move')
-      console.log(`s1: ${s1}`)
-      console.log(`s2: ${s2}`)
-      console.log(`dis1: ${distance1}`)
-      console.log(`dis2: ${distance2}`)
       this.isMoveSafe = false
       return
     }
@@ -221,16 +216,10 @@ export default class Hero extends Sprite{
   update() {
     this.updateMove()
     if (this.moving) {
-      console.log(this.direction)
       if (this.direction === CONST.DIR_UP) {
         if (this.movingframe >= CONST.HERO_TOTAL_FZ) {
-          if(this.heroWillHit == true){
-            this.heroHit = true
-            network.sendFail(()=>{
-              console.log('fail')
-            }, ()=>{
-              console.log('didnt send')
-            })
+          if(gamestatus.heroWillHit == true){
+            gamestatus.heroHit = true
           }
           this.movingframe = 0
           this.moving = false
@@ -253,24 +242,15 @@ export default class Hero extends Sprite{
           if(this.is3DCollideWith(this.blockAhead)){
 
             gamestatus.heroHit = true
-            network.sendFail(()=>{
-              console.log('fail')
-            }, ()=>{
-              console.log('didnt send')
-            })
+ 
           }
         }
       }
       else {
         if (this.movingframe >= CONST.HERO_TOTAL_FX) {
           this.movingframe = 0
-          if(this.heroWillHit == true){
-            this.heroHit = true
-            network.sendFail(()=>{
-              console.log('fail')
-            }, ()=>{
-              console.log('didnt send')
-            })
+          if(gamestatus.heroWillHit == true){
+            gamestatus.heroHit = true
           }
           if (this.direction === CONST.DIR_LEFT) {
             this.row -= 1
@@ -288,11 +268,6 @@ export default class Hero extends Sprite{
         else {
           if(this.movingframe === Math.round(CONST.HERO_TOTAL_FX / 2)){
             if(!this.canMoveSave){
-              network.sendFail(()=>{
-                console.log('fail')
-              }, ()=>{
-                console.log('didnt send')
-              })
               gamestatus.heroHit = true
             }
           }
@@ -302,11 +277,6 @@ export default class Hero extends Sprite{
           if(!(this.canMoveSave && this.isMoveSafe)){
             
             if(this.is2DCollideWith(this.blockAround)){
-              network.sendFail(()=>{
-                console.log('fail')
-              }, ()=>{
-                console.log('didnt send')
-              })
               gamestatus.heroHit = true
             }            
           }
@@ -315,11 +285,6 @@ export default class Hero extends Sprite{
     }
     else{
       if(this.is2DCollideWith(this.blockAhead)){
-        network.sendFail(()=>{
-          console.log('fail')
-        }, ()=>{
-          console.log('didnt send')
-        })
         gamestatus.heroHit = true
       }
     }

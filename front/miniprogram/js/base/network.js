@@ -7,8 +7,8 @@ export default class Network {
     }
     instance = this
 
-    this.url = 'https://game.lbjthu.tech:10443/'
-    this.wssUrl = 'wss://game.lbjthu.tech:10443/'
+    this.url = 'https://game.lbjthu.tech/'
+    this.wssUrl = 'wss://game.lbjthu.tech/'
     this.socket = undefined
 
     // data格式见https://github.com/CyrilKZ/FunnyGame/blob/lbj-back/back/wss.md#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B9%BF%E6%92%AD%E6%95%B0%E6%8D%AE
@@ -21,6 +21,7 @@ export default class Network {
     this.onJoin = function (data) { console.log(`onJoin: ${data}`) }
     this.onReady = function (data) { console.log(`onReady: ${data}`) }
     this.onClose = function (data) { console.log(`onClose`) }
+    this.onExit = function(data) {console.log(`onExit`)}
   }
 
   login(openid, userinfo, sucess, fail) {
@@ -110,7 +111,8 @@ export default class Network {
       'transfer': this.onTransfer,
       'pause': this.onPause,
       'join': this.onJoin,
-      'ready':this.onReady
+      'ready': this.onReady,
+      'exit': this.onExit,
     }
     fun[data.msg](data)
   }

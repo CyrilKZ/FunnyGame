@@ -1,7 +1,9 @@
 import Pool from './base/pool'
 import * as THREE from './libs/three.min'
 import MAIN_FONT from '../resources/font'
+import Network from './base/network'
 //import * as CONST from './libs/constants'
+let network = new Network()
 
 let instance
 export default class GameStatus {
@@ -17,11 +19,13 @@ export default class GameStatus {
     this.reset()
   }
   init(){
+    this.restart = false
     this.switchToLobby = false
     this.switchToGame = false
     this.switchToResult = false
 
-    this.host = false
+    
+    this.host = true
 
     this.selfInfo = {
       nickName: '',
@@ -29,7 +33,6 @@ export default class GameStatus {
       image: null,
       texture: null
     }
-    this.heroSide = 0
 
     this.enemyInfo = {
       nickName: '',
@@ -37,9 +40,8 @@ export default class GameStatus {
       image: null,
       texture: null
     }
-    this.enemySide = 0
 
-    this.roomID = ''
+    this.lobbyID = ''
     this.openID = ''
     this.socketOn = false
 
@@ -61,6 +63,7 @@ export default class GameStatus {
     this.enemyHit    = false
     this.enemyWillHit = false
     this.enemySide    = 0
+    this.enemyDisconnect = false
 
     this.selfScore   = 0
     this.enemyScore  = 0
@@ -88,6 +91,16 @@ export default class GameStatus {
       }
     )
   }
+
+  clearEnemyInfo(){
+    this.enemyInfo = {
+      nickName: '',
+      picUrl:'',
+      image: null,
+      texture: null
+    }
+  }
+
   setEnemyInfo(info){
     this.enemyInfo.nickName = info.nickName
     this.enemyInfo.picUrl = info.picUrl
@@ -101,5 +114,40 @@ export default class GameStatus {
         self.enemyInfo.texture = texture
       }
     )
+  }
+
+  leaveLobby(){
+    let self = this
+    if(this.lobbyID){
+      network.exitTeam({
+        "openid": self.openID,
+        "teamid": self.lobbyID
+      }, (res)=>{
+        if(res.result === 0){
+          self.clearEnemyInfo()
+          self.lobbyID = ''
+          self.host = true
+        }
+      })
+    }
+  }
+  joinLobby(lobbyid){
+    let self = this
+    network.joinTeam(this.openID, lobbyID, (res)=>{
+      if(res.result === 0){
+        self.host = false
+        network.initSocket(()=>{
+          self.socketOn = true
+          network.sendOpenid(self.openID,()=>{
+            this.lobbyID = lobbyid
+          })
+        })
+      }
+    })
+  }
+
+  switchLobby(lobbyid){
+    this.leaveLobby()
+    this.joinLobby(lobbyid)
   }
 }
