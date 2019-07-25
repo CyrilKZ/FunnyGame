@@ -15,12 +15,41 @@ export default class ResultPanel {
 
   preInit(){
     let data = {
-      pic: gamestatus.selfInfo.image,           // 图片
-      nickname: gamestatus.selfInfo.nickName,   // 昵称
-      win: gamestatus.enemyHit,                 // true-win, false-lose
-      score: gamestatus.score                   // 得分
+        win: gamestatus.enemyHit,
+        thisUser: { //本机用户
+          nickname: gamestatus.selfInfo.nickName,
+          avatar: gamestatus.selfInfo.image,
+          score: gamestatus.selfScore
+        },
+        thatUser: { //对方用户
+          nickname: gamestatus.enemyInfo.nickName,
+          avatar: gamestatus.enemyInfo.image,
+          score: gamestatus.enemyScore
+        }
     }
-    //todo: this.texture = ?
+    let canvas = wx.createCanvas()
+    canvas.width = 1450
+    canvas.height = 800
+    let context = canvas.getContext('2d')
+    context.drawImage(bg2, 0, 0)
+    context.drawImage(data.thisUser.avatar, 20, 325, 150, 150)
+    context.drawImage(data.thatUser.avatar, 745, 325, 150, 150)
+    context.font = "42px 微软雅黑"
+    context.fillStyle = "#FFF"
+    context.textBaseline = 'top'
+    context.fillText(data.thisUser.nickname, 205, 325, 250)
+    context.fillText(data.thatUser.nickname, 930, 325, 250)
+    context.textBaseline = 'middle'
+    context.font = "72px 微软雅黑"
+    context.fillText(data.thisUser.score, 525, 400, 200)
+    context.fillText(data.thatUser.score, 1250, 400, 200)
+    if(data.win){
+      context.drawImage(winner, 205, 405)
+    }
+    else{
+      context.drawImage(winner, 930, 405)
+    }
+    this.texture = new THREE.CanvasTexture(canvas)
   }
 
   init(){
