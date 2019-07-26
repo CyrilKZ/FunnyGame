@@ -175,6 +175,7 @@ export default class Game {
       this.currentStage = CONST.STAGE_LOBBY
       gamestatus.switchToLobby = false
     } else if (gamestatus.switchToGame) {
+      this.stages[CONST.STAGE_LOBBY].unreadySelf()
       this.currentStage = CONST.STAGE_GAME
       this.gameScene.initStartAnimation()
       gamestatus.switchToGame = false

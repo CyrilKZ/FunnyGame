@@ -6,13 +6,13 @@ export default class SoundPlayer {
       return instance
     }
     instance = this
-    this.slipSound = wx.createInnerAudioContext()
-    this.slipSound.src = 'resources/slip.wav'
+    this.slipSound1 = wx.createInnerAudioContext()
+    this.slipSound1.src = 'resources/slip1.wav'
+
+    this.slipSound2 = wx.createInnerAudioContext()
+    this.slipSound2.src = 'resources/slip2.wav'
 
     this.breakSound = wx.createInnerAudioContext()
     this.breakSound.src = 'resources/break.wav'
-
-    this.bubbleSound = wx.createInnerAudioContext()
-    this.bubbleSound.src = 'resources/block.wav'
   }
 }

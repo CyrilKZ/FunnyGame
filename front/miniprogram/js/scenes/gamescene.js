@@ -400,7 +400,7 @@ export default class GameScene {
         })
       })
       this.hero.update()
-      this.hud.updateMana(this.hero.blockPoints)
+      this.hud.update(this.hero.blockPoints)
       this.enemy.sync()
     }
 

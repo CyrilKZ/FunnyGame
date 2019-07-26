@@ -55,8 +55,8 @@ export default class Hero extends Sprite {
     let direction
     if (this.moves.length > 0) {
       direction = this.moves.shift()
-      sound.slipSound.stop()
-      sound.slipSound.play()
+      sound.slipSound1.stop()
+      sound.slipSound1.play()
     } else {
       return
     }
