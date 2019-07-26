@@ -1,12 +1,13 @@
-var fs = require('fs');
-var Server = require('./server');
+var fs = require('fs')
+var Server = require('./server')
+var path = require('path')
 
-var keypath = __dirname + '/server.pem';
-var certpath = __dirname + '/server.crt';
+var keypath = path.join(__dirname, 'server.pem')
+var certpath = path.join(__dirname, 'server.crt')
 
 var options = {
-    key: fs.readFileSync(keypath),
-    cert: fs.readFileSync(certpath)
-};
+  key: fs.readFileSync(keypath),
+  cert: fs.readFileSync(certpath)
+}
 
-var sever = new Server(options, 443);
+Server(options, 443)
