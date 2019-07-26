@@ -35,6 +35,7 @@ class User {
         this.info = userinfo;
         this.msgBuffer = [];
         this.pause = false;
+        this.timeobj = undefined;
         this.team = undefined;
         this.companion = undefined;
         this.socket = undefined;
@@ -67,7 +68,7 @@ class Team {
         user.team = this;
     }
 
-    restart() {
+    reset() {
         this.started = false;
         for (let user of this.users) {
             user.reset();
@@ -101,7 +102,7 @@ class Team {
     }
 
     checkReady() {
-        if(user.team.started === true){
+        if(this.started === true){
             return false;
         }
 
@@ -121,7 +122,7 @@ class Team {
         this.started = true;
         for(let user of this.users){
             user.socket.send('{"msg":"start"}', (err) => {
-                // console.log({ "msg": "start" });
+                console.log({ "msg": "start" });
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
                 }
@@ -134,11 +135,17 @@ class Team {
 var userHandler = {
     users: {},
     login: function (openid, userinfo) {
-        if (!this.users[openid]) {
+        if (this.users[openid] === undefined) {
             this.users[openid] = new User(openid, userinfo);
         }
+        else{
+            this.users[openid].pause = false;
+            this.users[openid].ready = false;
+            teamHandler.exit(openid);
+        }
     },
-    logout: function (user) {
+    logout: function (openid) {
+        let user = this.users[openid];
         if (!user) {
             return false;
         }
@@ -205,21 +212,27 @@ var teamHandler = {
             return false;
         }
     },
-    exit: function (openid, teamid) {
+    exit: function (openid) {
         let user = userHandler.users[openid];
-        if(user.compaion){
-            if(user.companion.pause){
-                user.companion.msgBuffer.push({'msg': 'exit'});
+        if(user){
+            if(user.companion){
+                if(user.companion.pause){
+                    user.companion.msgBuffer.push({'msg': 'exit'});
+                }
+                else{
+                    console.log('{"msg": "exit"}');
+                    user.companion.socket.send('{"msg": "exit"}', (err) => {
+                        if (err) {
+                            console.log(`[ERROR]: ${err}`);
+                        }
+                    });
+                }
             }
-            else{
-                user.companion.socket.send('{"msg": "exit"}', (err) => {
-                    if (err) {
-                        console.log(`[ERROR]: ${err}`);
-                    }
-                });
+
+            if (user.team) {
+                user.team.delUser(user);
             }
         }
-        userHandler.logout(user);
     },
     destroy: function (team) {
         delete this.teams[team.id];

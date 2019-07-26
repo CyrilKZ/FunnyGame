@@ -17,13 +17,22 @@ class Server {
         setInterval(function ping() {
             wss.clients.forEach(function each(ws) {
                 if (ws.isAlive === false) {
-                    return ws.close();
+                    let user = ws.user;
+                    if(user){
+                        if (!user.pause) {
+                            team.teamHandler.exit(user.id);
+                            team.userHandler.logout(user.id);
+                            console.log('logout');
+                        }
+                        console.log('close');
+                    }
+                    ws.terminate();
                 }
 
                 ws.isAlive = false;
                 ws.ping();
             });
-        }, 10000);
+        }, 1000);
     }
 }
 
@@ -34,56 +43,37 @@ app.get('/reset', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-    try {
-        team.userHandler.login(req.body.openid, req.body.userinfo);
-        res.status(200).send('Welcome');
-    }
-    catch (err) {
-        console.log(err);
-    }
+    team.userHandler.login(req.body.openid, req.body.userinfo);
+    res.status(200).send('Welcome');
 });
 
 app.post('/team/create', function (req, res) {
-    try {
-        let teamid = team.teamHandler.create(req.body.openid);
-        res.json({
-            'result': 0,
-            'teamid': teamid
-        });
-    }
-    catch (err) {
-        console.log(err);
-    }
+    let teamid = team.teamHandler.create(req.body.openid);
+    res.json({
+        'result': 0,
+        'teamid': teamid
+    });
 });
 
 app.post('/team/join', function (req, res) {
-    try {
-        if (team.teamHandler.join(req.body.openid, req.body.teamid)) {
-            res.json({
-                'result': 0
-            });
-        }
-        else {
-            res.json({
-                'result': 1
-            });
-        }
-    }
-    catch (err) {
-        console.log(err);
-    }
-});
-
-app.post('/team/exit', function (req, res) {
-    try {
-        team.teamHandler.exit(req.body.openid, req.body.teamid);
+    if (team.teamHandler.join(req.body.openid, req.body.teamid)) {
         res.json({
             'result': 0
         });
     }
-    catch (err) {
-        console.log(err);
+    else {
+        res.json({
+            'result': 1
+        });
     }
+});
+
+app.post('/team/exit', function (req, res) {
+    team.teamHandler.exit(req.body.openid);
+    team.userHandler.logout(req.body.openid);
+    res.json({
+        'result': 0
+    });
 });
 
 function wssHandler(wssSocket) {
@@ -96,29 +86,27 @@ function wssHandler(wssSocket) {
         this.isAlive = true;
     });
     wssSocket.on('message', function (msg) {
-        try {
-            let data = JSON.parse(msg);
-            if (user) {
-                console.log(`${user.id}: ${msg}`);
-                scene[data.msg](user, data);
+        let data = JSON.parse(msg);
+        if (user) {
+            console.log(`${user.id}: ${msg}`);
+            scene[data.msg](user, data);
+        }
+        else {
+            if (data.msg === 'open') {
+                user = scene.open(data.openid, wssSocket);
+                wssSocket.user = user;
             }
             else {
-                if (data.msg === 'open') {
-                    user = scene.open(data.openid, wssSocket);
-                }
-                else {
-                    console.log(`[SERVER] Received: ${msg}`);
-                    wssSocket.send(`Unauthorized:${data.msg}`);
-                }
+                console.log(`[SERVER] Received: ${msg}`);
+                wssSocket.send(`Unauthorized:${data.msg}`);
             }
-        }
-        catch (err) {
-            console.log(err);
         }
     });
     wssSocket.on('close', function (msg) {
         if (!user.pause) {
-            team.userHandler.logout(user);
+            team.teamHandler.exit(user.id);
+            team.userHandler.logout(user.id);
+            console.log('logout');
         }
         console.log('close');
     });
