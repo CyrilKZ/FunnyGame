@@ -1,6 +1,6 @@
 import * as THREE from '../libs/three.min'
 export default class DisplayBox {
-  constructor(url, lengthX = 0, lengthY = 0, x = 0, y = 0, z = 0, basic = false){
+  constructor (url, lengthX = 0, lengthY = 0, x = 0, y = 0, z = 0, basic = false) {
     this.loaded = false
     this.url = url
     this.x = x
@@ -13,50 +13,48 @@ export default class DisplayBox {
     this.visible = false
     this.basic = basic
 
-    if(typeof(url) === 'string'){
-      let self = this
-      let loader = new THREE.TextureLoader()
+    if (typeof (url) === 'string') {
+      const self = this
+      const loader = new THREE.TextureLoader()
       loader.load(
         url,
-        function(texture){
+        function (texture) {
           console.log(`${url} loaded`)
           let material
-          if(self.basic){
-            material = new THREE.MeshBasicMaterial({map:texture, transparent:true})
+          if (self.basic) {
+            material = new THREE.MeshBasicMaterial({ map: texture, transparent: true })
+          } else {
+            material = new THREE.MeshLambertMaterial({ map: texture, transparent: true })
           }
-          else{
-            material = new THREE.MeshLambertMaterial({map:texture, transparent:true})
-          }
-          let geometry = new THREE.PlaneGeometry(self.lengthX, self.lengthY)
+          const geometry = new THREE.PlaneGeometry(self.lengthX, self.lengthY)
           self.model = new THREE.Mesh(geometry, material)
-          self.loaded = true        
+          self.loaded = true
         }
       )
-    }
-    else{
+    } else {
       this.loaded = true
       let material
-      if(this.basic){
-        material = new THREE.MeshBasicMaterial({map:url, transparent:true})
+      if (this.basic) {
+        material = new THREE.MeshBasicMaterial({ map: url, transparent: true })
+      } else {
+        material = new THREE.MeshLambertMaterial({ map: url, transparent: true })
       }
-      else{
-        material = new THREE.MeshLambertMaterial({map:url, transparent:true})
-      }
-      let geometry = new THREE.PlaneGeometry(this.lengthX, this.lengthY)
+      const geometry = new THREE.PlaneGeometry(this.lengthX, this.lengthY)
       this.model = new THREE.Mesh(geometry, material)
     }
   }
 
-  show(){
-    if(!this.loaded){
+  show () {
+    if (!this.loaded) {
       console.log('texture loading in progress')
       return
     }
     this.visible = true
     this.model.visible = true
   }
-  hide(){
-    if(!this.loaded){
+
+  hide () {
+    if (!this.loaded) {
       console.log('texture loading in progress')
       return
     }
@@ -64,12 +62,12 @@ export default class DisplayBox {
     this.model.visible = false
   }
 
-  initToScene(scene, x = this.x, y = this.y, z = this.z){
-    if(!this.loaded){
+  initToScene (scene, x = this.x, y = this.y, z = this.z) {
+    if (!this.loaded) {
       console.log('texture loading in progress')
       return
     }
-    if(this.boundScene){
+    if (this.boundScene) {
       return
     }
     this.x = x
@@ -82,8 +80,9 @@ export default class DisplayBox {
     this.boundScene = true
     this.show()
   }
-  resetPos(x = this.x, y = this.y, z = this.z){
-    if(!this.loaded){
+
+  resetPos (x = this.x, y = this.y, z = this.z) {
+    if (!this.loaded) {
       console.log('texture loading in progress')
       return
     }
@@ -94,20 +93,22 @@ export default class DisplayBox {
     this.model.position.y = this.y + this.lengthY / 2
     this.model.position.z = this.z
   }
-  removeFromScene(scene){
-    if(!this.boundScene){
+
+  removeFromScene (scene) {
+    if (!this.boundScene) {
       console.error('not attached to any scene')
       return
     }
     this.hide()
     scene.remove(this.model)
     this.boundScene = false
-  }  
-  discard(){
-    if(this.boundScene){
+  }
+
+  discard () {
+    if (this.boundScene) {
       console.error('still attached to a scene')
     }
-    if(!this.loaded){
+    if (!this.loaded) {
       console.log('texture loading in progress')
       return
     }
