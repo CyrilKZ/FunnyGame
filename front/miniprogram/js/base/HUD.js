@@ -9,7 +9,6 @@ export default class HUD {
   constructor() {
     this.scene = new THREE.Scene()
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X / 2, CONST.SCREEN_X / 2, CONST.SCREEN_Y / 2, -CONST.SCREEN_Y / 2, 1, 1000)
-    //this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
 
     this.scene.background = 'rgba(0,0,0, 0)'
     this.camera.position.z = 100
@@ -180,17 +179,24 @@ export default class HUD {
     this.loaded = this.fullyInit[0] && this.fullyInit[1] && this.fullyInit[2]
   }
   clean() {
-    this.enemyPhoto.removeFromScene(this.scene)
-    this.enemyPhoto.discard()
-    this.enemyPhoto = null
+    if(this.enemyPhoto){
+      if(this.enemyPhoto.boundScene){
+        this.enemyPhoto.removeFromScene(this.scene)
+      }
+      this.enemyPhoto.discard()
+      this.enemyPhoto = null
+    }  
     this.enemyPhotoSet = false
     this.enemyBorderLeft.hide()
     this.enemyBorderRight.hide()
     
-
-    this.selfPhoto.removeFromScene(this.scene)
-    this.selfPhoto.discard()
-    this.selfPhoto = null
+    if(this.selfPhoto){
+      if(this.selfPhoto.boundScene){
+        this.selfPhoto.removeFromScene(this.scene)
+      }      
+      this.selfPhoto.discard()
+      this.selfPhoto = null
+    } 
     this.selfPhotoSet = false
     this.selfBorderLeft.hide()
     this.selfBorderRight.hide()

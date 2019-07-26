@@ -9,6 +9,7 @@ import Network from '../base/network'
 import ParticleCubeSystem from '../base/particles'
 import HUD from '../base/HUD'
 import ResultPanel from '../world/result'
+import SoundPlayer from '../base/soundplayer'
 
 const FINAL_CAMERA  = {
   y: -750,
@@ -28,6 +29,7 @@ const INITIAL_CAMERA = {
 
 let gamestatus = new GameStatus()
 let network = new Network()
+let sound = new SoundPlayer()
 
 export default class GameScene {
   constructor(){
@@ -35,7 +37,7 @@ export default class GameScene {
     this.scene.background = 'rgba(255,255,255,0)'
     this.camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0.5)
-    this.aLight = new THREE.AmbientLight(0xffffff, 0)
+    this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
     this.arena = new Ground()
     this.models = []
     this.hero = null
@@ -74,6 +76,10 @@ export default class GameScene {
       network.sendTransfer({
         'info': 'score',
         'score': gamestatus.selfScore
+      })
+      wx.postMessage({
+        command: 'update',
+        score :  gamestatus.selfScore
       })
     })
 
@@ -187,6 +193,8 @@ export default class GameScene {
       this.hero.hide()
       this.heroParticle.initToScene(this.scene, this.hero.speedX, -gamestatus.speed / 2, this.hero.speedZ, this.hero.x, this.hero.y, this.hero.z)
     }
+    sound.breakSound.stop()
+    sound.breakSound.play()
   }
   updateEndAnimation(){
     this.animationFrame += 1
@@ -204,7 +212,7 @@ export default class GameScene {
   }
   initSyncAnimation(){
     this.syncAnimation = true
-    this.aLight.intensity = 2
+    this.aLight.intensity = 1
     this.animationFrame = 0
   }
   updateSyncAnimation(){
@@ -213,7 +221,7 @@ export default class GameScene {
       this.animationFrame = 0
       this.syncAnimation = false
     }
-    this.aLight.intensity -= 1.5/CONST.SWITCH_SHORT_FRAME
+    this.aLight.intensity -= 0.5/CONST.SWITCH_SHORT_FRAME
     this.animationFrame += 1
   }
   initReverseAnimation(){
@@ -233,10 +241,9 @@ export default class GameScene {
     if(this.animationFrame === CONST.GAME_START_FRAME){
       this.animationFrame = 0
       this.reverseAnimation = false
-      this.resetRenderer()
       this.camera.position.z = INITIAL_CAMERA.z
       this.camera.position.y = INITIAL_CAMERA.y
-      //this.camera.rotation.set(new THREE.Euler( 0, 0, 0, 'XYZ' ))
+      this.camera.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'))
       this.reset()
       gamestatus.switchToLobby = true
     }
@@ -294,18 +301,26 @@ export default class GameScene {
     else{
       this.enemyParticle.removeFromScene(this.scene)
     }
-    this.setUpRenderer = function(renderer){
-      renderer.setScissor(1200, 0, 1920, 1080)
-      renderer.setViewport(600, 0, 1920, 1080)
-    }
+    this.resetRenderer()
     this.cleanCharacters()
     gamestatus.reset()
   }
+  reboot(){
+    this.panel.hide()
+    this.panel.reset()
+    this.hud.clean()
+    this.camera.position.z = INITIAL_CAMERA.z
+    this.camera.position.y = INITIAL_CAMERA.y
+    this.camera.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'))
+    this.reset()
+    this.setUpRenderer = function(renderer){
+      renderer.setScissor(1920, 0, 1920, 1080)
+      renderer.setViewport(600, 0, 1920, 1080)
+    }
+    gamestatus.gameOn = false
+  }
 
   // In-game
-  switchPause(pause){
-    gamestatus.pause = pause
-  }
   addBlockToSelf(row, absdis){
     let block = gamestatus.pool.getItemByClass('block', Block)
     block.init(row, this.scene, absdis - gamestatus.absDistance)
@@ -369,10 +384,18 @@ export default class GameScene {
     if(gamestatus.enemyDisconnect){
       gamestatus.enemyHit = true
       gamestatus.enemyScore = 0
+      this.panel.preInit()
+      wx.showToast({
+        title: "对方退出了游戏",
+        icon:'none'
+      })
     }
     if(gamestatus.gameOn){
       gamestatus.frame += 1
       gamestatus.absDistance += gamestatus.speed
+      if(gamestatus.frame % (3600 * 3) === (3600*3-1) && gamestatus.speed < 2){
+        gamestatus.speed += 0.2
+      }
       this.arena.update(gamestatus.speed)
       gamestatus.blocks.forEach((row) => {
         row.forEach((item)=>{

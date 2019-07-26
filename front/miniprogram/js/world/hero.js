@@ -3,9 +3,11 @@ import GameStatus from '../status'
 import Network from '../base/network'
 import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
+import SoundPlayer from '../base/soundplayer'
 
 let gamestatus = new GameStatus()
 let network = new Network()
+let sound = new SoundPlayer()
 
 export default class Hero extends Sprite{
   constructor(){
@@ -50,6 +52,8 @@ export default class Hero extends Sprite{
     let direction
     if(this.moves.length > 0){
       direction = this.moves.shift()
+      sound.slipSound.stop()
+      sound.slipSound.play()
     }
     else{
       return

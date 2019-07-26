@@ -9,7 +9,7 @@ export default class Ground {
     this.bars = []
 
     let groundGeometry = new THREE.PlaneGeometry(CONST.PLANE_WIDTH, CONST.PLANE_LENGTH, 1, 1)
-    let groundMaterial = new THREE.MeshBasicMaterial({color: 0xfefefe})
+    let groundMaterial = new THREE.MeshLambertMaterial({color: 0xfefefe})
     this.ground = new THREE.Mesh(groundGeometry, groundMaterial)
     this.ground.receiveShadow = true
 
