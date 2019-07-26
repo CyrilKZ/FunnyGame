@@ -3,17 +3,15 @@ import * as CONST from '../libs/constants'
 import GameStatus from '../status'
 import DisplayBox from '../base/displaybox'
 
-let gamestatus = new GameStatus()
+const gamestatus = new GameStatus()
 
 export default class HUD {
-  constructor() {
+  constructor () {
     this.scene = new THREE.Scene()
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X / 2, CONST.SCREEN_X / 2, CONST.SCREEN_Y / 2, -CONST.SCREEN_Y / 2, 1, 1000)
 
     this.scene.background = 'rgba(0,0,0, 0)'
     this.camera.position.z = 100
-
-
 
     this.visible = false
 
@@ -42,34 +40,35 @@ export default class HUD {
       true
     )
     this.enemyBorderRight = new DisplayBox(
-      'resources/hudbar_orange_right.png', 
-      CONST.HUD_LENGTHX, 
-      CONST.HUD_LENGTHY, 
-      960 - CONST.HUD_LENGTHX, 
-      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
-      1, 
+      'resources/hudbar_orange_right.png',
+      CONST.HUD_LENGTHX,
+      CONST.HUD_LENGTHY,
+      960 - CONST.HUD_LENGTHX,
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY,
+      1,
       true
     )
     this.selfBorderLeft = new DisplayBox(
-      'resources/hudbar_green_left.png', 
-      CONST.HUD_LENGTHX, 
-      CONST.HUD_LENGTHY, 
-      -960, 
-      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
-      1, 
+      'resources/hudbar_green_left.png',
+      CONST.HUD_LENGTHX,
+      CONST.HUD_LENGTHY,
+      -960,
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY,
+      1,
       true
     )
     this.selfBorderRight = new DisplayBox(
-      'resources/hudbar_green_right.png', 
-      CONST.HUD_LENGTHX, 
-      CONST.HUD_LENGTHY, 
-      960 - CONST.HUD_LENGTHX, 
-      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
-      1, 
+      'resources/hudbar_green_right.png',
+      CONST.HUD_LENGTHX,
+      CONST.HUD_LENGTHY,
+      960 - CONST.HUD_LENGTHX,
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY,
+      1,
       true
     )
   }
-  tryShowSelfInfo() {
+
+  tryShowSelfInfo () {
     if (this.selfPhotoSet) {
       return
     }
@@ -90,7 +89,8 @@ export default class HUD {
       this.selfBorderRight.hide()
     }
   }
-  tryShowEnemyInfo() {
+
+  tryShowEnemyInfo () {
     if (this.enemyPhotoSet) {
       return
     }
@@ -111,7 +111,8 @@ export default class HUD {
       this.enemyBorderRight.hide()
     }
   }
-  tryToInit() {
+
+  tryToInit () {
     if (this.loaded) {
       return
     }
@@ -122,15 +123,13 @@ export default class HUD {
           this.enemyPhoto.resetPos(-960 + CONST.HUD_PIC_MARGIN, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
           this.enemyBorderLeft.show()
           this.enemyBorderRight.hide()
-        }
-        else {
+        } else {
           this.enemyPhoto.resetPos(960 - CONST.HUD_PIC_MARGIN - CONST.HUD_PHOTO_SIZE, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
           this.enemyBorderRight.show()
           this.enemyBorderLeft.hide()
         }
       }
-    }
-    else {
+    } else {
       this.tryShowEnemyInfo()
     }
     if (this.selfPhotoSet) {
@@ -140,33 +139,30 @@ export default class HUD {
           this.selfPhoto.resetPos(960 - CONST.HUD_PIC_MARGIN - CONST.HUD_PHOTO_SIZE, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
           this.selfBorderRight.show()
           this.selfBorderLeft.hide()
-        }
-        else {
+        } else {
           this.selfPhoto.resetPos(-960 + CONST.HUD_PIC_MARGIN, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
           this.selfBorderLeft.show()
           this.selfBorderRight.hide()
         }
       }
-    }
-    else {
+    } else {
       this.tryShowSelfInfo()
     }
     if (!this.fullyInit[2]) {
-      let geometry = this.manaGeometry
-      let material = this.manaMaterial
+      const geometry = this.manaGeometry
+      const material = this.manaMaterial
       if (gamestatus.heroSide === CONST.DIR_RIGHT) {
         for (let i = 0; i < 10; ++i) {
-          let model = new THREE.Mesh(geometry, material)
+          const model = new THREE.Mesh(geometry, material)
           model.position.x = 950 - i * (CONST.HUD_MANA_SIZE + 1) - CONST.HUD_MANA_SIZE / 2
           model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
           model.position.z = 4
           this.manaIcons.push(model)
           this.scene.add(model)
         }
-      }
-      else {
+      } else {
         for (let i = 0; i < 10; ++i) {
-          let model = new THREE.Mesh(geometry, material)
+          const model = new THREE.Mesh(geometry, material)
           model.position.x = -950 + i * (CONST.HUD_MANA_SIZE + 1) + CONST.HUD_MANA_SIZE / 2
           model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
           model.position.z = 4
@@ -178,25 +174,26 @@ export default class HUD {
     }
     this.loaded = this.fullyInit[0] && this.fullyInit[1] && this.fullyInit[2]
   }
-  clean() {
-    if(this.enemyPhoto){
-      if(this.enemyPhoto.boundScene){
+
+  clean () {
+    if (this.enemyPhoto) {
+      if (this.enemyPhoto.boundScene) {
         this.enemyPhoto.removeFromScene(this.scene)
       }
       this.enemyPhoto.discard()
       this.enemyPhoto = null
-    }  
+    }
     this.enemyPhotoSet = false
     this.enemyBorderLeft.hide()
     this.enemyBorderRight.hide()
-    
-    if(this.selfPhoto){
-      if(this.selfPhoto.boundScene){
+
+    if (this.selfPhoto) {
+      if (this.selfPhoto.boundScene) {
         this.selfPhoto.removeFromScene(this.scene)
-      }      
+      }
       this.selfPhoto.discard()
       this.selfPhoto = null
-    } 
+    }
     this.selfPhotoSet = false
     this.selfBorderLeft.hide()
     this.selfBorderRight.hide()
@@ -207,39 +204,45 @@ export default class HUD {
     this.fullyInit = [false, false, false]
     this.loaded = false
   }
-  show() {
+
+  show () {
     this.visible = true
   }
-  hide() {
+
+  hide () {
     this.visible = false
   }
-  hideAllMana() {
+
+  hideAllMana () {
     this.manaIcons.forEach((icon) => {
       icon.visible = false
     })
   }
-  updateMana(count) {
+
+  updateMana (count) {
     for (let i = 0; i < 10; ++i) {
       if (i < count) {
         this.manaIcons[i].visible = true
-      }
-      else {
+      } else {
         this.manaIcons[i].visible = false
       }
     }
   }
-  showText(s) {
+
+  showText (s) {
     wx.showToast({
       title: s
     })
   }
-  update(point) {
+
+  update (point) {
     if (!this.visible || !this.loaded) {
       return
     }
     this.updateMana(point)
   }
-  render(renderer) {
+
+  render (renderer) {
     if (!this.visible || !this.loaded) {
       return
     }
@@ -255,8 +258,7 @@ export default class HUD {
       renderer.setScissor(CONST.SCREEN_X - CONST.HUD_LENGTHX, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)
       renderer.render(this.scene, this.camera)
-    }
-    else {
+    } else {
       // left photo
       renderer.setScissor(0, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)

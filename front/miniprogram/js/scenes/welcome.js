@@ -6,10 +6,10 @@ import DisplayBox from '../base/displaybox'
 import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
 
-let gamestatus = new GameStatus()
-let network = new Network()
+const gamestatus = new GameStatus()
+const network = new Network()
 export default class WelcomeScene extends UI {
-  constructor() {
+  constructor () {
     super('resources/startbg.png')
     this.handlingAuth = false
     wx.cloud.callFunction({
@@ -18,9 +18,9 @@ export default class WelcomeScene extends UI {
         console.log('called cloud function')
         gamestatus.openID = res.result.openid
         wx.postMessage({
-            command: 'init',
-            openid: res.result.openid
-          })
+          command: 'init',
+          openid: res.result.openid
+        })
       },
       fail: err => {
         console.error('get openid failed with error', err)
@@ -29,7 +29,8 @@ export default class WelcomeScene extends UI {
     gamestatus.initialQuery = wx.getLaunchOptionsSync().query.teamid
     this.setUpScene()
   }
-  setUpScene() {
+
+  setUpScene () {
     this.doWeHaveToUseThis = wx.createUserInfoButton({
       type: 'image',
       image: 'resources/start.png',
@@ -54,7 +55,8 @@ export default class WelcomeScene extends UI {
 
     this.helpBox = new DisplayBox('resources/helpbg.png', 1450, 800, -725, -400, 2, true)
   }
-  fail(res){
+
+  fail (res) {
     console.log(res)
     wx.showToast({
       title: res.errMsg,
@@ -62,7 +64,7 @@ export default class WelcomeScene extends UI {
     })
   }
 
-  tryToInitButtons() {
+  tryToInitButtons () {
     if (!this.loaded) {
       return
     }
@@ -83,14 +85,15 @@ export default class WelcomeScene extends UI {
 
     this.buttonsSet = this.buttonsSet || (this.btnRanklist.boundScene && this.btnBack.boundScene)
   }
-  handleAuthorizeEvent(res) {
+
+  handleAuthorizeEvent (res) {
     if (this.handlingAuth) {
       return
     }
-    let self = this
+    const self = this
     this.handlingAuth = true
     let shareData = gamestatus.initialQuery
-    if(shareData === undefined || shareData === ''){
+    if (shareData === undefined || shareData === '') {
       shareData = gamestatus.onshowQuery
     }
     gamestatus.setSelfInfo(JSON.parse(res.rawData))
@@ -98,29 +101,28 @@ export default class WelcomeScene extends UI {
     if (shareData === undefined || shareData === '') {
       console.log('host')
       gamestatus.host = true
-      network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
-        network.createTeam(gamestatus.openID, (res)=>{
+      network.login(gamestatus.openID, gamestatus.selfInfo, () => {
+        network.createTeam(gamestatus.openID, (res) => {
           gamestatus.lobbyID = res.teamid
-          network.initSocket(()=>{
+          network.initSocket(() => {
             gamestatus.socketOn = true
             network.sendOpenid(gamestatus.openID, () => {
               self.animation = true
               self.doWeHaveToUseThis.hide()
               self.handlingAuth = false
               self.welcomed = true
-              //network.sendPause(false)
+              // network.sendPause(false)
             }, self.fail)
           }, self.fail)
         }, self.fail)
       }, self.fail)
-    }
-    else {
+    } else {
       gamestatus.host = false
       gamestatus.lobbyID = shareData
-      network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
+      network.login(gamestatus.openID, gamestatus.selfInfo, () => {
         console.log(gamestatus.openID)
         console.log(gamestatus.lobbyID)
-        network.joinTeam(gamestatus.openID, gamestatus.lobbyID ,(res)=>{
+        network.joinTeam(gamestatus.openID, gamestatus.lobbyID, (res) => {
           console.log('gest')
           network.initSocket(() => {
             gamestatus.socketOn = true
@@ -129,22 +131,23 @@ export default class WelcomeScene extends UI {
               self.doWeHaveToUseThis.hide()
               self.handlingAuth = false
               self.welcomed = true
-              //network.sendPause(false)
+              // network.sendPause(false)
             }, self.fail)
           }, self.fail)
         }, self.fail)
       }, self.fail)
     }
   }
-  showRanklist() {
-    let openDataContext = wx.getOpenDataContext()
-    let sharedCanvas = openDataContext.canvas
-    let texture = new THREE.CanvasTexture(sharedCanvas)
+
+  showRanklist () {
+    const openDataContext = wx.getOpenDataContext()
+    const sharedCanvas = openDataContext.canvas
+    const texture = new THREE.CanvasTexture(sharedCanvas)
     this.rankList = new DisplayBox(texture, 1450, 800, -725, -400, 2, true)
     this.rankList.initToScene(this.scene)
   }
 
-  loop() {
+  loop () {
     if (!this.loaded) {
       return
     }
@@ -153,7 +156,8 @@ export default class WelcomeScene extends UI {
     }
     this.tryToInitButtons()
   }
-  fade() {
+
+  fade () {
     this.frame += 1
     this.light.intensity += 4 / CONST.SWITCH_SHORT_FRAME
     this.aLight.intensity += 4 / CONST.SWITCH_SHORT_FRAME
@@ -163,30 +167,29 @@ export default class WelcomeScene extends UI {
       this.display = false
     }
   }
-  handleTouchEvents(res) {
+
+  handleTouchEvents (res) {
     if (!this.buttonsSet) {
       return
     }
-    let endX = res.endX
-    let endY = res.endY
-    let initX = res.initX
-    let initY = res.initY
+    const endX = res.endX
+    const endY = res.endY
+    const initX = res.initX
+    const initY = res.initY
     if (this.btnRanklist.checkTouch(endX, endY, initX, initY)) {
       this.doWeHaveToUseThis.hide()
       this.btnRanklist.hideButton()
       this.btnHelp.hideButton()
       this.btnBack.showButton()
       this.showRanklist()
-    }
-    else if (this.btnBack.checkTouch(endX, endY, initX, initY)) {
+    } else if (this.btnBack.checkTouch(endX, endY, initX, initY)) {
       this.btnBack.hideButton()
       this.doWeHaveToUseThis.show()
       this.btnRanklist.showButton()
       this.btnHelp.showButton()
       this.helpBox.hide()
       this.rankList.hide()
-    }
-    else if (this.btnHelp.checkTouch(endX, endY, initX, initY)) {
+    } else if (this.btnHelp.checkTouch(endX, endY, initX, initY)) {
       this.doWeHaveToUseThis.hide()
       this.btnRanklist.hideButton()
       this.btnHelp.hideButton()

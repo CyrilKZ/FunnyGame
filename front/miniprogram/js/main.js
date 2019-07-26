@@ -2,13 +2,13 @@ import GameScene from './scenes/gamescene'
 import WelcomScene from './scenes/welcome'
 import * as THREE from './libs/three.min'
 import * as CONST from './libs/constants'
-import GameStatus from './status';
+import GameStatus from './status'
 import LobbyScene from './scenes/lobby'
 import TouchEvents from './base/touch'
-import Network from './base/network';
+import Network from './base/network'
 
-let ctx = canvas.getContext('webgl')
-let renderer = new THREE.WebGLRenderer({
+const ctx = canvas.getContext('webgl')
+const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   context: ctx,
   alpha: true,
@@ -21,126 +21,120 @@ renderer.shadowMapEnabled = true
 renderer.setScissorTest(true)
 
 wx.cloud.init()
-let db = wx.cloud.database()
 
-let gamestatus = new GameStatus()
-let touchevents = new TouchEvents()
-let network = new Network()
-
-
+const gamestatus = new GameStatus()
+const touchevents = new TouchEvents()
+const network = new Network()
 
 export default class Game {
-  constructor(){
+  constructor () {
     this.aniID = 0
     this.gameScene = new GameScene()
 
-    
     this.stages = [
       new WelcomScene(),
       new LobbyScene()
     ]
     this.currentStage = CONST.STAGE_WELCOME
     this.initTouchEvents()
-    
+
     wx.setKeepScreenOn({
       keepScreenOn: true
     })
-    let self = this
-    network.onJoin = function(data){
+    const self = this
+    network.onJoin = function (data) {
       console.log(data.userinfo)
       gamestatus.setEnemyInfo(data.userinfo)
-            
-    }    
-    network.onStart = function(){
-      if(gamestatus.gameOn){
+    }
+    network.onStart = function () {
+      if (gamestatus.gameOn) {
         return
       }
       self.stages[CONST.STAGE_LOBBY].initEndAnimation()
-      self.gameScene.initCharacters()    
+      self.gameScene.initCharacters()
     }
-    network.onReady = function(data){
+    network.onReady = function (data) {
       self.stages[CONST.STAGE_LOBBY].setEnemyReady(data.state)
     }
-    network.onExit = function(data){
+    network.onExit = function (data) {
       console.log('exit')
       gamestatus.pause = false
       gamestatus.enemyDisconnect = true
     }
-    network.onClose = function(){
+    network.onClose = function () {
       gamestatus.socketOn = false
     }
-    network.onPause = function(data){
+    network.onPause = function (data) {
       gamestatus.pause = data.state
-      if(data.state){
-        // 对方暂停连接        
-        if(gamestatus.gameOn){
+      if (data.state) {
+        // 对方暂停连接
+        if (gamestatus.gameOn) {
           wx.showLoading({
-            title: "对方已断开连接",
-            icon: "loading"
+            title: '对方已断开连接',
+            icon: 'loading'
           })
         }
         return
       }
       // 对方重连
-      if(gamestatus.gameOn){
+      if (gamestatus.gameOn) {
         wx.hideLoading()
       }
     }
-    wx.onHide(function(){      
-      if(self.currentStage === CONST.STAGE_LOBBY){
+    wx.onHide(function () {
+      if (self.currentStage === CONST.STAGE_LOBBY) {
         // 取消自身准备状态
         self.stages[CONST.STAGE_LOBBY].unreadySelf()
       }
-      if(gamestatus.socketOn){
-        network.sendPause(true, ()=>{
+      if (gamestatus.socketOn) {
+        network.sendPause(true, () => {
           gamestatus.pause = true
         })
       }
     })
-    wx.onShow(function(obj){
-      let fail = function(){
+    wx.onShow(function (obj) {
+      const fail = function () {
         wx.showToast({
-          title: "连接失败",
+          title: '连接失败',
           icon: 'none'
         })
         gamestatus.restart = true
       }
-      
+
       gamestatus.onshowQuery = obj.query.teamid
-      let shareData = obj.query.teamid
+      const shareData = obj.query.teamid
       console.log(`sharedata: ${shareData}`)
-      if(self.currentStage === CONST.STAGE_LOBBY){
+      if (self.currentStage === CONST.STAGE_LOBBY) {
         // 重连进入房间界面
-        if(shareData && shareData!==gamestatus.lobbyID){
+        if (shareData && shareData !== gamestatus.lobbyID) {
           wx.showToast({
-            title: "请先退出房间!",
+            title: '请先退出房间!',
             icon: 'none'
           })
         }
-        network.initSocket(()=>{
-          network.sendOpenid(gamestatus.openID, ()=>{
-            network.sendPause(false, ()=>{
+        network.initSocket(() => {
+          network.sendOpenid(gamestatus.openID, () => {
+            network.sendPause(false, () => {
               gamestatus.socketOn = true
               gamestatus.pause = false
-            },fail)
-          },fail)
-        },fail)
-      }
-      else if (self.currentStage !== CONST.STAGE_WELCOME){
-        network.initSocket(()=>{
-          network.sendOpenid(gamestatus.openID,()=>{
-            network.sendPause(false,()=>{
+            }, fail)
+          }, fail)
+        }, fail)
+      } else if (self.currentStage !== CONST.STAGE_WELCOME) {
+        network.initSocket(() => {
+          network.sendOpenid(gamestatus.openID, () => {
+            network.sendPause(false, () => {
               wx.showToast({
-                title: "连接成功"
+                title: '连接成功'
               })
               gamestatus.socketOn = true
               gamestatus.pause = false
-            },fail)
-          },fail)
-        },fail)
-      }      
+            }, fail)
+          }, fail)
+        }, fail)
+      }
     })
-    wx.onNetworkStatusChange(function(res){
+    wx.onNetworkStatusChange(function (res) {
       gamestatus.restart = true
       self.stages[CONST.STAGE_LOBBY].enemyLeave()
       gamestatus.lobbyID = ''
@@ -151,9 +145,9 @@ export default class Game {
       gamestatus.host = true
     })
     this.restart()
-    
   }
-  restart(){  
+
+  restart () {
     this.frame = 0
     this.bindLoop = this.loop.bind(this)
     window.cancelAnimationFrame(this.aniID)
@@ -162,9 +156,10 @@ export default class Game {
       canvas
     )
   }
-  loop() {
-    if(gamestatus.restart){
-      gamestatus.restart = false      
+
+  loop () {
+    if (gamestatus.restart) {
+      gamestatus.restart = false
       this.stages[0].restart()
       this.stages[1].restart()
       this.gameScene.reboot()
@@ -172,71 +167,71 @@ export default class Game {
       this.stages[CONST.STAGE_WELCOME].doWeHaveToUseThis.show()
       gamestatus.reset()
     }
-    if(gamestatus.switchToLobby){
+    if (gamestatus.switchToLobby) {
       this.stages[CONST.STAGE_LOBBY].restore()
       this.stages[CONST.STAGE_LOBBY].initStartAnimation()
       this.gameScene.resetRenderer()
       this.gameScene.initSyncAnimation()
       this.currentStage = CONST.STAGE_LOBBY
       gamestatus.switchToLobby = false
-    }
-    else if(gamestatus.switchToGame){
+    } else if (gamestatus.switchToGame) {
       this.currentStage = CONST.STAGE_GAME
       this.gameScene.initStartAnimation()
       gamestatus.switchToGame = false
     }
 
-    if(!this.gameScene.loaded){
+    if (!this.gameScene.loaded) {
       this.gameScene.tryToSetUp()
-    }
-    else{
+    } else {
       this.gameScene.loop()
     }
-    this.stages.forEach((stage)=>{
+    this.stages.forEach((stage) => {
       stage.loop()
     })
 
     this.render()
   }
-  render() {
+
+  render () {
     this.aniID = window.requestAnimationFrame(
       this.bindLoop,
       canvas
-      )
-    if(this.currentStage !== CONST.STAGE_GAME){
+    )
+    if (this.currentStage !== CONST.STAGE_GAME) {
       this.stages[this.currentStage].render(renderer)
     }
     this.gameScene.render(renderer)
   }
-  handleTouchEvents(res){  
-    if(this.currentStage !== CONST.STAGE_GAME){
+
+  handleTouchEvents (res) {
+    if (this.currentStage !== CONST.STAGE_GAME) {
       this.stages[this.currentStage].handleTouchEvents(res)
-    }
-    else{
+    } else {
       this.gameScene.handleTouchEvents(res)
     }
-  } 
-  initTouchEvents(){
+  }
+
+  initTouchEvents () {
     touchevents.reset()
-    canvas.addEventListener('touchstart', ((e)=>{
+    canvas.addEventListener('touchstart', (e) => {
       e.preventDefault()
-      e.touches.forEach((item)=>{
+      e.touches.forEach((item) => {
         touchevents.addEvent(item)
       })
-    }))
-    canvas.addEventListener('touchmove',((e)=>{
+    })
+    canvas.addEventListener('touchmove', (e) => {
       e.preventDefault()
-      e.touches.forEach((item)=>{
+      e.touches.forEach((item) => {
         touchevents.followUpEvent(item)
       })
-    }))
-    canvas.addEventListener('touchend', ((e)=>{
+    })
+    canvas.addEventListener('touchend', (e) => {
       e.preventDefault()
-      e.changedTouches.forEach((item)=>{
-        let res = touchevents.removeEvent(item)
+      e.changedTouches.forEach((item) => {
+        const res = touchevents.removeEvent(item)
         console.log(res)
-        this.handleTouchEvents(res)        
+        this.handleTouchEvents(res)
       })
-    }))
-  } 
+    })
+  }
 }

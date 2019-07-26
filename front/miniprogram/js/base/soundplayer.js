@@ -1,8 +1,8 @@
 let instance
 
-export default class SoundPlayer{
-  constructor(){
-    if(instance){
+export default class SoundPlayer {
+  constructor () {
+    if (instance) {
       return instance
     }
     instance = this

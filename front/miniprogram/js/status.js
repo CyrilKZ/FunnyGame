@@ -1,13 +1,13 @@
 import Pool from './base/pool'
 import * as THREE from './libs/three.min'
 import Network from './base/network'
-//import * as CONST from './libs/constants'
-let network = new Network()
+// import * as CONST from './libs/constants'
+const network = new Network()
 
 let instance
 export default class GameStatus {
-  constructor(){
-    if(instance){
+  constructor () {
+    if (instance) {
       return instance
     }
     instance = this
@@ -16,25 +16,25 @@ export default class GameStatus {
     this.init()
     this.reset()
   }
-  init(){
+
+  init () {
     this.restart = false
     this.switchToLobby = false
     this.switchToGame = false
     this.switchToResult = false
 
-    
     this.host = true
 
     this.selfInfo = {
       nickName: '',
-      picUrl:'',
+      picUrl: '',
       image: null,
       texture: null
     }
 
     this.enemyInfo = {
       nickName: '',
-      picUrl:'',
+      picUrl: '',
       image: null,
       texture: null
     }
@@ -52,101 +52,102 @@ export default class GameStatus {
     this.gameOn = false
     this.pause = false
     this.enemyDisconnect = false
-    
   }
-  reset(){
-    this.frame   = 0
-    this.aniFrame = 0
-    this.step    = 0
-    this.speed   = 1.2
-    this.accel   = 0
-    this.blocks  = [[],[],[],[]]
-    this.heroWillHit = false
-    this.heroSide    = 0
-    this.heroHit     = false
-    this.enemyHit    = false
-    this.enemyWillHit = false
-    this.enemySide    = 0
-    
 
-    this.selfScore   = 0
-    this.enemyScore  = 0
-    
+  reset () {
+    this.frame = 0
+    this.aniFrame = 0
+    this.step = 0
+    this.speed = 1.2
+    this.accel = 0
+    this.blocks = [[], [], [], []]
+    this.heroWillHit = false
+    this.heroSide = 0
+    this.heroHit = false
+    this.enemyHit = false
+    this.enemyWillHit = false
+    this.enemySide = 0
+
+    this.selfScore = 0
+    this.enemyScore = 0
+
     this.absDistance = 0
   }
-  removeBlock(block){
-    let temp = this.blocks[block.row].shift()
+
+  removeBlock (block) {
+    const temp = this.blocks[block.row].shift()
     temp.hide()
-    this.pool.recover('block',block)
+    this.pool.recover('block', block)
   }
-  recycleAllBlock(){
-    for(let i = 0; i < 4; ++i){
-      while(this.blocks[i].length > 0){
-        let temp = this.blocks[i].shift()
+
+  recycleAllBlock () {
+    for (let i = 0; i < 4; ++i) {
+      while (this.blocks[i].length > 0) {
+        const temp = this.blocks[i].shift()
         temp.hide()
         this.pool.recover('block', temp)
       }
     }
   }
-  setSelfInfo(info){
+
+  setSelfInfo (info) {
     this.selfInfo.nickName = info.nickName
     this.selfInfo.picUrl = info.avatarUrl
     this.selfInfo.image = wx.createImage()
     this.selfInfo.image.src = this.selfInfo.picUrl
-    let loader = new THREE.TextureLoader()
-    let self = this
+    const loader = new THREE.TextureLoader()
+    const self = this
     loader.load(
       self.selfInfo.picUrl,
-      function(texture){
+      function (texture) {
         self.selfInfo.texture = texture
       }
     )
   }
 
-  clearEnemyInfo(){
+  clearEnemyInfo () {
     this.enemyInfo = {
       nickName: '',
-      picUrl:'',
+      picUrl: '',
       image: null,
       texture: null
     }
   }
 
-  setEnemyInfo(info){
+  setEnemyInfo (info) {
     this.enemyInfo.nickName = info.nickName
     this.enemyInfo.picUrl = info.picUrl
     this.enemyInfo.image = wx.createImage()
     this.enemyInfo.image.src = this.enemyInfo.picUrl
-    let loader = new THREE.TextureLoader()
-    let self = this
+    const loader = new THREE.TextureLoader()
+    const self = this
     loader.load(
       self.enemyInfo.picUrl,
-      function(texture){
+      function (texture) {
         self.enemyInfo.texture = texture
       }
     )
   }
 
-
-  joinLobby(lobbyid){
-    let self = this
-    let fail = function(res){
+  joinLobby (lobbyid) {
+    const self = this
+    const fail = function (res) {
       wx.showToast({
-        title:res.errMsg,
-        icon:'none'
+        title: res.errMsg,
+        icon: 'none'
       })
     }
-    network.joinTeam(this.openID, lobbyid, (res)=>{
-      if(res.result === 0){
+    network.joinTeam(this.openID, lobbyid, (res) => {
+      if (res.result === 0) {
         self.host = false
-        network.initSocket(()=>{
+        network.initSocket(() => {
           self.socketOn = true
-          network.sendOpenid(self.openID,()=>{
-            network.sendPause(false, ()=>{
+          network.sendOpenid(self.openID, () => {
+            network.sendPause(false, () => {
               self.lobbyID = lobbyid
-            },fail)
-          },fail)
-        },fail)
+            }, fail)
+          }, fail)
+        }, fail)
       }
     })
   }
