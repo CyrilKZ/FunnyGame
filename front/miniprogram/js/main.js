@@ -58,6 +58,7 @@ export default class Game {
       self.stages[CONST.STAGE_LOBBY].setEnemyReady(data.state)
     }
     network.onExit = function(data){
+      console.log('exit')
       gamestatus.pause = false
       gamestatus.enemyDisconnect = true
     }
@@ -100,7 +101,28 @@ export default class Game {
         })
         gamestatus.restart = true
       }
-      if(gamestatus.gameOn){
+      
+      gamestatus.onshowQuery = obj.query.teamid
+      let shareData = obj.query.teamid
+      console.log(`sharedata: ${shareData}`)
+      if(self.currentStage === CONST.STAGE_LOBBY){
+        // 重连进入房间界面
+        if(shareData && shareData!==gamestatus.lobbyID){
+          wx.showToast({
+            title: "请先退出房间!",
+            icon: 'none'
+          })
+        }
+        network.initSocket(()=>{
+          network.sendOpenid(gamestatus.openID, ()=>{
+            network.sendPause(false, ()=>{
+              gamestatus.socketOn = true
+              gamestatus.pause = false
+            },fail)
+          },fail)
+        },fail)
+      }
+      else if (self.currentStage !== CONST.STAGE_WELCOME){
         network.initSocket(()=>{
           network.sendOpenid(gamestatus.openID,()=>{
             network.sendPause(false,()=>{
@@ -113,47 +135,7 @@ export default class Game {
           },fail)
         },fail)
       }
-      let shareData = obj.query.teamid
       
-      if(self.currentStage === CONST.STAGE_LOBBY){
-        // 重连进入房间界面
-
-        if(shareData === undefined || gamestatus.lobbyID === ''){
-          if(gamestatus.lobbyID === undefined || gamestatus.lobbyID === ''){
-            // 原先无房间信息，直接退出
-            gamestatus.restart = true
-          }
-          else{
-            // 回到原来房间
-            network.initSocket(()=>{
-              network.sendOpenid(gamestatus.openID, ()=>{
-                network.sendPause(false, ()=>{
-                  gamestatus.socketOn = true
-                  gamestatus.pause = false
-                }, fail)
-              }, fail)
-            }, fail)
-          }
-          return
-        }
-        if(shareData === gamestatus.lobbyID){
-          // 回到原来房间
-          network.initSocket(()=>{
-            network.sendOpenid(gamestatus.openID, ()=>{
-              network.sendPause(false, ()=>{
-                gamestatus.socketOn = true
-                gamestatus.pause = false
-              }, fail)
-            }, fail)
-          }, fail)
-          return
-        }
-        if(shareData !== gamestatus.lobbyID){
-          // 切换房间
-          self.stages[CONST.STAGE_LOBBY].enemyLeave()
-          gamestatus.switchLobby(shareData)
-        }
-      }
     })
     this.restart()
     

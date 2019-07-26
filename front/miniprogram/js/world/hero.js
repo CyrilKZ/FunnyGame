@@ -229,6 +229,7 @@ export default class Hero extends Sprite{
           this.model.position.z = this.z + CONST.HERO_RADIUS
           if(this.blockAhead !==null && this.y - this.lengthY >= this.blockAhead.y){
             this.energy += CONST.HERO_ENERGY_REWARD
+            gamestatus.selfScore += CONST.JUMP_SCORE
           }
           this.scanBlockAhead()
         }
@@ -298,8 +299,8 @@ export default class Hero extends Sprite{
     }
     this.energy += 1
     if(this.energy > CONST.HERO_ENERGY_LIMIT){
-      this.energy -= CONST.HERO_ENERGY_REWARD
-      this.blockPonits += 1
+      this.energy -= CONST.HERO_ENERGY_LIMIT
+      this.blockPoints += 1
     }
   }
 }

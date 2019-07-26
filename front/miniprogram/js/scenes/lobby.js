@@ -28,6 +28,9 @@ export default class LobbyScene extends UI {
     this.selfReady = new DisplayBox('resources/onready.png', 170, 147, -660, -50, 2)
     this.enemyPhoto = null
     
+    this.enemyName = null
+    this.selfName = null
+
     this.tryToInitButtons()
   }
   tryToInitButtons(){
@@ -135,8 +138,8 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.selfInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -830, -130)
-    displayBox.initToScene(this.scene)
+    this.selfName = new DisplayBox(texture, canvas.width, canvas.height, -830, -130)
+    this.selfName.initToScene(this.scene)
   }
 
   renderEnemyName() {
@@ -152,8 +155,8 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.enemyInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -220, -130)
-    displayBox.initToScene(this.scene)
+    this.enemyName = new DisplayBox(texture, canvas.width, canvas.height, -220, -130)
+    this.enemyName.initToScene(this.scene)
   }
 
   inviteEnemy(){
@@ -164,11 +167,17 @@ export default class LobbyScene extends UI {
   }
 
   enemyLeave(){
-    this.enemyPhoto.removeFromScene(this.scene)
+    if(this.enemyPhoto && this.enemyPhoto.boundScene){
+      this.enemyPhoto.removeFromScene(this.scene)
+      this.enemyPhoto.discard()
+      if(this.enemyName.boundScene){
+        this.enemyName.removeFromScene(this.scene)
+      }  
+    }
     this.enemyPhotoSet = false
-    this.enemyPhoto.discard()
+    
     gamestatus.clearEnemyInfo()
-    renderEnemyName()
+      
     this.inviteButton.showButton()   
     this.enemyJoined = false
     gamestatus.host = true
@@ -194,10 +203,16 @@ export default class LobbyScene extends UI {
   
   exit(){
     this.unreadySelf()
+    let self = this
     network.exitTeam(gamestatus.openID, gamestatus.lobbyID, ()=>{
+      gamestatus.clearEnemyInfo()
       gamestatus.socketOn = false
       gamestatus.host = true
       gamestatus.restart = true
+      gamestatus.lobbyID = ''
+      gamestatus.initialQuery = ''
+      gamestatus.onshowQuery = ''
+      self.enemyLeave()
     })
   }
 

@@ -48,6 +48,12 @@ export default class GameStatus {
     this.selfReady = false
     this.enemyReady = false
 
+    this.initialQuery = ''
+    this.onshowQuery = ''
+
+    this.gameOn = false
+    this.pause = false
+    this.enemyDisconnect = false
     
   }
   reset(){
@@ -63,12 +69,11 @@ export default class GameStatus {
     this.enemyHit    = false
     this.enemyWillHit = false
     this.enemySide    = 0
-    this.enemyDisconnect = false
+    
 
     this.selfScore   = 0
     this.enemyScore  = 0
-    this.gameOn = false
-    this.pause = false
+    
     this.absDistance = 0
   }
   removeBlock(block){
@@ -76,7 +81,15 @@ export default class GameStatus {
     temp.hide()
     this.pool.recover('block',block)
   }
-
+  recycleAllBlock(){
+    for(let i = 0; i < 4; ++i){
+      while(this.blocks[i].length > 0){
+        let temp = this.blocks[i].shift()
+        temp.hide()
+        this.pool.recover('block', temp)
+      }
+    }
+  }
   setSelfInfo(info){
     this.selfInfo.nickName = info.nickName
     this.selfInfo.picUrl = info.avatarUrl
@@ -116,38 +129,27 @@ export default class GameStatus {
     )
   }
 
-  leaveLobby(){
-    let self = this
-    if(this.lobbyID){
-      network.exitTeam({
-        "openid": self.openID,
-        "teamid": self.lobbyID
-      }, (res)=>{
-        if(res.result === 0){
-          self.clearEnemyInfo()
-          self.lobbyID = ''
-          self.host = true
-        }
-      })
-    }
-  }
+
   joinLobby(lobbyid){
     let self = this
-    network.joinTeam(this.openID, lobbyID, (res)=>{
+    let fail = function(res){
+      wx.showToast({
+        title:res.errMsg,
+        icon:'none'
+      })
+    }
+    network.joinTeam(this.openID, lobbyid, (res)=>{
       if(res.result === 0){
         self.host = false
         network.initSocket(()=>{
           self.socketOn = true
           network.sendOpenid(self.openID,()=>{
-            this.lobbyID = lobbyid
-          })
-        })
+            network.sendPause(false, ()=>{
+              self.lobbyID = lobbyid
+            },fail)
+          },fail)
+        },fail)
       }
     })
-  }
-
-  switchLobby(lobbyid){
-    this.leaveLobby()
-    this.joinLobby(lobbyid)
   }
 }

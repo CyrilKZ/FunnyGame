@@ -48,6 +48,7 @@ export default class GameScene {
     this.startAnimation = false
     this.endAnimation = false
     this.syncAnimation = false
+    this.reverseAnimation = false
     this.panelOn = false
 
     this.heroParticle = new ParticleCubeSystem(CONST.HERO_COLOR, CONST.HERO_LENGTH, CONST.HERO_LENGTH, CONST.HERO_LENGTH)
@@ -68,10 +69,11 @@ export default class GameScene {
       }      
     })
     network.onWin = ((res)=>{
+      console.log(`win`)
       gamestatus.enemyHit = true
       network.sendTransfer({
-        info: 'score',
-        score: gamestatus.selfScore
+        'info': 'score',
+        'score': gamestatus.selfScore
       })
     })
 
@@ -102,6 +104,7 @@ export default class GameScene {
         }
       }
       else if(res.info === 'score'){
+        console.log(`score: ${res.score}`)
         gamestatus.enemyScore = res.score
         self.panel.preInit()
       }
@@ -163,13 +166,12 @@ export default class GameScene {
         })
       }
       this.hud.show()
-      //this.hud.showText('开始')
     }
     if(this.animationFrame > CONST.GAME_START_FRAME){
       this.camera.position.z += (FINAL_CAMERA.z - INITIAL_CAMERA.z) / CONST.GAME_START_FRAME
       this.camera.position.y += (FINAL_CAMERA.y - INITIAL_CAMERA.y) / CONST.GAME_START_FRAME
       this.camera.rotateX((FINAL_CAMERA.rotX - INITIAL_CAMERA.rotX) /CONST.GAME_START_FRAME)
-      if(!this.hud.fullyInit[0] || !this.hud.fullyInit[1]){
+      if(!this.hud.loaded){
         this.hud.tryToInit()
       }
     }  
@@ -187,9 +189,11 @@ export default class GameScene {
     }
   }
   updateEndAnimation(){
+    this.animationFrame += 1
     if(this.animationFrame === CONST.PARICLE_LIFESPAN){
       this.endAnimation = false
-      this.panelOn = true
+      this.panel.init()
+      this.panel.show()
     }
     if(gamestatus.heroHit){
       this.heroParticle.playAnimation()
@@ -211,6 +215,34 @@ export default class GameScene {
     }
     this.aLight.intensity -= 1.5/CONST.SWITCH_SHORT_FRAME
     this.animationFrame += 1
+  }
+  initReverseAnimation(){
+    this.panel.hide()
+    this.panel.reset()
+    this.reverseAnimation = true
+    this.animationFrame = 0
+    let self = this
+    this.setUpRenderer = function(renderer){
+      renderer.setScissor(0, 0, 1920, 1080)
+      renderer.setViewport(600 / CONST.GAME_START_FRAME * self.animationFrame, 0, 1920, 1080)
+    }
+    
+  }
+  updateReverseAnimation(){
+    this.animationFrame += 1
+    if(this.animationFrame === CONST.GAME_START_FRAME){
+      this.animationFrame = 0
+      this.reverseAnimation = false
+      this.resetRenderer()
+      this.camera.position.z = INITIAL_CAMERA.z
+      this.camera.position.y = INITIAL_CAMERA.y
+      //this.camera.rotation.set(new THREE.Euler( 0, 0, 0, 'XYZ' ))
+      this.reset()
+      gamestatus.switchToLobby = true
+    }
+    this.camera.position.z += (INITIAL_CAMERA.z - FINAL_CAMERA.z) / CONST.GAME_START_FRAME
+    this.camera.position.y += (INITIAL_CAMERA.y - FINAL_CAMERA.y) / CONST.GAME_START_FRAME
+    this.camera.rotateX((INITIAL_CAMERA.rotX - FINAL_CAMERA.rotX) / CONST.GAME_START_FRAME)
   }
   setUpRenderer(renderer){
     renderer.setScissor(1920, 0, 1920, 1080)
@@ -255,11 +287,7 @@ export default class GameScene {
     
   }  
   reset(){
-    gamestatus.blocks.forEach((row) => {
-      row.forEach((item)=>{
-        item.update(600)
-      })
-    })
+    gamestatus.recycleAllBlock()
     if(gamestatus.heroHit){
       this.heroParticle.removeFromScene(this.scene)
     }
@@ -271,6 +299,7 @@ export default class GameScene {
       renderer.setViewport(600, 0, 1920, 1080)
     }
     this.cleanCharacters()
+    gamestatus.reset()
   }
 
   // In-game
@@ -282,7 +311,7 @@ export default class GameScene {
     block.init(row, this.scene, absdis - gamestatus.absDistance)
   }
   addBlockToEnemy(x){
-    if(this.hero.blockPonits < 1){
+    if(this.hero.blockPoints < 1){
       return
     }
     console.log(x)
@@ -308,8 +337,8 @@ export default class GameScene {
     let self = this
     let block = null
 
-    if(gamestatus.host){
-      self.hero.blockPonits -= 1
+    if(gamestatus.heroSide === CONST.DIR_RIGHT){
+      self.hero.blockPoints -= 1
       block = gamestatus.pool.getItemByClass('block', Block)
       block.init(row, this.scene)
       network.sendBrick({
@@ -322,7 +351,7 @@ export default class GameScene {
       }))
     }
     else{
-      self.hero.blockPonits -= 1
+      self.hero.blockPoints -= 1
       block = gamestatus.pool.getItemByClass('block', Block)
       block.init(row, this.scene)
       network.sendBrick({
@@ -341,39 +370,34 @@ export default class GameScene {
       gamestatus.enemyHit = true
       gamestatus.enemyScore = 0
     }
-    gamestatus.frame += 1
-    gamestatus.absDistance += gamestatus.speed
-    this.arena.update(gamestatus.speed)
-    gamestatus.blocks.forEach((row) => {
-      row.forEach((item)=>{
-        item.update(gamestatus.speed)
-      })
-    })
-    this.hero.update()
-    this.hud.updateMana(this.hero.blockPoints)
-    this.enemy.sync()
-    if(gamestatus.heroHit){
-      network.sendTransfer({
-        info: 'score',
-        score: gamestatus.score
-      },()=>{
-
-      },()=>{
-        wx.showToast({
-          title: "网络异常",
-          icon: "none"
+    if(gamestatus.gameOn){
+      gamestatus.frame += 1
+      gamestatus.absDistance += gamestatus.speed
+      this.arena.update(gamestatus.speed)
+      gamestatus.blocks.forEach((row) => {
+        row.forEach((item)=>{
+          item.update(gamestatus.speed)
         })
       })
-      network.sendFail(()=>{
+      this.hero.update()
+      this.hud.updateMana(this.hero.blockPoints)
+      this.enemy.sync()
+    }
 
-      }, ()=>{
-        wx.showToast({
-          title: "网络异常",
-          icon: "none"
+    if(gamestatus.heroHit){
+      network.sendFail(()=>{
+        network.sendTransfer({
+          'info': 'score',
+          'score': gamestatus.selfScore
+        },()=>{},()=>{
+          wx.showToast({
+            title: "网络异常",
+            icon: "none"
+          })
         })
       })
     }
-    if(gamestatus.heroHit === true || gamestatus.enemyHit === true){
+    if(gamestatus.heroHit || gamestatus.enemyHit){      
       this.initEndAnimation()
       gamestatus.gameOn = false
       return
@@ -391,11 +415,6 @@ export default class GameScene {
     this.panel.render(renderer)
   }
   loop(){
-    if(this.panelOn){
-      this.panel.init()
-      this.panelOn = false
-      return
-    }
     if(this.startAnimation){
       this.updateStartAnimation()
       return
@@ -406,6 +425,10 @@ export default class GameScene {
     }
     if(this.syncAnimation){
       this.updateSyncAnimation()
+      return
+    }
+    if(this.reverseAnimation){
+      this.updateReverseAnimation()
       return
     }
     if(gamestatus.pause || !gamestatus.gameOn){
@@ -423,8 +446,7 @@ export default class GameScene {
     if(this.panel.visible){
       this.panel.reset()
       this.hud.clean()
-      gamestatus.switchLobby = true
-      this.resetRenderer()
+      this.initReverseAnimation()
     }
     console.log(res)
     console.log(this.startAnimation || gamestatus.heroHit || gamestatus.enemyHit || !gamestatus.gameOn || gamestatus.pause)

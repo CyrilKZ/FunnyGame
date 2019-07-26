@@ -25,6 +25,7 @@ export default class Network {
   }
 
   login(openid, userinfo, sucess, fail) {
+    console.log(`login`)
     let options = {
       'url': this.url + 'login',
       'data': {
