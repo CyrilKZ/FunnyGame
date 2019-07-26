@@ -38,7 +38,7 @@ export default class Button extends DisplayBox{
     this.available = false
   }
   checkTouch(screenEndX, screenEndY, screenInitX, screenInitY){
-    console.log(this.available)
+    //console.log(this.available)
     if(!this.available){
       return false
     }

@@ -26,6 +26,7 @@ export default class WelcomeScene extends UI {
         console.error('get openid failed with error', err)
       }
     })
+    gamestatus.initialQuery = wx.getLaunchOptionsSync().query.teamid
     this.setUpScene()
   }
   setUpScene() {
@@ -43,6 +44,8 @@ export default class WelcomeScene extends UI {
       this.handleAuthorizeEvent(info)
     })
 
+    this.welcomed = false
+
     this.buttonsSet = false
     this.btnRanklist = new Button('resources/rank_button.png', 122, 169, 581, -460)
     this.btnHelp = new Button('resources/help_button.png', 122, 169, 756, -460)
@@ -51,8 +54,12 @@ export default class WelcomeScene extends UI {
 
     this.helpBox = new DisplayBox('resources/helpbg.png', 1450, 800, -725, -400, 2, true)
   }
-  fail(res) {
-    console.log(`fail info: ${res}`)
+  fail(res){
+    console.log(res)
+    wx.showToast({
+      title: res.errMsg,
+      icon: 'none'
+    })
   }
 
   tryToInitButtons() {
@@ -80,43 +87,53 @@ export default class WelcomeScene extends UI {
     if (this.handlingAuth) {
       return
     }
+    let self = this
     this.handlingAuth = true
-    let shareData = wx.getLaunchOptionsSync().query.teamid
+    let shareData = gamestatus.initialQuery
+    if(shareData === undefined || shareData === ''){
+      shareData = gamestatus.onshowQuery
+    }
     gamestatus.setSelfInfo(JSON.parse(res.rawData))
     console.log(shareData)
-    if (shareData === undefined) {
+    if (shareData === undefined || shareData === '') {
       console.log('host')
       gamestatus.host = true
-      network.login(gamestatus.openID, gamestatus.selfInfo, () => {
-        network.createTeam(gamestatus.openID, (res) => {
-          gamestatus.roomID = res.teamid
-          network.initSocket(() => {
+      network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
+        network.createTeam(gamestatus.openID, (res)=>{
+          gamestatus.lobbyID = res.teamid
+          network.initSocket(()=>{
             gamestatus.socketOn = true
             network.sendOpenid(gamestatus.openID, () => {
-              this.animation = true
-              this.doWeHaveToUseThis.hide()
-            }, this.fail)
-          }, this.fail)
-        }, this.fail)
-      }, this.fail)
+              self.animation = true
+              self.doWeHaveToUseThis.hide()
+              self.handlingAuth = false
+              self.welcomed = true
+              //network.sendPause(false)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }, self.fail)
     }
     else {
       gamestatus.host = false
-      gamestatus.roomID = shareData
-      network.login(gamestatus.openID, gamestatus.selfInfo, () => {
+      gamestatus.lobbyID = shareData
+      network.login(gamestatus.openID, gamestatus.selfInfo, ()=>{
         console.log(gamestatus.openID)
-        console.log(gamestatus.roomID)
-        network.joinTeam(gamestatus.openID, gamestatus.roomID, (res) => {
+        console.log(gamestatus.lobbyID)
+        network.joinTeam(gamestatus.openID, gamestatus.lobbyID ,(res)=>{
           console.log('gest')
           network.initSocket(() => {
             gamestatus.socketOn = true
             network.sendOpenid(gamestatus.openID, () => {
-              this.animation = true
-              this.doWeHaveToUseThis.hide()
-            }, this.fail)
-          }, this.fail)
-        }, this.fail)
-      }, this.fail)
+              self.animation = true
+              self.doWeHaveToUseThis.hide()
+              self.handlingAuth = false
+              self.welcomed = true
+              //network.sendPause(false)
+            }, self.fail)
+          }, self.fail)
+        }, self.fail)
+      }, self.fail)
     }
   }
   showRanklist() {
@@ -138,7 +155,6 @@ export default class WelcomeScene extends UI {
   }
   fade() {
     this.frame += 1
-    //console.log(this.frame)
     this.light.intensity += 4 / CONST.SWITCH_SHORT_FRAME
     this.aLight.intensity += 4 / CONST.SWITCH_SHORT_FRAME
     if (this.frame === CONST.SWITCH_SHORT_FRAME) {

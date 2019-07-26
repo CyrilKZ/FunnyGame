@@ -6,141 +6,171 @@ import DisplayBox from '../base/displaybox'
 let gamestatus = new GameStatus()
 
 export default class HUD {
-  constructor(){
+  constructor() {
     this.scene = new THREE.Scene()
-    this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 1000)
+    this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X / 2, CONST.SCREEN_X / 2, CONST.SCREEN_Y / 2, -CONST.SCREEN_Y / 2, 1, 1000)
     //this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
 
     this.scene.background = 'rgba(0,0,0, 0)'
     this.camera.position.z = 100
 
 
+
     this.visible = false
+
     this.selfPhoto = null
-    this.selfBorder = null
-    this.selfPotoSet = false
+    this.selfPhotoSet = false
+
     this.enemyPic = null
     this.enemyPicSet = false
-    this.enemyBorder = null
+
     this.frame = 0
-    
+
     this.fullyInit = [false, false, false]
     this.loaded = false
-    
-    this.hasText = false
-    this.text = null
 
     this.manaIcons = []
-    this. manaGeometry = new THREE.PlaneGeometry(CONST.HUD_MANA_SIZE, CONST.HUD_MANA_SIZE, 1, 1)
-    this. manaMaterial = new THREE.MeshBasicMaterial({color: 0xaabbcc})
+    this.manaGeometry = new THREE.PlaneGeometry(CONST.HUD_MANA_SIZE, CONST.HUD_MANA_SIZE, 1, 1)
+    this.manaMaterial = new THREE.MeshBasicMaterial({ color: 0x15559a })
+
+    this.enemyBorderLeft = new DisplayBox(
+      'resources/hudbar_orange_left.png',
+      CONST.HUD_LENGTHX,
+      CONST.HUD_LENGTHY,
+      -960,
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY,
+      1,
+      true
+    )
+    this.enemyBorderRight = new DisplayBox(
+      'resources/hudbar_orange_right.png', 
+      CONST.HUD_LENGTHX, 
+      CONST.HUD_LENGTHY, 
+      960 - CONST.HUD_LENGTHX, 
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
+      1, 
+      true
+    )
+    this.selfBorderLeft = new DisplayBox(
+      'resources/hudbar_green_left.png', 
+      CONST.HUD_LENGTHX, 
+      CONST.HUD_LENGTHY, 
+      -960, 
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
+      1, 
+      true
+    )
+    this.selfBorderRight = new DisplayBox(
+      'resources/hudbar_green_right.png', 
+      CONST.HUD_LENGTHX, 
+      CONST.HUD_LENGTHY, 
+      960 - CONST.HUD_LENGTHX, 
+      540 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, 
+      1, 
+      true
+    )
   }
-  tryShowSelfInfo(){  
-    if(this.selfPhotoSet){
+  tryShowSelfInfo() {
+    if (this.selfPhotoSet) {
       return
     }
-    if(gamestatus.selfInfo.picUrl === ''){
+    if (gamestatus.selfInfo.picUrl === '') {
       return
     }
-    if(gamestatus.selfInfo.texture){
-      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
+    if (gamestatus.selfInfo.texture) {
+      this.selfPhoto = new DisplayBox(gamestatus.selfInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 2, true)
       this.selfPhoto.initToScene(this.scene)
       this.selfPhotoSet = true
     }
+    if (!this.selfBorderLeft.boundScene) {
+      this.selfBorderLeft.initToScene(this.scene)
+      this.selfBorderLeft.hide()
+    }
+    if (!this.selfBorderRight.boundScene) {
+      this.selfBorderRight.initToScene(this.scene)
+      this.selfBorderRight.hide()
+    }
   }
-  tryShowEnemyInfo(){
-    if(this.enemyPhotoSet){
+  tryShowEnemyInfo() {
+    if (this.enemyPhotoSet) {
       return
     }
-    if(gamestatus.enemyInfo.picUrl === ''){
+    if (gamestatus.enemyInfo.picUrl === '') {
       return
     }
-    if(gamestatus.enemyInfo.texture){
-      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 0, true)
+    if (gamestatus.enemyInfo.texture) {
+      this.enemyPhoto = new DisplayBox(gamestatus.enemyInfo.texture, CONST.HUD_PHOTO_SIZE, CONST.HUD_PHOTO_SIZE, 0, 0, 2, true)
       this.enemyPhoto.initToScene(this.scene)
       this.enemyPhotoSet = true
     }
+    if (!this.enemyBorderLeft.boundScene) {
+      this.enemyBorderLeft.initToScene(this.scene)
+      this.enemyBorderLeft.hide()
+    }
+    if (!this.enemyBorderRight.boundScene) {
+      this.enemyBorderRight.initToScene(this.scene)
+      this.enemyBorderRight.hide()
+    }
   }
-  tryToInit(){
-    if(this.loaded){
+  tryToInit() {
+    if (this.loaded) {
       return
     }
-    if(this.enemyPhotoSet) {
-      if(!this.fullyInit[0]){
+    if (this.enemyPhotoSet) {
+      if (!this.fullyInit[0]) {
         this.fullyInit[0] = true
-        if(gamestatus.host){
-          this.enemyPhoto.resetPos(-860, 440 - CONST.HUD_PHOTO_SIZE, 0)
+        if (gamestatus.heroSide === CONST.DIR_RIGHT) {
+          this.enemyPhoto.resetPos(-960 + CONST.HUD_PIC_MARGIN, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
+          this.enemyBorderLeft.show()
+          this.enemyBorderRight.hide()
         }
-        else{
-          this.enemyPhoto.resetPos(860 - CONST.HUD_PHOTO_SIZE, 440 - CONST.HUD_PHOTO_SIZE, 0)
+        else {
+          this.enemyPhoto.resetPos(960 - CONST.HUD_PIC_MARGIN - CONST.HUD_PHOTO_SIZE, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
+          this.enemyBorderRight.show()
+          this.enemyBorderLeft.hide()
         }
-        let edges = new THREE.EdgesGeometry(this.enemyPhoto.model.geometry)
-        this.enemyBorder = new THREE.LineSegments(
-          edges,
-          new THREE.LineBasicMaterial({
-            color: 0xaaaaaa,
-            linewidth: 2
-          })
-        )
-        this.enemyBorder.position.set(this.enemyPhoto.model.position.x, this.enemyPhoto.model.position.y, this.enemyPhoto.model.position.z)
-        this.scene.add(this.enemyBorder)
       }
     }
-    else{
+    else {
       this.tryShowEnemyInfo()
     }
-    if(this.selfPhotoSet){ 
-      if(!this.fullyInit[1]){
+    if (this.selfPhotoSet) {
+      if (!this.fullyInit[1]) {
         this.fullyInit[1] = true
-        if(gamestatus.host){
-          this.selfPhoto.resetPos(860 - CONST.HUD_PHOTO_SIZE, 440 - CONST.HUD_PHOTO_SIZE, 0)
+        if (gamestatus.heroSide === CONST.DIR_RIGHT) {
+          this.selfPhoto.resetPos(960 - CONST.HUD_PIC_MARGIN - CONST.HUD_PHOTO_SIZE, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
+          this.selfBorderRight.show()
+          this.selfBorderLeft.hide()
         }
-        else{
-          this.selfPhoto.resetPos(-860, 440 - CONST.HUD_PHOTO_SIZE, 0)
+        else {
+          this.selfPhoto.resetPos(-960 + CONST.HUD_PIC_MARGIN, 540 - CONST.HUD_TOP_MAGIN - CONST.HUD_PHOTO_SIZE, 2)
+          this.selfBorderLeft.show()
+          this.selfBorderRight.hide()
         }
-        let edges = new THREE.EdgesGeometry(this.selfPhoto.model.geometry)
-        this.selfBorder = new THREE.LineSegments(
-          edges,
-          new THREE.LineBasicMaterial({
-            color: 0xaaaaaa,
-            linewidth: 2
-          })
-        )
-        this.selfBorder.position.set(this.selfPhoto.model.position.x, this.selfPhoto.model.position.y, this.selfPhoto.model.position.z)
-        this.scene.add(this.selfBorder)
       }
     }
-    else{
+    else {
       this.tryShowSelfInfo()
     }
-    if(!this.fullyInit[2]){
+    if (!this.fullyInit[2]) {
       let geometry = this.manaGeometry
       let material = this.manaMaterial
-      if(gamestatus.host){
-        for(let i = 0 ; i < 5; ++i){
+      if (gamestatus.heroSide === CONST.DIR_RIGHT) {
+        for (let i = 0; i < 10; ++i) {
           let model = new THREE.Mesh(geometry, material)
-          model.position.x = 860 - i * CONST.HUD_MANA_SIZE - CONST.HUD_MANA_SIZE / 2
+          model.position.x = 950 - i * (CONST.HUD_MANA_SIZE + 1) - CONST.HUD_MANA_SIZE / 2
           model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
-          this.manaIcons.push(model)
-          this.scene.add(model)
-
-          model = new THREE.Mesh(geometry, material)
-          model.position.x = 860 - i * CONST.HUD_MANA_SIZE - CONST.HUD_MANA_SIZE / 2
-          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2 - 32
+          model.position.z = 4
           this.manaIcons.push(model)
           this.scene.add(model)
         }
       }
-      else{
-        for(let i = 0 ; i < 5; ++i){
+      else {
+        for (let i = 0; i < 10; ++i) {
           let model = new THREE.Mesh(geometry, material)
-          model.position.x = -860 + i * CONST.HUD_MANA_SIZE + CONST.HUD_MANA_SIZE / 2
+          model.position.x = -950 + i * (CONST.HUD_MANA_SIZE + 1) + CONST.HUD_MANA_SIZE / 2
           model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2
-          this.manaIcons.push(model)
-          this.scene.add(model)
-
-          model = new THREE.Mesh(geometry, material)
-          model.position.x = -860 + i * CONST.HUD_MANA_SIZE + CONST.HUD_MANA_SIZE / 2
-          model.position.y = 540 - 260 - CONST.HUD_MANA_SIZE / 2 - 32
+          model.position.z = 4
           this.manaIcons.push(model)
           this.scene.add(model)
         }
@@ -149,113 +179,87 @@ export default class HUD {
     }
     this.loaded = this.fullyInit[0] && this.fullyInit[1] && this.fullyInit[2]
   }
-  clean(){
+  clean() {
     this.enemyPhoto.removeFromScene(this.scene)
     this.enemyPhoto.discard()
     this.enemyPhoto = null
-    this.scene.remove(this.enemyBorder)
-    this.enemyBorder.geometry.dispose()
-    this.enemyBorder.material.dispose()
-    this.enemyBorder = null
+    this.enemyPhotoSet = false
+    this.enemyBorderLeft.hide()
+    this.enemyBorderRight.hide()
+    
 
     this.selfPhoto.removeFromScene(this.scene)
     this.selfPhoto.discard()
     this.selfPhoto = null
-    this.scene.remove(this.selfBorder)
-    this.selfBorder.geometry.dispose()
-    this.selfBorder.material.dispose()
-    this.selfBorder = null
+    this.selfPhotoSet = false
+    this.selfBorderLeft.hide()
+    this.selfBorderRight.hide()
 
     this.hideAllMana()
 
     this.visible = false
+    this.fullyInit = [false, false, false]
+    this.loaded = false
   }
-  show(){
+  show() {
     this.visible = true
   }
-  hide(){
+  hide() {
     this.visible = false
   }
-  hideAllMana(){
-    this.manaIcons.forEach((icon)=>{
+  hideAllMana() {
+    this.manaIcons.forEach((icon) => {
       icon.visible = false
     })
   }
-  updateMana(count){
-    for(let i = 0 ; i < 10; ++i){
-      if(i < count){
+  updateMana(count) {
+    for (let i = 0; i < 10; ++i) {
+      if (i < count) {
         this.manaIcons[i].visible = true
       }
-      else{
+      else {
         this.manaIcons[i].visible = false
       }
-    }    
+    }
   }
-  showText(s){
-    if(!this.visible ||!this.loaded){
-      return
-    }
-    if(!gamestatus.font){
-      return
-    }
-    if(this.text){
-      this.scene.remove(this.text)
-      this.text.geometry.dispose()
-      this.text.material.dispose()
-    }
-    let geometry = new THREE.TextGeometry(s,{
-      font: gamestatus.font,
-      size: 40,
-      height: 1
+  showText(s) {
+    wx.showToast({
+      title: s
     })
-    let materil = new THREE.MeshBasicMaterial({color: 0xaaaaaa})
-    this.text = new THREE.Mesh(geometry, materil)
-    this.scene.add(this.text)
-    this.frame = 0
   }
-  updateText(){
-    this.frame += 1
-    if(this.frame === 60){
-      this.text.visible = false
-    }
-  }
-  update(point){
-    if(!this.visible ||!this.loaded){
+  update(point) {
+    if (!this.visible || !this.loaded) {
       return
-    }
-    if(this.text){
-      this.updateText()
     }
     this.updateMana(point)
   }
-  render(renderer){
-    return
-    if(!this.visible || !this.loaded){
+  render(renderer) {
+    if (!this.visible || !this.loaded) {
       return
     }
     console.log('showing hud')
 
-    if(gamestatus.host){
+    if (gamestatus.host) {
       // left photo
-      renderer.setScissor(100, 1080 - 262, 162, 164)
+      renderer.setScissor(0, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)
       renderer.render(this.scene, this.camera)
 
       // right photo
-      renderer.setScissor(1920 - 262, 1080 - 262 - 64, 162, 164 + 64)
+      renderer.setScissor(CONST.SCREEN_X - CONST.HUD_LENGTHX, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)
       renderer.render(this.scene, this.camera)
     }
-    else{
+    else {
       // left photo
-      renderer.setScissor(100, 1080 - 262 - 64, 162, 164 + 64)
+      renderer.setScissor(0, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)
       renderer.render(this.scene, this.camera)
 
       // right photo
-      renderer.setScissor(1920 - 262, 1080 - 262, 162, 164)
+      renderer.setScissor(CONST.SCREEN_X - CONST.HUD_LENGTHX, 1080 - CONST.HUD_TOP_MAGIN - CONST.HUD_LENGTHY, CONST.HUD_LENGTHX, CONST.HUD_LENGTHY)
       renderer.setViewport(0, 0, 1920, 1080)
       renderer.render(this.scene, this.camera)
-    }    
+    }
   }
 }

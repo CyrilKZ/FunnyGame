@@ -28,6 +28,9 @@ export default class LobbyScene extends UI {
     this.selfReady = new DisplayBox('resources/onready.png', 170, 147, -660, -50, 2)
     this.enemyPhoto = null
     
+    this.enemyName = null
+    this.selfName = null
+
     this.tryToInitButtons()
   }
   tryToInitButtons(){
@@ -51,14 +54,13 @@ export default class LobbyScene extends UI {
   }
   readySelf(){
     let self = this
-    this.selfReady.initToScene(this.scene)
+    if(!this.selfReady.boundScene){
+      this.selfReady.initToScene(this.scene)
+    }  
     this.selfReady.show()
 
     console.log('ready')
     console.log(self.enemyJoined)
-    // if(!self.enemyJoined){
-    //   return
-    // }
     
     network.sendReady(true, ()=>{
       gamestatus.selfReady = true
@@ -67,12 +69,11 @@ export default class LobbyScene extends UI {
     })
   }
   unreadySelf(){
-    this.selfReady.hide()
-    let self = this
-    // if(!self.enemyJoined){
-    //   return
-    // }
+    if(this.selfReady.boundScene){
+      this.selfReady.hide()
+    }  
 
+    let self = this
     network.sendReady(false, ()=>{
       gamestatus.selfReady = false
       self.imReady.hideButton()
@@ -81,8 +82,10 @@ export default class LobbyScene extends UI {
   }
   setEnemyReady(ready){
     gamestatus.enemyReady = ready
-    if(ready){
+    if(!this.othersReady.boundScene){
       this.othersReady.initToScene(this.scene)
+    }
+    if(ready){      
       this.othersReady.show()
     }
     else{
@@ -135,8 +138,8 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.selfInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -830, -130)
-    displayBox.initToScene(this.scene)
+    this.selfName = new DisplayBox(texture, canvas.width, canvas.height, -830, -130)
+    this.selfName.initToScene(this.scene)
   }
 
   renderEnemyName() {
@@ -152,28 +155,32 @@ export default class LobbyScene extends UI {
     context.fillText(gamestatus.enemyInfo.nickName, 200, 50, 400)
 
     let texture = new THREE.CanvasTexture(canvas)
-    let displayBox = new DisplayBox(texture, canvas.width, canvas.height, -220, -130)
-    displayBox.initToScene(this.scene)
+    this.enemyName = new DisplayBox(texture, canvas.width, canvas.height, -220, -130)
+    this.enemyName.initToScene(this.scene)
   }
 
   inviteEnemy(){
     console.log('invite')
     wx.shareAppMessage({
-      query: 'teamid=' + gamestatus.roomID.toString()
+      query: 'teamid=' + gamestatus.lobbyID.toString()
     })
   }
 
   enemyLeave(){
-    this.enemyPhoto.removeFromScene(this.scene)
-    this.enemyPhotoSet = false
-    this.enemyPhoto.discard()
-    gamestatus.enemyInfo = {
-      nickName: '',
-      picUrl: ''
+    if(this.enemyPhoto && this.enemyPhoto.boundScene){
+      this.enemyPhoto.removeFromScene(this.scene)
+      this.enemyPhoto.discard()
+      if(this.enemyName.boundScene){
+        this.enemyName.removeFromScene(this.scene)
+      }  
     }
-    renderEnemyName()
+    this.enemyPhotoSet = false
+    
+    gamestatus.clearEnemyInfo()
+      
     this.inviteButton.showButton()   
     this.enemyJoined = false
+    gamestatus.host = true
   }
   update(){
     if(!this.buttonsSet){
@@ -190,22 +197,35 @@ export default class LobbyScene extends UI {
 
   initStartAnimation(){
     this.startAnimation = true
-    this.light.intensity = 20
+    this.light.intensity = 2
     this.animationFrame = 0
   }
   
   exit(){
-
+    this.unreadySelf()
+    let self = this
+    network.exitTeam(gamestatus.openID, gamestatus.lobbyID, ()=>{
+      gamestatus.clearEnemyInfo()
+      gamestatus.socketOn = false
+      gamestatus.host = true
+      gamestatus.restart = true
+      gamestatus.lobbyID = ''
+      gamestatus.initialQuery = ''
+      gamestatus.onshowQuery = ''
+      self.enemyLeave()
+    })
   }
+
 
   updateStartAnimation(){
     if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
       this.light.intensity = 0
       this.startAnimation = false
       this.animationFrame = 0
+      this.unreadySelf()
       return
     }
-    this.light.intensity -= 20 / CONST.SWITCH_SHORT_FRAME
+    this.light.intensity -= 2 / CONST.SWITCH_SHORT_FRAME
     this.animationFrame += 1
   }
 
@@ -213,16 +233,17 @@ export default class LobbyScene extends UI {
     this.endAnimation = true
     this.light.intensity = 0
     this.animationFrame = 0
+    
   }
   updateEndAnimation(){
     if(this.animationFrame === CONST.SWITCH_SHORT_FRAME){
-      this.light.intensity = 20
+      this.light.intensity = 2
       this.endAnimation = false
       this.animationFrame = 0
       gamestatus.switchToGame = true
       return
     }
-    this.light.intensity += 20 / CONST.SWITCH_SHORT_FRAME
+    this.light.intensity += 2 / CONST.SWITCH_SHORT_FRAME
     this.animationFrame += 1
   }
 
@@ -233,6 +254,11 @@ export default class LobbyScene extends UI {
     }
     else if(this.endAnimation){
       this.updateEndAnimation()
+    }
+    else if(gamestatus.enemyDisconnect){
+      this.setEnemyReady(false)
+      this.enemyLeave()
+      gamestatus.enemyDisconnect = false
     }
   }
   restore(){
@@ -258,7 +284,7 @@ export default class LobbyScene extends UI {
       this.inviteEnemy()
     }
     else if(this.exitButton.checkTouch(endX, endY, initX, initY)){
-        this.exit()
-      }
+      this.exit()
+    }
   }
 }

@@ -14,6 +14,10 @@ export default class ResultPanel {
   constructor(){
     this.scene = new THREE.Scene()
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 2000)
+    this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
+
+    this.camera.position.z = 100
+    //this.scene.add(this.aLight)
     this.ground = null
     this.texture = null
     this.visible = false
@@ -55,29 +59,31 @@ export default class ResultPanel {
     else{
       context.drawImage(winner, 930, 405)
     }
+    console.log(`pre init complete`)
     this.texture = new THREE.CanvasTexture(canvas)
   }
 
   init(){
-    let geometry = new THREE.PlaneGeometry(CONST.PANEL_WIDTH, CONST.PANEL_WIDTH)
-    let material = new THREE.MeshBasicGeometry({map: this.texture})
+    let geometry = new THREE.PlaneGeometry(CONST.PANEL_WIDTH, CONST.PANEL_HEIGHT, 1, 1)
+    let material = new THREE.MeshBasicMaterial({map: this.texture})
     this.ground = new THREE.Mesh(geometry, material)
     this.scene.add(this.ground)
-    this.visible = true
   }
   reset(){
     this.scene.remove(this.ground)
-    this.ground.geometry.dispose()
-    this.ground.material.dispose()
     this.ground = null
     this.texture = null
+  }
+  show(){
+    this.visible = true
+  }
+  hide(){
     this.visible = false
   }
-
   // render
   setupRenderer(renderer){
     renderer.setScissor((CONST.SCREEN_X - CONST.PANEL_WIDTH)/2, (CONST.SCREEN_Y - CONST.PANEL_HEIGHT)/2, CONST.PANEL_WIDTH, CONST.PANEL_HEIGHT)
-    renderer.setViewport(0, 0, CONST.SCREEN_X, CONST.SCREEN_Y)
+    renderer.setViewport(0, 0, 1920, 1080)
   }
   render(renderer){
     if(!this.visible){

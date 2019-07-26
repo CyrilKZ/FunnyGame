@@ -48,9 +48,95 @@ export default class Game {
             
     }    
     network.onStart = function(){
+      if(gamestatus.gameOn){
+        return
+      }
       self.stages[CONST.STAGE_LOBBY].initEndAnimation()
       self.gameScene.initCharacters()    
     }
+    network.onReady = function(data){
+      self.stages[CONST.STAGE_LOBBY].setEnemyReady(data.state)
+    }
+    network.onExit = function(data){
+      console.log('exit')
+      gamestatus.pause = false
+      gamestatus.enemyDisconnect = true
+    }
+    network.onClose = function(){
+      gamestatus.socketOn = false
+    }
+    network.onPause = function(data){
+      gamestatus.pause = data.state
+      if(data.state){
+        // 对方暂停连接        
+        if(gamestatus.gameOn){
+          wx.showLoading({
+            title: "对方已断开连接",
+            icon: "loading"
+          })
+        }
+        return
+      }
+      // 对方重连
+      if(gamestatus.gameOn){
+        wx.hideLoading()
+      }
+    }
+    wx.onHide(function(){      
+      if(self.currentStage === CONST.STAGE_LOBBY){
+        // 取消自身准备状态
+        self.stages[CONST.STAGE_LOBBY].unreadySelf()
+      }
+      if(gamestatus.socketOn){
+        network.sendPause(true, ()=>{
+          gamestatus.pause = true
+        })
+      }
+    })
+    wx.onShow(function(obj){
+      let fail = function(){
+        wx.showToast({
+          title: "连接失败",
+          icon: 'none'
+        })
+        gamestatus.restart = true
+      }
+      
+      gamestatus.onshowQuery = obj.query.teamid
+      let shareData = obj.query.teamid
+      console.log(`sharedata: ${shareData}`)
+      if(self.currentStage === CONST.STAGE_LOBBY){
+        // 重连进入房间界面
+        if(shareData && shareData!==gamestatus.lobbyID){
+          wx.showToast({
+            title: "请先退出房间!",
+            icon: 'none'
+          })
+        }
+        network.initSocket(()=>{
+          network.sendOpenid(gamestatus.openID, ()=>{
+            network.sendPause(false, ()=>{
+              gamestatus.socketOn = true
+              gamestatus.pause = false
+            },fail)
+          },fail)
+        },fail)
+      }
+      else if (self.currentStage !== CONST.STAGE_WELCOME){
+        network.initSocket(()=>{
+          network.sendOpenid(gamestatus.openID,()=>{
+            network.sendPause(false,()=>{
+              wx.showToast({
+                title: "连接成功"
+              })
+              gamestatus.socketOn = true
+              gamestatus.pause = false
+            },fail)
+          },fail)
+        },fail)
+      }
+      
+    })
     this.restart()
     
   }
@@ -64,9 +150,19 @@ export default class Game {
     )
   }
   loop() {
+    if(gamestatus.restart){
+      gamestatus.restart = false      
+      this.stages[0].restart()
+      this.stages[1].restart()
+      this.gameScene.reset()
+      this.currentStage = CONST.STAGE_WELCOME
+      this.stages[CONST.STAGE_WELCOME].doWeHaveToUseThis.show()
+      gamestatus.reset()
+    }
     if(gamestatus.switchToLobby){
       this.stages[CONST.STAGE_LOBBY].restore()
       this.stages[CONST.STAGE_LOBBY].initStartAnimation()
+      this.gameScene.resetRenderer()
       this.gameScene.initSyncAnimation()
       this.currentStage = CONST.STAGE_LOBBY
       gamestatus.switchToLobby = false

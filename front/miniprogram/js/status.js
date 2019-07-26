@@ -1,7 +1,9 @@
 import Pool from './base/pool'
 import * as THREE from './libs/three.min'
 import MAIN_FONT from '../resources/font'
+import Network from './base/network'
 //import * as CONST from './libs/constants'
+let network = new Network()
 
 let instance
 export default class GameStatus {
@@ -17,11 +19,13 @@ export default class GameStatus {
     this.reset()
   }
   init(){
+    this.restart = false
     this.switchToLobby = false
     this.switchToGame = false
     this.switchToResult = false
 
-    this.host = false
+    
+    this.host = true
 
     this.selfInfo = {
       nickName: '',
@@ -29,7 +33,6 @@ export default class GameStatus {
       image: null,
       texture: null
     }
-    this.heroSide = 0
 
     this.enemyInfo = {
       nickName: '',
@@ -37,15 +40,20 @@ export default class GameStatus {
       image: null,
       texture: null
     }
-    this.enemySide = 0
 
-    this.roomID = ''
+    this.lobbyID = ''
     this.openID = ''
     this.socketOn = false
 
     this.selfReady = false
     this.enemyReady = false
 
+    this.initialQuery = ''
+    this.onshowQuery = ''
+
+    this.gameOn = false
+    this.pause = false
+    this.enemyDisconnect = false
     
   }
   reset(){
@@ -61,11 +69,11 @@ export default class GameStatus {
     this.enemyHit    = false
     this.enemyWillHit = false
     this.enemySide    = 0
+    
 
     this.selfScore   = 0
     this.enemyScore  = 0
-    this.gameOn = false
-    this.pause = false
+    
     this.absDistance = 0
   }
   removeBlock(block){
@@ -73,7 +81,15 @@ export default class GameStatus {
     temp.hide()
     this.pool.recover('block',block)
   }
-
+  recycleAllBlock(){
+    for(let i = 0; i < 4; ++i){
+      while(this.blocks[i].length > 0){
+        let temp = this.blocks[i].shift()
+        temp.hide()
+        this.pool.recover('block', temp)
+      }
+    }
+  }
   setSelfInfo(info){
     this.selfInfo.nickName = info.nickName
     this.selfInfo.picUrl = info.avatarUrl
@@ -88,6 +104,16 @@ export default class GameStatus {
       }
     )
   }
+
+  clearEnemyInfo(){
+    this.enemyInfo = {
+      nickName: '',
+      picUrl:'',
+      image: null,
+      texture: null
+    }
+  }
+
   setEnemyInfo(info){
     this.enemyInfo.nickName = info.nickName
     this.enemyInfo.picUrl = info.picUrl
@@ -101,5 +127,29 @@ export default class GameStatus {
         self.enemyInfo.texture = texture
       }
     )
+  }
+
+
+  joinLobby(lobbyid){
+    let self = this
+    let fail = function(res){
+      wx.showToast({
+        title:res.errMsg,
+        icon:'none'
+      })
+    }
+    network.joinTeam(this.openID, lobbyid, (res)=>{
+      if(res.result === 0){
+        self.host = false
+        network.initSocket(()=>{
+          self.socketOn = true
+          network.sendOpenid(self.openID,()=>{
+            network.sendPause(false, ()=>{
+              self.lobbyID = lobbyid
+            },fail)
+          },fail)
+        },fail)
+      }
+    })
   }
 }

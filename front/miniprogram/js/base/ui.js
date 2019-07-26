@@ -6,7 +6,7 @@ export default class UI {
     this.scene = new THREE.Scene()
     this.camera = new THREE.OrthographicCamera(-CONST.SCREEN_X/2, CONST.SCREEN_X/2, CONST.SCREEN_Y/2, -CONST.SCREEN_Y/2, 1, 2000)
     this.light = new THREE.DirectionalLight(0xffffff, 0)
-    this.aLight = new THREE.AmbientLight(0xffffff, 1)
+    this.aLight = new THREE.AmbientLight(0xffffff, 0.5)
     this.camera.position.z = 120
     this.light.position.set(0, 0, 100)
     this.scene.add(this.light)
@@ -37,7 +37,8 @@ export default class UI {
   restart(){
     this.frame = 0
     this.show()
-    this.light.intensity = 0.5
+    this.light.intensity = 0
+    this.aLight.intensity = 1
   }
   show(){
     this.display = true
