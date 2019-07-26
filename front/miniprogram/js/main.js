@@ -6,6 +6,7 @@ import GameStatus from './status'
 import LobbyScene from './scenes/lobby'
 import TouchEvents from './base/touch'
 import Network from './base/network'
+import SoundPlayer from './base/soundplayer'
 
 const ctx = canvas.getContext('webgl')
 const renderer = new THREE.WebGLRenderer({
@@ -25,6 +26,7 @@ wx.cloud.init()
 const gamestatus = new GameStatus()
 const touchevents = new TouchEvents()
 const network = new Network()
+const sound = new SoundPlayer()
 
 export default class Game {
   constructor () {
@@ -40,6 +42,16 @@ export default class Game {
 
     wx.setKeepScreenOn({
       keepScreenOn: true
+    })
+    wx.showShareMenu()
+    wx.onShareAppMessage(function () {
+      // 用户点击了“转发”按钮
+      return {
+        query: ''
+      }
+    })
+    wx.onAudioInterruptionEnd(function () {
+      sound.bgm.play()
     })
     const self = this
     network.onJoin = function (data) {
@@ -88,11 +100,11 @@ export default class Game {
       }
       if (gamestatus.socketOn) {
         network.sendPause(true, () => {
-          gamestatus.pause = true
         })
       }
     })
     wx.onShow(function (obj) {
+      sound.bgm.play()
       const fail = function () {
         wx.showToast({
           title: '连接失败',
@@ -113,25 +125,27 @@ export default class Game {
           })
         }
         network.initSocket(() => {
+          gamestatus.socketOn = true
           network.sendOpenid(gamestatus.openID, () => {
             network.sendPause(false, () => {
-              gamestatus.socketOn = true
               gamestatus.pause = false
             }, fail)
           }, fail)
         }, fail)
       } else if (self.currentStage !== CONST.STAGE_WELCOME) {
         network.initSocket(() => {
+          gamestatus.socketOn = true
           network.sendOpenid(gamestatus.openID, () => {
             network.sendPause(false, () => {
               wx.showToast({
                 title: '连接成功'
               })
-              gamestatus.socketOn = true
               gamestatus.pause = false
             }, fail)
           }, fail)
         }, fail)
+      } else {
+        gamestatus.pause = false
       }
     })
     wx.onNetworkStatusChange(function (res) {

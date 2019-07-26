@@ -167,6 +167,7 @@ export default class LobbyScene extends UI {
   inviteEnemy () {
     console.log('invite')
     wx.shareAppMessage({
+      title: '快来加入我的游戏',
       query: 'teamid=' + gamestatus.lobbyID.toString()
     })
   }
