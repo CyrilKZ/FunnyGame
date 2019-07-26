@@ -3,9 +3,11 @@ import GameStatus from '../status'
 import Network from '../base/network'
 import * as THREE from '../libs/three.min'
 import * as CONST from '../libs/constants'
+import SoundPlayer from '../base/soundplayer'
 
 let gamestatus = new GameStatus()
 let network = new Network()
+let sound = new SoundPlayer()
 
 export default class Enemy extends Sprite {
   constructor() {
@@ -142,6 +144,8 @@ export default class Enemy extends Sprite {
     else{
       return
     }
+    sound.slipSound.stop()
+    sound.slipSound.play()
     let direction = nextMove.direction
     let safe = nextMove.safe
     this.diffFrame = nextMove.frame - gamestatus.frame

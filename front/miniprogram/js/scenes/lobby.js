@@ -199,6 +199,7 @@ export default class LobbyScene extends UI {
     this.startAnimation = true
     this.light.intensity = 2
     this.animationFrame = 0
+    this.setEnemyReady(false)
   }
   
   exit(){

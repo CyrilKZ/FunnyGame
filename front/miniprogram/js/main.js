@@ -27,6 +27,8 @@ let gamestatus = new GameStatus()
 let touchevents = new TouchEvents()
 let network = new Network()
 
+
+
 export default class Game {
   constructor(){
     this.aniID = 0
@@ -40,7 +42,9 @@ export default class Game {
     this.currentStage = CONST.STAGE_WELCOME
     this.initTouchEvents()
     
-
+    wx.setKeepScreenOn({
+      keepScreenOn: true
+    })
     let self = this
     network.onJoin = function(data){
       console.log(data.userinfo)
@@ -134,8 +138,17 @@ export default class Game {
             },fail)
           },fail)
         },fail)
-      }
-      
+      }      
+    })
+    wx.onNetworkStatusChange(function(res){
+      gamestatus.restart = true
+      self.stages[CONST.STAGE_LOBBY].enemyLeave()
+      gamestatus.lobbyID = ''
+      gamestatus.initialQuery = ''
+      gamestatus.onshowQuery = ''
+      gamestatus.clearEnemyInfo()
+      gamestatus.socketOn = false
+      gamestatus.host = true
     })
     this.restart()
     
@@ -154,7 +167,7 @@ export default class Game {
       gamestatus.restart = false      
       this.stages[0].restart()
       this.stages[1].restart()
-      this.gameScene.reset()
+      this.gameScene.reboot()
       this.currentStage = CONST.STAGE_WELCOME
       this.stages[CONST.STAGE_WELCOME].doWeHaveToUseThis.show()
       gamestatus.reset()
@@ -168,7 +181,7 @@ export default class Game {
       gamestatus.switchToLobby = false
     }
     else if(gamestatus.switchToGame){
-      this.currentStage = -1
+      this.currentStage = CONST.STAGE_GAME
       this.gameScene.initStartAnimation()
       gamestatus.switchToGame = false
     }
@@ -190,13 +203,13 @@ export default class Game {
       this.bindLoop,
       canvas
       )
-    if(this.currentStage !== -1){
+    if(this.currentStage !== CONST.STAGE_GAME){
       this.stages[this.currentStage].render(renderer)
     }
     this.gameScene.render(renderer)
   }
   handleTouchEvents(res){  
-    if(this.currentStage !== -1){
+    if(this.currentStage !== CONST.STAGE_GAME){
       this.stages[this.currentStage].handleTouchEvents(res)
     }
     else{
