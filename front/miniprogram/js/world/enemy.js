@@ -139,8 +139,8 @@ export default class Enemy extends Sprite {
     } else {
       return
     }
-    sound.slipSound.stop()
-    sound.slipSound.play()
+    sound.slipSound2.stop()
+    sound.slipSound2.play()
     const direction = nextMove.direction
     const safe = nextMove.safe
     this.diffFrame = nextMove.frame - gamestatus.frame

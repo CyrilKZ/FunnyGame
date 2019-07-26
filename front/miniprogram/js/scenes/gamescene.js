@@ -98,7 +98,15 @@ export default class GameScene {
 
         } else {
           const otherfrm = res.frm
-          while (otherfrm - gamestatus.frame > 3) {
+          if (otherfrm - gamestatus.frame > 30) {
+            wx.showToast({
+              title: '网络异常!',
+              icon: 'none'
+            })
+            gamestatus.heroHit = true
+            return
+          }
+          while (otherfrm - gamestatus.frame > 4) {
             console.log('force update')
             self.updateGame()
           }
@@ -164,6 +172,7 @@ export default class GameScene {
           info: 'restart'
         }, () => {
           gamestatus.gameOn = true
+          gamestatus.frame = 0
         })
       }
       this.hud.show()
@@ -400,7 +409,7 @@ export default class GameScene {
         })
       })
       this.hero.update()
-      this.hud.updateMana(this.hero.blockPoints)
+      this.hud.update(this.hero.blockPoints)
       this.enemy.sync()
     }
 

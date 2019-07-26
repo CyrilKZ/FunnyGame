@@ -47,4 +47,4 @@ export const HUD_TOP_MAGIN = 200
 export const HUD_LENGTHY = 120
 export const HUD_LENGTHX = 395
 export const HUD_PIC_MARGIN = 226
-export const JUMP_SCORE = 200
+export const JUMP_SCORE = 20

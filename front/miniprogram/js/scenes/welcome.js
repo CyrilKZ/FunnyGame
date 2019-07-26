@@ -123,17 +123,27 @@ export default class WelcomeScene extends UI {
         console.log(gamestatus.openID)
         console.log(gamestatus.lobbyID)
         network.joinTeam(gamestatus.openID, gamestatus.lobbyID, (res) => {
-          console.log('gest')
-          network.initSocket(() => {
-            gamestatus.socketOn = true
-            network.sendOpenid(gamestatus.openID, () => {
-              self.animation = true
-              self.doWeHaveToUseThis.hide()
-              self.handlingAuth = false
-              self.welcomed = true
-              // network.sendPause(false)
+          if (res.result === 0) {
+            network.initSocket(() => {
+              gamestatus.socketOn = true
+              network.sendOpenid(gamestatus.openID, () => {
+                self.animation = true
+                self.doWeHaveToUseThis.hide()
+                self.handlingAuth = false
+                self.welcomed = true
+                // network.sendPause(false)
+              }, self.fail)
             }, self.fail)
-          }, self.fail)
+          } else {
+            wx.showToast({
+              title: '房间不存在!',
+              icon: 'none'
+            })
+            gamestatus.lobbyID = ''
+            gamestatus.initialQuery = ''
+            gamestatus.onshowQuery = ''
+            gamestatus.handlingAuth = false
+          }
         }, self.fail)
       }, self.fail)
     }

@@ -167,6 +167,7 @@ export default class LobbyScene extends UI {
   inviteEnemy () {
     console.log('invite')
     wx.shareAppMessage({
+      title: '快来加入我的游戏',
       query: 'teamid=' + gamestatus.lobbyID.toString()
     })
   }
@@ -205,7 +206,6 @@ export default class LobbyScene extends UI {
     this.startAnimation = true
     this.light.intensity = 2
     this.animationFrame = 0
-    this.setEnemyReady(false)
   }
 
   exit () {

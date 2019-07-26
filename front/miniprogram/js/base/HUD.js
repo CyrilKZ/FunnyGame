@@ -159,6 +159,7 @@ export default class HUD {
           model.position.z = 4
           this.manaIcons.push(model)
           this.scene.add(model)
+          model.visible = false
         }
       } else {
         for (let i = 0; i < 10; ++i) {
@@ -168,6 +169,7 @@ export default class HUD {
           model.position.z = 4
           this.manaIcons.push(model)
           this.scene.add(model)
+          model.visible = false
         }
       }
       this.fullyInit[2] = true

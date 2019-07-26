@@ -19,7 +19,7 @@ export default class Ground {
 
     const leftLoader = new THREE.TextureLoader()
     leftLoader.load(
-      'resources/leftside.png',
+      'resources/leftside.jpg',
       function (texture) {
         console.log(`left texture ${texture} loaded`)
         const material = new THREE.MeshBasicMaterial({ map: texture })
@@ -32,7 +32,7 @@ export default class Ground {
 
     const rightLoader = new THREE.TextureLoader()
     rightLoader.load(
-      'resources/rightside.png',
+      'resources/rightside.jpg',
       function (texture) {
         console.log(`right texture ${texture} loaded`)
         const material = new THREE.MeshBasicMaterial({ map: texture })
@@ -45,7 +45,7 @@ export default class Ground {
 
     const midLoader = new THREE.TextureLoader()
     midLoader.load(
-      'resources/midbar.png',
+      'resources/midbar.jpg',
       function (texture) {
         console.log(`mid texture ${texture} loaded`)
         const material = new THREE.MeshBasicMaterial({ map: texture })
@@ -59,7 +59,7 @@ export default class Ground {
 
     const centerLoader = new THREE.TextureLoader()
     centerLoader.load(
-      'resources/centerbar.png',
+      'resources/centerbar.jpg',
       function (texture) {
         console.log(`mid texture ${texture} loaded`)
         const material = new THREE.MeshBasicMaterial({ map: texture })
