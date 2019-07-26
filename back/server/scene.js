@@ -77,12 +77,14 @@ function forwardData(user, data) {
 }
 
 function fail(user, data) {
+    user.team.reset();
     let companion = user.companion;
     if (companion) {
         if (companion.pause) {
             companion.msgBuffer.push({'msg':'win'});
         }
         else {
+            console.log('{"msg":"win"}');
             companion.socket.send('{"msg":"win"}', (err) => {
                 if (err) {
                     console.log(`[ERROR]: ${err}`);
@@ -95,6 +97,7 @@ function fail(user, data) {
 function pause(user, data) {
     user.setPause(data.state);
     if (data.state === false) {
+        // clearTimeout(user.timeobj);
         for (let msg of user.msgBuffer) {
             user.socket.send(JSON.stringify(msg), (err) => {
                 if (err) {
@@ -107,6 +110,13 @@ function pause(user, data) {
         if (user.team.checkReady()) {
             user.team.start();
         }
+    }
+    else{
+        // user.timeobj = setTimeout(function(){
+        //     if(user){
+        //         team.teamHandler.exit(user.id);
+        //     }
+        // }, 300000);
     }
     
     let companion = user.companion;
@@ -136,6 +146,5 @@ module.exports = {
     'action': forwardData,
     'transfer': forwardData,
     'fail': fail,
-    'pause': pause,
-    'restart': restart
+    'pause': pause
 }
